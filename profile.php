@@ -19,7 +19,6 @@ if(isset($_POST['email']) && isset($_POST['password'])){
 
         $row = mysqli_fetch_assoc($result);
 
-        // Plain password check (only for learning, NOT secure)
         if($password == $row['password']){
 
             $_SESSION['useremail'] = $useremail;
