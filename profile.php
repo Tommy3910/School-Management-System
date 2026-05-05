@@ -1,47 +1,49 @@
 <?php
+session_start();
+$conn = mysqli_connect("localhost", "root", "", "rad_project");
 
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
-$conn = mysqli_connect("localhost","root","","rad_project");
+    // Get form data safely
+    $email = $_POST['email'] ?? '';
+    $password = $_POST['password'] ?? '';
 
-if (!$conn) {
-    die("Connection failed: " . mysqli_connect_error());
-}
+    if (empty($email) || empty($password)) {
+        echo "Please fill all fields";
+        exit();
+    }
 
-if(isset($_POST['email']) && isset($_POST['password'])){
-
-    $useremail = mysqli_real_escape_string($conn, $_POST['email']);
-    $password = mysqli_real_escape_string($conn, $_POST['password']);
-
-    $sql = "SELECT * FROM users WHERE useremail='$useremail'";
+    // Query database
+    $sql = "SELECT * FROM users WHERE useremail = '$email'";
     $result = mysqli_query($conn, $sql);
 
-    if(mysqli_num_rows($result) > 0){
-
+    if (mysqli_num_rows($result) == 1) {
         $row = mysqli_fetch_assoc($result);
 
-        // Plain password check (only for learning, NOT secure)
-        if($password == $row['password']){
+        // Check password (plain text for now)
+        if ($password == $row['password']) {
 
-            $_SESSION['useremail'] = $useremail;
+            $_SESSION['email'] = $email;
 
-            if(str_contains($useremail, "@teacher")){
-                header("Location: teacherHomePage.php");
+            // 🔥 Redirect based on email
+            if (strpos($email, '@student') !== false) {
+                header("Location: student_home.php");
                 exit();
             } 
-            else if(str_contains($useremail, "@student")){
-                header("Location: studentHomePage.php");
+            elseif (strpos($email, '@teacher') !== false) {
+                header("Location: teacher_home.php");
                 exit();
             } 
-            else{
-                die("Invalid email role");
+            else {
+                echo "Invalid email type";
             }
 
         } else {
-            die("Wrong password");
+            echo "Wrong password";
         }
 
     } else {
-        die("User not found");
+        echo "User not found";
     }
 }
 ?>
