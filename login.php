@@ -67,6 +67,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             --shadow:   0 20px 60px rgba(26,60,46,0.18);
         }
 
+        body.dark-mode {
+            --forest:   #0a1f18;
+            --leaf:     #1a4d39;
+            --sage:     #4a9d6f;
+            --cream:    #1a1a1a;
+            --gold:     #d4a574;
+            --gold-lt:  #e8c285;
+            --text:     #e8e8e8;
+            --muted:    #a0b5a0;
+            --white:    #2a2a2a;
+            --shadow:   0 20px 60px rgba(0,0,0,0.5);
+        }
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
@@ -398,6 +411,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             box-shadow: 0 2px 8px rgba(26,60,46,0.12);
         }
 
+        .dark-mode-toggle {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            background: var(--white);
+            border: 1.5px solid var(--muted);
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(26,60,46,0.1);
+        }
+
+        .dark-mode-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(26,60,46,0.15);
+        }
+
+        .dark-mode-toggle svg {
+            width: 24px;
+            height: 24px;
+            color: var(--forest);
+            transition: color 0.3s ease;
+        }
+
         /* animations */
         @keyframes fadeUp {
             from { opacity: 0; transform: translateY(22px); }
@@ -413,6 +456,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     </style>
 </head>
 <body>
+
+<!-- Dark Mode Toggle -->
+<button class="dark-mode-toggle" id="darkModeToggle" title="Toggle dark mode" aria-label="Toggle dark mode">
+    <svg id="sunIcon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+    <svg id="moonIcon" style="display:none;" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+</button>
 
 <!-- ═══ Left Panel ═══ -->
 <div class="panel-left">
@@ -511,6 +564,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 </div>
 
 <script>
+    // Initialize dark mode from localStorage
+    function initDarkMode() {
+        const isDarkMode = localStorage.getItem('darkMode') === 'true';
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+            updateToggleIcon();
+        }
+    }
+
+    function updateToggleIcon() {
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        if (isDark) {
+            sunIcon.style.display = 'none';
+            moonIcon.style.display = 'block';
+        } else {
+            sunIcon.style.display = 'block';
+            moonIcon.style.display = 'none';
+        }
+    }
+
+    // Toggle dark mode
+    document.getElementById('darkModeToggle').addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        const isDarkMode = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDarkMode);
+        updateToggleIcon();
+    });
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', initDarkMode);
+
     function setRole(el) {
         document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
         el.classList.add('active');
