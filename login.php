@@ -68,15 +68,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
 
         body.dark-mode {
-            --forest:   #0a1f18;
-            --leaf:     #1a4d39;
-            --sage:     #4a9d6f;
-            --cream:    #1a1a1a;
-            --gold:     #d4a574;
-            --gold-lt:  #e8c285;
-            --text:     #e8e8e8;
-            --muted:    #a0b5a0;
-            --white:    #2a2a2a;
+            --forest:   #0d2518;
+            --leaf:     #2d6a4f;
+            --sage:     #74c69d;
+            --cream:    #1e2d24;
+            --gold:     #e0a83a;
+            --gold-lt:  #f4c96a;
+            --text:     #eef4f0;
+            --muted:    #c8ddd0;
+            --white:    #ffffff;
             --shadow:   0 20px 60px rgba(0,0,0,0.5);
         }
 
