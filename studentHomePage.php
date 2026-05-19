@@ -15,7 +15,7 @@ pageHead('Student Dashboard');
   <!-- HEADER -->
   <header class="hdr s-hdr">
     <div class="hbrand">
-      <span style="font-size:1.4rem">🍁</span>
+      <img src="maple_wood_logo.png" alt="Maplewood Logo" class="hlogo">
       <h1>Maple<em>wood</em></h1>
     </div>
     <div class="hright">
@@ -93,38 +93,251 @@ pageHead('Student Dashboard');
       </div>
 
       <!-- ── TIMETABLE TAB ── -->
-      <?php elseif ($tab === 'timetable'): ?>
-      <div class="phdr"><h2>My Timetable</h2><p>Year <?= e($user['year']) ?> — Weekly Schedule</p></div>
-      <div class="crd"><div class="tw">
-        <table>
-          <thead><tr>
-            <th>Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th>
-          </tr></thead>
-          <tbody>
-            <?php foreach ($TIMETABLE as $row): ?>
-            <tr>
-              <td class="tcol"><?= e($row['t']) ?></td>
-              <?php foreach ($row['s'] as $s): ?>
-              <?php if ($s==='BREAK'): ?>
-                <td class="cbrk"><i class="fas fa-coffee"></i> Break</td>
-              <?php elseif ($s==='SPORT'): ?>
-                <td class="cspt">🏃 Sport (2hr)</td>
-              <?php else: ?>
-                <td><span class="csub"><?= e($s) ?></span></td>
-              <?php endif; ?>
-              <?php endforeach; ?>
-            </tr>
+<?php elseif ($tab === 'timetable'): ?>
+<?php
+  $yr = (int)$user['year'];
+  if ($yr <= 6)     $yg = '1-6';
+  elseif ($yr <= 9) $yg = '7-9';
+  else              $yg = '10-11';
+?>
+<div class="phdr"><h2>My Timetable</h2><p>Year <?= e($user['year']) ?> — Weekly Schedule</p></div>
+
+<div class="crd">
+  <?php if ($yg === '1-6'): ?>
+  <!-- ════ YEAR 1–6 : 5 periods, 1hr each ════ -->
+  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 12:45 pm &nbsp;·&nbsp; 1 hr classes
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+        <th>8:00–9:00</th>
+        <th>9:00–10:00</th>
+        <th>10:00–10:45<br><span style="font-weight:400;font-size:.65rem">(Break 45 min)</span></th>
+        <th>10:45–11:45</th>
+        <th>11:45–12:45</th>
+      </tr></thead>
+      <tbody>
+        <?php foreach ($TIMETABLE as $row):
+          $periods    = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5']];
+          $is_sport   = (bool)$row['sport_day'];
+        ?>
+        <tr>
+          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+            <?= e($row['day']) ?>
+          </td>
+          <?php if ($is_sport): ?>
+            <td colspan="2" style="padding:4px">
+              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                ⚽ Sport Session (2 hrs)
+              </div>
+            </td>
+            <td style="padding:4px">
+              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                Break (45 min)
+              </div>
+            </td>
+            <?php foreach (array_slice($periods, 3) as $p): ?>
+            <td style="padding:4px">
+              <div style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                <?= e($p) ?>
+              </div>
+            </td>
             <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div></div>
-      <div class="crd" style="padding:1.1rem 1.25rem">
-        <div style="display:flex;gap:1.5rem;font-size:.8rem;flex-wrap:wrap">
-          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(45,106,79,.08);border-radius:2px;margin-right:5px"></span>Regular Class</span>
-          <span><span style="display:inline-block;width:10px;height:10px;background:rgba(212,168,71,.12);border-radius:2px;margin-right:5px"></span>Sport (2hr)</span>
-          <span style="color:var(--MT);font-style:italic"><i class="fas fa-coffee" style="margin-right:5px"></i>Break</span>
-        </div>
+          <?php else: ?>
+            <?php foreach ($periods as $idx => $p): ?>
+              <?php if ($p === 'BREAK'): ?>
+              <td style="padding:4px">
+                <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                  Break (45 min)
+                </div>
+              </td>
+              <?php else: ?>
+              <td style="padding:4px">
+                <div style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                  <?= e($p) ?>
+                </div>
+              </td>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:rgba(45,106,79,.08);border-radius:3px"></span>Class (1 hr)</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Monday</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (45 min)</span>
+  </div>
+
+  <?php elseif ($yg === '7-9'): ?>
+  <!-- ════ YEAR 7–9 : 7 periods, 45min, sport Tuesday ════ -->
+  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport: Tuesday
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+        <th>8:00–8:45</th>
+        <th>8:45–9:30</th>
+        <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+        <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
+        <th>11:00–11:45</th>
+        <th>11:45–12:30</th>
+        <th>12:30–1:15</th>
+        <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+      </tr></thead>
+      <tbody>
+        <?php foreach ($TIMETABLE as $row):
+          $periods  = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5'],$row['p6'],$row['p7']];
+          $is_sport = (bool)$row['sport_day'];
+        ?>
+        <tr>
+          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+            <?= e($row['day']) ?>
+          </td>
+          <?php if ($is_sport): ?>
+            <td colspan="2" style="padding:4px">
+              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                ⚽ Sport (2 hrs)
+              </div>
+            </td>
+            <td colspan="2" style="padding:4px">
+              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                Break (1 hr 30 min)
+              </div>
+            </td>
+            <?php foreach (array_slice($periods, 3) as $p): ?>
+            <td style="padding:4px">
+              <div style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                <?= e($p) ?>
+              </div>
+            </td>
+            <?php endforeach; ?>
+          <?php else: ?>
+           <?php foreach ($periods as $idx => $p): ?>
+  <?php if ($idx === 3): // inject BREAK before p4 ?>
+    <td style="padding:4px">
+      <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+        Break (1 hr)
       </div>
+    </td>
+  <?php endif; ?>
+
+  <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+  <td style="padding:4px">
+    <div style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+      <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
+    </div>
+  </td>
+  <?php else: ?>
+  <td style="padding:4px">
+    <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+      <?= e($p) ?>
+    </div>
+  </td>
+  <?php endif; ?>
+<?php endforeach; ?>
+          <?php endif; ?>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#dbeafe;border-radius:3px"></span>Class (45 min)</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short period (30 min)</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Tuesday</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1 hr)</span>
+  </div>
+
+  <?php else: ?>
+  <!-- ════ YEAR 10–11 : 7 periods, 45min, sport Friday ════ -->
+  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport: Friday
+  </div>
+  <div class="tw">
+    <table>
+      <thead><tr>
+        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+        <th>8:00–8:45</th>
+        <th>8:45–9:30</th>
+        <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+        <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
+        <th>11:00–11:45</th>
+        <th>11:45–12:30</th>
+        <th>12:30–1:15</th>
+        <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+      </tr></thead>
+      <tbody>
+        <?php foreach ($TIMETABLE as $row):
+          $periods  = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5'],$row['p6'],$row['p7']];
+          $is_sport = (bool)$row['sport_day'];
+        ?>
+        <tr>
+          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+            <?= e($row['day']) ?>
+          </td>
+          <?php if ($is_sport): ?>
+            <td colspan="2" style="padding:4px">
+              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                ⚽ Sport (2 hrs)
+              </div>
+            </td>
+            <td colspan="2" style="padding:4px">
+              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                Break (1 hr 30 min)
+              </div>
+            </td>
+            <?php foreach (array_slice($periods, 3) as $p): ?>
+            <td style="padding:4px">
+              <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                <?= e($p) ?>
+              </div>
+            </td>
+            <?php endforeach; ?>
+          <?php else: ?>
+           <?php foreach ($periods as $idx => $p): ?>
+  <?php if ($idx === 3): // inject BREAK before p4 ?>
+    <td style="padding:4px">
+      <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+        Break (1 hr)
+      </div>
+    </td>
+  <?php endif; ?>
+
+  <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+  <td style="padding:4px">
+    <div style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+      <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
+    </div>
+  </td>
+  <?php else: ?>
+  <td style="padding:4px">
+    <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+      <?= e($p) ?>
+    </div>
+  </td>
+  <?php endif; ?>
+<?php endforeach; ?>
+ <?php endif; ?>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:rgba(212,168,71,.15);border-radius:3px"></span>Class (45 min)</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short period (30 min)</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Friday</span>
+    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1 hr)</span>
+  </div>
+  <?php endif; ?>
+</div>
 
       <!-- ── HOMEWORK TAB ── -->
       <?php elseif ($tab === 'homework'): ?>

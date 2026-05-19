@@ -19,11 +19,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'save_schedule') {
         flash('toast', 'Schedule saved successfully.');
     } elseif ($action === 'save_timetable') {
+        $row_ids    = $_POST['row_ids']    ?? [];
+        $slots      = $_POST['slots']      ?? [];
+        $sport_days = $_POST['sport_days'] ?? [];
+        $tt_group   = $_POST['tt_group']   ?? '10-11';
+
+        // Number of editable columns per group (BREAK/SPORT cells send hidden values too)
+        $col_count = ($tt_group === '1-6') ? 5 : 7;
+
+        $slot_idx = 0;
+        foreach ($row_ids as $rid) {
+            $rid      = (int)$rid;
+            $is_sport = in_array((string)$rid, $sport_days) ? 1 : 0;
+            $p = [];
+            for ($x = 0; $x < $col_count; $x++) {
+                $p[] = "'" . $conn->real_escape_string($slots[$slot_idx++] ?? '') . "'";
+            }
+
+            if ($tt_group === '1-6') {
+                $conn->query("UPDATE timetable SET
+                    p1={$p[0]}, p2={$p[1]}, p3={$p[2]}, p4={$p[3]}, p5={$p[4]},
+                    sport_day=$is_sport
+                    WHERE id=$rid");
+            } else {
+                $conn->query("UPDATE timetable SET
+                    p1={$p[0]}, p2={$p[1]}, p3={$p[2]}, p4={$p[3]},
+                    p5={$p[4]}, p6={$p[5]}, p7={$p[6]},
+                    sport_day=$is_sport
+                    WHERE id=$rid");
+            }
+        }
         flash('toast', 'Timetable saved successfully.');
     } elseif ($action === 'send_invoice') {
         flash('toast', 'Invoice sent to ' . ($_POST['student'] ?? 'student') . '.');
     }
-    redirect("dashboard.php?tab={$tab}");
+    $return_url = "teacherHomePage.php?tab={$tab}";
+    if (!empty($_POST['tt_year'])) {
+        $return_url .= '&year=' . (int)$_POST['tt_year'];
+    }
+    redirect($return_url);
 }
 
 $toast = flash('toast');
@@ -33,7 +67,7 @@ pageHead('Teacher Dashboard');
   <!-- HEADER -->
   <header class="hdr t-hdr">
     <div class="hbrand">
-      <span style="font-size:1.4rem">🍁</span>
+      <img src="maple_wood_logo.png" alt="Maplewood Logo" class="hlogo">
       <h1>Maple<em>wood</em></h1>
       <span class="abadge">Admin</span>
     </div>
@@ -98,47 +132,120 @@ pageHead('Teacher Dashboard');
         </form>
       </div>
 
-      <!-- ── TIMETABLE EDITOR ── -->
-      <?php elseif ($tab === 'timetable'): ?>
-      <div class="phdr"><h2>Timetable Editor</h2><p>Edit subject slots — changes reflect in student view</p></div>
-      <div style="display:flex;gap:.75rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
-        <select style="padding:.38rem .75rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
-          <?php foreach ([7,8,9,10,11] as $y): ?>
-          <option <?= $y===10?'selected':'' ?>>Year <?= $y ?></option>
+     <!-- ── TIMETABLE EDITOR ── -->
+<?php elseif ($tab === 'timetable'): ?>
+<?php
+  $tt_year = (int)($_GET['year'] ?? 10);
+  if ($tt_year <= 6)      $tt_group = '1-6';
+  elseif ($tt_year <= 9)  $tt_group = '7-9';
+  else                    $tt_group = '10-11';
+
+  $tt_rows = [];
+  $res = $conn->query(
+      "SELECT * FROM timetable
+       WHERE year = $tt_year AND year_group = '$tt_group'
+       ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
+  );
+  if ($res) while ($r = $res->fetch_assoc()) $tt_rows[] = $r;
+
+  // Column headers per group
+  if ($tt_group === '1-6') {
+      $headers = ['8:00–9:00','9:00–10:00','10:00–10:45 (Break)','10:45–11:45','11:45–12:45'];
+      $cols    = ['p1','p2','p3','p4','p5'];
+  } else {
+      $headers = ['8:00–8:45','8:45–9:30','9:30–10:00 (30min)','10:00–11:00 (Break)','11:00–11:45','11:45–12:30','12:30–1:15','1:15–1:45 (30min)'];
+      $cols    = ['p1','p2','p3','p4','p5','p6','p7'];
+  }
+?>
+<div class="phdr"><h2>Timetable Editor</h2><p>Edit subject slots — changes reflect in student view instantly</p></div>
+
+<div style="display:flex;gap:.75rem;margin-bottom:1.2rem;align-items:center;flex-wrap:wrap">
+  <form method="GET">
+    <input type="hidden" name="tab" value="timetable">
+    <select name="year" onchange="this.form.submit()"
+      style="padding:.38rem .75rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;background:#fff">
+      <?php foreach (range(1,11) as $y): ?>
+      <option value="<?= $y ?>" <?= $y===$tt_year?'selected':'' ?>>Year <?= $y ?></option>
+      <?php endforeach; ?>
+    </select>
+  </form>
+  <span style="font-size:.75rem;color:var(--MT)">
+    Group: <strong><?= $tt_group ?></strong> —
+    <?php if ($tt_group==='1-6') echo '5 periods · 1 hr each · 8:00–12:45';
+    else echo '7 periods · 45 min each · 8:00–1:45'; ?>
+  </span>
+</div>
+
+<?php if (empty($tt_rows)): ?>
+<div class="crd" style="padding:2rem;text-align:center;color:var(--MT)">
+  <i class="fas fa-calendar-times" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
+  No timetable found for Year <?= $tt_year ?>. Add rows to the database first.
+</div>
+<?php else: ?>
+<div class="crd">
+  <form method="POST">
+    <input type="hidden" name="action" value="save_timetable">
+    <input type="hidden" name="tt_year" value="<?= $tt_year ?>">
+    <input type="hidden" name="tt_group" value="<?= $tt_group ?>">
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;padding-left:1rem;min-width:110px">Day</th>
+            <?php foreach ($headers as $h): ?>
+            <th style="font-size:.68rem"><?= $h ?></th>
+            <?php endforeach; ?>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($tt_rows as $row): ?>
+          <input type="hidden" name="row_ids[]" value="<?= $row['id'] ?>">
+          <tr>
+            <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+              <?= e($row['day']) ?>
+              <label style="display:flex;align-items:center;gap:.3rem;font-size:.68rem;font-weight:500;margin-top:.3rem;cursor:pointer;color:var(--P)">
+                <input type="checkbox" name="sport_days[]" value="<?= $row['id'] ?>" <?= $row['sport_day']?'checked':'' ?>>
+                Sport day
+              </label>
+            </td>
+            <?php foreach ($cols as $idx => $col): ?>
+              <?php if ($tt_group !== '1-6' && $idx === 3): ?>
+                <td style="background:#f3f4f6;text-align:center;font-size:.72rem;color:var(--MT);padding:4px">
+                  Break<input type="hidden" name="slots[]" value="BREAK">
+                </td>
+              <?php endif; ?>
+              <?php $val = $row[$col] ?? ''; ?>
+              <?php if ($val === 'BREAK'): ?>
+                <td style="background:#f9f6f0;text-align:center;font-size:.72rem;color:var(--MT);padding:4px">
+                  Break<input type="hidden" name="slots[]" value="BREAK">
+                </td>
+              <?php elseif ($val === 'SPORT'): ?>
+                <td style="background:#fef9e7;text-align:center;font-size:.72rem;color:#92400e;padding:4px">
+                  ⚽ Sport<input type="hidden" name="slots[]" value="SPORT">
+                </td>
+              <?php else: ?>
+                <td style="padding:3px">
+                  <input class="einput" type="text" name="slots[]" value="<?= e($val) ?>"
+                    style="min-width:70px">
+                </td>
+              <?php endif; ?>
+            <?php endforeach; ?>
+          </tr>
           <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="crd">
-        <form method="POST">
-          <input type="hidden" name="action" value="save_timetable">
-          <div class="tw">
-            <table>
-              <thead><tr>
-                <th>Time</th><th>Monday</th><th>Tuesday</th><th>Wednesday</th><th>Thursday</th><th>Friday</th>
-              </tr></thead>
-              <tbody>
-                <?php foreach ($TIMETABLE as $row): ?>
-                <tr>
-                  <td class="tcol"><?= e($row['t']) ?></td>
-                  <?php foreach ($row['s'] as $s): ?>
-                    <?php if ($s==='BREAK'): ?>
-                      <td class="cbrk">Break</td>
-                    <?php elseif ($s==='SPORT'): ?>
-                      <td class="cspt">🏃 Sport</td>
-                    <?php else: ?>
-                      <td><input class="einput" type="text" name="slots[]" value="<?= e($s) ?>"></td>
-                    <?php endif; ?>
-                  <?php endforeach; ?>
-                </tr>
-                <?php endforeach; ?>
-              </tbody>
-            </table>
-          </div>
-          <div style="padding:1rem 1.25rem">
-            <button type="submit" class="bsm bpr"><i class="fas fa-save"></i> Save Timetable</button>
-          </div>
-        </form>
-      </div>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:1rem 1.25rem;display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;border-top:1.5px solid var(--W)">
+      <button type="submit" class="bsm bpr"><i class="fas fa-save"></i> Save Timetable</button>
+      <span style="font-size:.75rem;color:var(--MT)">
+        <i class="fas fa-info-circle"></i>
+        Type <strong>BREAK</strong> or <strong>SPORT</strong> (uppercase) to set special cells.
+        Tick "Sport day" to auto-mark the row.
+      </span>
+    </div>
+  </form>
+</div>
+<?php endif; ?>
 
       <!-- ── GRADES ── -->
       <?php elseif ($tab === 'grades'): ?>

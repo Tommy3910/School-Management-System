@@ -1,6 +1,9 @@
 <?php
 session_start();
 
+// DB connection MUST be first
+$conn = mysqli_connect("localhost", "root", "", "rad_project");
+
 // ── Helpers ──────────────────────────────────────────────
 function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
 
@@ -37,15 +40,27 @@ $COURSES = [
     ['code'=>'AR108',  'name'=>'Art',               'icon'=>'🎨', 'pct'=>88],
 ];
 
-$TIMETABLE = [
-    ['t'=>'7:30–8:30',  's'=>['BM','Math','Science','English','History']],
-    ['t'=>'8:30–9:30',  's'=>['Math','BM','English','Science','Geography']],
-    ['t'=>'9:30–10:30', 's'=>['English','Science','BM','Math','SPORT']],
-    ['t'=>'10:30–11:00','s'=>['BREAK','BREAK','BREAK','BREAK','SPORT']],
-    ['t'=>'11:00–12:00','s'=>['History','Geography','Math','BM','—']],
-    ['t'=>'12:00–13:00','s'=>['Geography','English','History','Geography','—']],
-];
+// ── Load timetable from DB ──────────────────────────
+$TIMETABLE = [];
+$TT_GROUP  = '10-11'; // default
 
+if (isset($_SESSION['user']['year'])) {
+    $yr = (int)$_SESSION['user']['year'];
+    if ($yr <= 6)      $TT_GROUP = '1-6';
+    elseif ($yr <= 9)  $TT_GROUP = '7-9';
+    else               $TT_GROUP = '10-11';
+
+    $tt_res = $conn->query(
+        "SELECT * FROM timetable
+         WHERE year = $yr AND year_group = '$TT_GROUP'
+         ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
+    );
+    if ($tt_res) {
+        while ($r = $tt_res->fetch_assoc()) {
+            $TIMETABLE[] = $r;
+        }
+    }
+}
 $HOMEWORK = [
     ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
     ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
@@ -56,9 +71,9 @@ $HOMEWORK = [
 ];
 
 $PAYMENTS = [
-    ['date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['date'=>'1 Apr 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['date'=>'1 Mar 2024', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
+    ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Siti Aminah', 'year'=>10, 'date'=>'1 Apr 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Rajan Kumar', 'year'=>11, 'date'=>'1 Mar 2024', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
 ];
 
 // ── Teacher data ──────────────────────────────────────────

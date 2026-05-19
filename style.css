@@ -80,6 +80,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--G);color:var(--
 /* ── DASHBOARD HEADER ── */
 .hdr{height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 1.75rem;position:sticky;top:0;z-index:200;box-shadow:0 1px 0 rgba(0,0,0,.1)}
 .hbrand{display:flex;align-items:center;gap:.6rem}
+.hbrand .hlogo{width:34px;height:34px;object-fit:contain;border-radius:8px;background:#fff;padding:4px}
 .hbrand h1{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:#fff}
 .hbrand h1 em{color:var(--O);font-style:italic}
 .hright{display:flex;align-items:center;gap:.875rem}
