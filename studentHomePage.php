@@ -1,6 +1,6 @@
 <?php
-require_once '../config.php';
-require_once '../layout.php';
+require_once '../School-Management-System/config.php';
+require_once '../School-Management-System/layout.php';
 requireAuth('student');
 
 $user = $_SESSION['user'];

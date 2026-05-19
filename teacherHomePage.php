@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/layout.php';
+require_once '../School-Management-System/config.php';
+require_once '../School-Management-System/layout.php';
 requireAuth('teacher');
 
 $user = $_SESSION['user'];
