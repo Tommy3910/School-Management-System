@@ -1,6 +1,6 @@
 <?php
-require_once '../School-Management-System/config.php';
-require_once '../School-Management-System/layout.php';
+require_once 'config.php';
+require_once 'layout.php';
 requireAuth('student');
 
 $user = $_SESSION['user'];
@@ -11,7 +11,7 @@ $toast = flash('toast');
 
 pageHead('Student Dashboard');
 ?>
-a<div id="student">
+<div id="student">
   <!-- HEADER -->
   <header class="hdr s-hdr">
     <div class="hbrand">
@@ -23,7 +23,7 @@ a<div id="student">
         <div class="av"><?= e(strtoupper(substr($user['name'],0,1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
       </div>
-      <a href="../logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
   </header>
 

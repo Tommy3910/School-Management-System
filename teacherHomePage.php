@@ -1,6 +1,6 @@
 <?php
-require_once '../School-Management-System/config.php';
-require_once '../School-Management-System/layout.php';
+require_once 'config.php';
+require_once 'layout.php';
 requireAuth('teacher');
 
 $user = $_SESSION['user'];
@@ -39,7 +39,7 @@ pageHead('Teacher Dashboard');
     </div>
     <div class="hright">
       <span style="color:rgba(255,255,255,.75);font-size:.8rem"><i class="fas fa-chalkboard-teacher"></i> <?= e($user['name']) ?></span>
-      <a href="../logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
     </div>
   </header>
 
