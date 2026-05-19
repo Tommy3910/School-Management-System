@@ -8,9 +8,9 @@ $error = '';
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     $email    = $_POST['email']    ?? '';
-    $password = $_POST['password'] ?? '';   // ← lowercase, matches input name
+    $password = $_POST['password'] ?? '';
 
-    if (empty($email) || empty($password)) {  // ← lowercase $password
+    if (empty($email) || empty($password)) {
         $error = "Please fill all fields";
     } else {
         $stmt = $conn->prepare("SELECT * FROM users WHERE useremail = ?");
@@ -18,12 +18,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $stmt->execute();
         $result = $stmt->get_result();
 
-        if ($result->num_rows == 1) {               // ← fetch once only
+        if ($result->num_rows == 1) {
             $row = $result->fetch_assoc();
 
-            if ($password == $row['PASSWORD']) {    // plain text check
-                $_SESSION['useremail'] = $email;
-                $_SESSION['role']      = $row['role'];
+            if ($password == $row['PASSWORD']) {
+                $_SESSION['user'] = [
+                    'role'  => $row['role'],
+                    'name'  => $row['name'],
+                    'email' => $row['useremail'],
+                    'year'  => $row['year'],
+                ];
 
                 switch ($row['role']) {
                     case 'student':
