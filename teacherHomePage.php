@@ -4,7 +4,7 @@ require_once 'layout.php';
 requireAuth('teacher');
 
 $user = $_SESSION['user'];
-$tab  = $_GET['tab'] ?? 'schedules';
+$tab  = $_REQUEST['tab'] ?? 'schedules';
 
 // Handle homework approve/mark-missing POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -50,10 +50,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
         flash('toast', 'Timetable saved successfully.');
+    } elseif ($action === 'add_subject') {
+        $name = trim($_POST['subj_name'] ?? '');
+        $yg   = trim($_POST['yg'] ?? '');
+        if ($name !== '' && $yg !== '') {
+            $nameEsc = $conn->real_escape_string($name);
+            $ygEsc   = $conn->real_escape_string($yg);
+            $conn->query("INSERT INTO subjects (name, year_group) VALUES ('$nameEsc','$ygEsc')");
+            flash('toast', 'Subject added to Year Group ' . e($yg) . '.');
+        } else {
+            flash('toast', 'Please enter a valid subject name.');
+        }
+    } elseif ($action === 'remove_subject') {
+        $subj_id = (int)($_POST['subj_id'] ?? 0);
+        if ($subj_id > 0) {
+            $conn->query("DELETE FROM subjects WHERE id=$subj_id");
+            flash('toast', 'Subject removed.');
+        }
+    } elseif ($action === 'save_grades') {
+        $gyear = (int)($_POST['gyear'] ?? 0);
+        $gterm = $conn->real_escape_string($_POST['gterm'] ?? 'Term 1');
+        $student_ids = $_POST['student_ids'] ?? [];
+        $subject_ids = $_POST['subject_ids'] ?? [];
+        $marks = $_POST['marks'] ?? [];
+        foreach ($student_ids as $idx => $sid) {
+            $student_id = (int)$sid;
+            $subject_id = (int)($subject_ids[$idx] ?? 0);
+            $mark = isset($marks[$idx]) ? floatval($marks[$idx]) : null;
+            if ($student_id > 0 && $subject_id > 0 && $mark !== null) {
+                $grade = calcGrade($mark, 100);
+                $markVal = $conn->real_escape_string((string)$mark);
+                $conn->query("INSERT INTO grades (student_id, subject_id, year, term, marks, grade)
+                    VALUES ($student_id, $subject_id, $gyear, '$gterm', $markVal, '$grade')
+                    ON DUPLICATE KEY UPDATE marks=$markVal, grade='$grade'");
+            }
+        }
+        flash('toast', 'Grades saved and notifications queued.');
     } elseif ($action === 'send_invoice') {
         flash('toast', 'Invoice sent to ' . ($_POST['student'] ?? 'student') . '.');
     }
     $return_url = "teacherHomePage.php?tab={$tab}";
+    if ($tab === 'grades') {
+        $return_url .= '&gyear=' . ((int)($_POST['gyear'] ?? $_GET['gyear'] ?? 10));
+        $return_url .= '&gterm=' . urlencode($_POST['gterm'] ?? $_GET['gterm'] ?? 'Term 1');
+        $return_url .= '&gsub=' . urlencode($_POST['gsub'] ?? $_GET['gsub'] ?? 'grade');
+    }
     if (!empty($_POST['tt_year'])) {
         $return_url .= '&year=' . (int)$_POST['tt_year'];
     }
@@ -253,6 +294,7 @@ pageHead('Teacher Dashboard');
   $grade_year  = (int)($_GET['gyear'] ?? 10);
   $grade_term  = $_GET['gterm'] ?? 'Term 1';
   $grade_subTab = $_GET['gsub'] ?? 'grade'; // 'grade' or 'subjects'
+  $grade_subject_id = (int)($_REQUEST['gsubj'] ?? 0);
   $terms        = ['Term 1','Term 2','Term 3'];
 
   if ($grade_year <= 6)      $grade_yg = '1-6';
@@ -260,9 +302,27 @@ pageHead('Teacher Dashboard');
   else                       $grade_yg = '10-11';
 
   // Fetch subjects for this year group
-  $subj_res = $conn->query("SELECT * FROM subjects WHERE year_group='$grade_yg' ORDER BY name");
+  $grade_yg_esc = $conn->real_escape_string($grade_yg);
+  $subj_res = $conn->query(
+      "SELECT * FROM subjects WHERE year_group='$grade_yg_esc' OR year_group = REPLACE('$grade_yg_esc','-',',') ORDER BY name"
+  );
   $subjects  = [];
   if ($subj_res) while ($r = $subj_res->fetch_assoc()) $subjects[] = $r;
+
+  if (!empty($subjects)) {
+      $subjectIds = array_map('intval', array_column($subjects, 'id'));
+      if (!in_array($grade_subject_id, $subjectIds, true)) {
+          $grade_subject_id = (int)$subjects[0]['id'];
+      }
+  }
+
+  $selected_subject = null;
+  foreach ($subjects as $s) {
+      if ((int)$s['id'] === $grade_subject_id) {
+          $selected_subject = $s;
+          break;
+      }
+  }
 
   // Fetch students for this year
   $stud_res = $conn->query("SELECT * FROM users WHERE role='student' AND year=$grade_year ORDER BY name");
@@ -273,11 +333,12 @@ pageHead('Teacher Dashboard');
   $existing = [];
   if (!empty($students) && !empty($subjects)) {
       $gt = $conn->real_escape_string($grade_term);
+      $subjectFilter = $grade_subject_id ? " AND g.subject_id = $grade_subject_id" : '';
       $gr = $conn->query(
           "SELECT g.*, s.name AS subject_name
            FROM grades g
            JOIN subjects s ON g.subject_id = s.id
-           WHERE g.year = $grade_year AND g.term = '$gt'"
+           WHERE g.year = $grade_year AND g.term = '$gt'" . $subjectFilter
       );
       if ($gr) while ($r = $gr->fetch_assoc())
           $existing[$r['student_id']][$r['subject_id']] = $r;
@@ -305,10 +366,18 @@ pageHead('Teacher Dashboard');
       <option <?= $t===$grade_term?'selected':'' ?>><?= e($t) ?></option>
       <?php endforeach; ?>
     </select>
+    <?php if ($grade_subTab === 'grade' && !empty($subjects)): ?>
+    <select name="gsubj" onchange="this.form.submit()"
+      style="padding:.38rem .75rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;background:#fff">
+      <?php foreach ($subjects as $s): ?>
+      <option value="<?= $s['id'] ?>" <?= ((int)$s['id'] === $grade_subject_id) ? 'selected' : '' ?>><?= e($s['name']) ?></option>
+      <?php endforeach; ?>
+    </select>
+    <?php endif; ?>
   </form>
 
   <!-- Sub-tabs -->
-  <a href="?tab=grades&gyear=<?= $grade_year ?>&gterm=<?= urlencode($grade_term) ?>&gsub=grade"
+  <a href="?tab=grades&gyear=<?= $grade_year ?>&gterm=<?= urlencode($grade_term) ?>&gsub=grade&gsubj=<?= $grade_subject_id ?>"
     style="padding:.38rem .9rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
     background:<?= $grade_subTab!=='subjects'?'var(--P)':'#fff' ?>;color:<?= $grade_subTab!=='subjects'?'#fff':'var(--F)' ?>">
     <i class="fas fa-pen"></i> Grade Students
@@ -330,6 +399,8 @@ pageHead('Teacher Dashboard');
     <!-- Add subject form -->
     <form method="POST" style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap">
       <input type="hidden" name="action" value="add_subject">
+      <input type="hidden" name="tab" value="grades">
+      <input type="hidden" name="gsub" value="subjects">
       <input type="hidden" name="gyear"  value="<?= $grade_year ?>">
       <input type="hidden" name="gterm"  value="<?= e($grade_term) ?>">
       <input type="hidden" name="yg"     value="<?= e($grade_yg) ?>">
@@ -372,7 +443,7 @@ pageHead('Teacher Dashboard');
   <i class="fas fa-users" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
   No students found for Year <?= $grade_year ?>.
 </div>
-<?php elseif (empty($subjects)): ?>
+<?php elseif (empty($subjects) || !$selected_subject): ?>
 <div class="crd" style="padding:2rem;text-align:center;color:var(--MT)">
   <i class="fas fa-list" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
   No subjects set up for Year Group <?= e($grade_yg) ?>. Go to <strong>Manage Subjects</strong> first.
@@ -380,11 +451,14 @@ pageHead('Teacher Dashboard');
 <?php else: ?>
 <form method="POST">
   <input type="hidden" name="action"  value="save_grades">
+  <input type="hidden" name="tab"     value="grades">
+  <input type="hidden" name="gsub"    value="grade">
+  <input type="hidden" name="gsubj"   value="<?= $grade_subject_id ?>">
   <input type="hidden" name="gyear"   value="<?= $grade_year ?>">
   <input type="hidden" name="gterm"   value="<?= e($grade_term) ?>">
   <div class="crd">
     <div class="crdhdr">
-      <h3><i class="fas fa-pen"></i>&nbsp; Year <?= $grade_year ?> — <?= e($grade_term) ?></h3>
+      <h3><i class="fas fa-pen"></i>&nbsp; Year <?= $grade_year ?> — <?= e($grade_term) ?> — <?= e($selected_subject['name']) ?></h3>
       <button type="submit" class="bsm bpr"><i class="fas fa-save"></i> Save & Notify Students</button>
     </div>
     <div class="tw">
@@ -392,28 +466,25 @@ pageHead('Teacher Dashboard');
         <thead>
           <tr>
             <th style="text-align:left;padding-left:1rem;min-width:140px">Student</th>
-            <?php foreach ($subjects as $s): ?>
-            <th style="min-width:110px"><?= e($s['name']) ?><br>
+            <th style="min-width:160px"><?= e($selected_subject['name']) ?><br>
               <span style="font-weight:400;font-size:.65rem;color:var(--MT)">Marks / 100</span>
             </th>
-            <?php endforeach; ?>
           </tr>
         </thead>
         <tbody>
-          <?php foreach ($students as $st): ?>
+          <?php foreach ($students as $st):
+            $existing_grade = $existing[$st['id']][$grade_subject_id] ?? null;
+            $existing_marks = $existing_grade ? $existing_grade['marks'] : '';
+            $existing_letter = $existing_grade ? $existing_grade['grade'] : '';
+          ?>
           <tr>
             <td style="font-weight:600;background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem">
               <div><?= e($st['name']) ?></div>
               <div style="font-size:.7rem;color:var(--MT)">Year <?= $st['year'] ?></div>
             </td>
-            <?php foreach ($subjects as $s):
-              $existing_grade = $existing[$st['id']][$s['id']] ?? null;
-              $existing_marks = $existing_grade ? $existing_grade['marks'] : '';
-              $existing_letter = $existing_grade ? $existing_grade['grade'] : '';
-            ?>
             <td style="padding:4px;text-align:center">
               <input type="hidden" name="student_ids[]" value="<?= $st['id'] ?>">
-              <input type="hidden" name="subject_ids[]" value="<?= $s['id'] ?>">
+              <input type="hidden" name="subject_ids[]" value="<?= $grade_subject_id ?>">
               <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
                 <input type="number" name="marks[]"
                   value="<?= $existing_marks ?>"
@@ -428,7 +499,6 @@ pageHead('Teacher Dashboard');
                 </span>
               </div>
             </td>
-            <?php endforeach; ?>
           </tr>
           <?php endforeach; ?>
         </tbody>
