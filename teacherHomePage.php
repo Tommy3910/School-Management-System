@@ -247,36 +247,242 @@ pageHead('Teacher Dashboard');
 </div>
 <?php endif; ?>
 
-      <!-- ── GRADES ── -->
-      <?php elseif ($tab === 'grades'): ?>
-      <div class="phdr"><h2>Student Grades</h2><p>Academic performance overview</p></div>
-      <div class="srow">
-        <div class="sc"><div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-trophy"></i></div><div class="sv">2</div><div class="sl">Grade A</div></div>
-        <div class="sc"><div class="sico" style="background:rgba(45,106,79,.1);color:var(--S)"><i class="fas fa-thumbs-up"></i></div><div class="sv">3</div><div class="sl">Grade B</div></div>
-        <div class="sc"><div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-exclamation"></i></div><div class="sv">1</div><div class="sl">Needs Help</div></div>
-        <div class="sc"><div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i></div><div class="sv">76%</div><div class="sl">Class Avg</div></div>
-      </div>
-      <div class="crd">
-        <div class="crdhdr"><h3><i class="fas fa-user-graduate"></i>&nbsp; All Students</h3>
-          <a href="?tab=grades" class="bsm bpr"><i class="fas fa-download"></i> Export</a>
+      <!-- ── GRADES TAB (Teacher) ── -->
+<?php elseif ($tab === 'grades'): ?>
+<?php
+  $grade_year  = (int)($_GET['gyear'] ?? 10);
+  $grade_term  = $_GET['gterm'] ?? 'Term 1';
+  $grade_subTab = $_GET['gsub'] ?? 'grade'; // 'grade' or 'subjects'
+  $terms        = ['Term 1','Term 2','Term 3'];
+
+  if ($grade_year <= 6)      $grade_yg = '1-6';
+  elseif ($grade_year <= 9)  $grade_yg = '7-9';
+  else                       $grade_yg = '10-11';
+
+  // Fetch subjects for this year group
+  $subj_res = $conn->query("SELECT * FROM subjects WHERE year_group='$grade_yg' ORDER BY name");
+  $subjects  = [];
+  if ($subj_res) while ($r = $subj_res->fetch_assoc()) $subjects[] = $r;
+
+  // Fetch students for this year
+  $stud_res = $conn->query("SELECT * FROM users WHERE role='student' AND year=$grade_year ORDER BY name");
+  $students  = [];
+  if ($stud_res) while ($r = $stud_res->fetch_assoc()) $students[] = $r;
+
+  // Fetch existing grades
+  $existing = [];
+  if (!empty($students) && !empty($subjects)) {
+      $gt = $conn->real_escape_string($grade_term);
+      $gr = $conn->query(
+          "SELECT g.*, s.name AS subject_name
+           FROM grades g
+           JOIN subjects s ON g.subject_id = s.id
+           WHERE g.year = $grade_year AND g.term = '$gt'"
+      );
+      if ($gr) while ($r = $gr->fetch_assoc())
+          $existing[$r['student_id']][$r['subject_id']] = $r;
+  }
+?>
+
+<div class="phdr"><h2>Student Grades</h2><p>Manage and release grades to students</p></div>
+
+<!-- Controls row -->
+<div style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+  <!-- Year selector -->
+  <form method="GET" style="display:flex;gap:.5rem;align-items:center">
+    <input type="hidden" name="tab"  value="grades">
+    <input type="hidden" name="gsub" value="<?= e($grade_subTab ?? 'grade') ?>">
+    <select name="gyear" onchange="this.form.submit()"
+      style="padding:.38rem .75rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;background:#fff">
+      <?php foreach (range(1,11) as $y): ?>
+      <option value="<?= $y ?>" <?= $y===$grade_year?'selected':'' ?>>Year <?= $y ?></option>
+      <?php endforeach; ?>
+    </select>
+    <!-- Term selector -->
+    <select name="gterm" onchange="this.form.submit()"
+      style="padding:.38rem .75rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;background:#fff">
+      <?php foreach ($terms as $t): ?>
+      <option <?= $t===$grade_term?'selected':'' ?>><?= e($t) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </form>
+
+  <!-- Sub-tabs -->
+  <a href="?tab=grades&gyear=<?= $grade_year ?>&gterm=<?= urlencode($grade_term) ?>&gsub=grade"
+    style="padding:.38rem .9rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
+    background:<?= $grade_subTab!=='subjects'?'var(--P)':'#fff' ?>;color:<?= $grade_subTab!=='subjects'?'#fff':'var(--F)' ?>">
+    <i class="fas fa-pen"></i> Grade Students
+  </a>
+  <a href="?tab=grades&gyear=<?= $grade_year ?>&gterm=<?= urlencode($grade_term) ?>&gsub=subjects"
+    style="padding:.38rem .9rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
+    background:<?= $grade_subTab==='subjects'?'var(--P)':'#fff' ?>;color:<?= $grade_subTab==='subjects'?'#fff':'var(--F)' ?>">
+    <i class="fas fa-list"></i> Manage Subjects
+  </a>
+</div>
+
+<?php if ($grade_subTab === 'subjects'): ?>
+<!-- ── MANAGE SUBJECTS ── -->
+<div class="crd">
+  <div class="crdhdr">
+    <h3><i class="fas fa-list"></i>&nbsp; Subjects for Year Group <?= e($grade_yg) ?></h3>
+  </div>
+  <div style="padding:1.1rem 1.25rem">
+    <!-- Add subject form -->
+    <form method="POST" style="display:flex;gap:.6rem;margin-bottom:1.2rem;flex-wrap:wrap">
+      <input type="hidden" name="action" value="add_subject">
+      <input type="hidden" name="gyear"  value="<?= $grade_year ?>">
+      <input type="hidden" name="gterm"  value="<?= e($grade_term) ?>">
+      <input type="hidden" name="yg"     value="<?= e($grade_yg) ?>">
+      <input type="text" name="subj_name" placeholder="e.g. Physics, Art, Music..."
+        required
+        style="flex:1;min-width:180px;padding:.42rem .85rem;border-radius:8px;border:1.5px solid var(--W);
+        font-family:'Plus Jakarta Sans',sans-serif;font-size:.85rem">
+      <button type="submit" class="bsm bpr"><i class="fas fa-plus"></i> Add Subject</button>
+    </form>
+
+    <!-- Subject list -->
+    <?php if (empty($subjects)): ?>
+      <p style="color:var(--MT);font-size:.83rem">No subjects yet. Add one above.</p>
+    <?php else: ?>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <?php foreach ($subjects as $s): ?>
+        <div style="display:flex;align-items:center;justify-content:space-between;
+          padding:.6rem 1rem;background:#f9f6f0;border-radius:9px;border:1.5px solid var(--W)">
+          <span style="font-weight:600;font-size:.85rem"><?= e($s['name']) ?></span>
+          <form method="POST" onsubmit="return confirm('Remove <?= e($s['name']) ?>?')">
+            <input type="hidden" name="action"   value="remove_subject">
+            <input type="hidden" name="subj_id"  value="<?= $s['id'] ?>">
+            <input type="hidden" name="gyear"     value="<?= $grade_year ?>">
+            <input type="hidden" name="gterm"     value="<?= e($grade_term) ?>">
+            <button type="submit" class="bsm bms" style="padding:.28rem .7rem">
+              <i class="fas fa-trash"></i> Remove
+            </button>
+          </form>
         </div>
-        <div class="tw">
-          <table>
-            <thead><tr><th>Student</th><th>Year</th><th>BM</th><th>Math</th><th>Science</th><th>English</th><th>History</th><th>Overall</th></tr></thead>
-            <tbody>
-              <?php foreach ($GRADES as $g): ?>
-              <tr>
-                <td style="font-weight:600"><?= e($g[0]) ?></td>
-                <td>Year <?= $g[1] ?></td>
-                <td><?= $g[2] ?></td><td><?= $g[3] ?></td><td><?= $g[4] ?></td>
-                <td><?= $g[5] ?></td><td><?= $g[6] ?></td>
-                <td><strong style="color:var(--F)"><?= e($g[7]) ?></strong></td>
-              </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
-        </div>
+        <?php endforeach; ?>
       </div>
+    <?php endif; ?>
+  </div>
+</div>
+
+<?php else: ?>
+<!-- ── GRADE STUDENTS ── -->
+<?php if (empty($students)): ?>
+<div class="crd" style="padding:2rem;text-align:center;color:var(--MT)">
+  <i class="fas fa-users" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
+  No students found for Year <?= $grade_year ?>.
+</div>
+<?php elseif (empty($subjects)): ?>
+<div class="crd" style="padding:2rem;text-align:center;color:var(--MT)">
+  <i class="fas fa-list" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
+  No subjects set up for Year Group <?= e($grade_yg) ?>. Go to <strong>Manage Subjects</strong> first.
+</div>
+<?php else: ?>
+<form method="POST">
+  <input type="hidden" name="action"  value="save_grades">
+  <input type="hidden" name="gyear"   value="<?= $grade_year ?>">
+  <input type="hidden" name="gterm"   value="<?= e($grade_term) ?>">
+  <div class="crd">
+    <div class="crdhdr">
+      <h3><i class="fas fa-pen"></i>&nbsp; Year <?= $grade_year ?> — <?= e($grade_term) ?></h3>
+      <button type="submit" class="bsm bpr"><i class="fas fa-save"></i> Save & Notify Students</button>
+    </div>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left;padding-left:1rem;min-width:140px">Student</th>
+            <?php foreach ($subjects as $s): ?>
+            <th style="min-width:110px"><?= e($s['name']) ?><br>
+              <span style="font-weight:400;font-size:.65rem;color:var(--MT)">Marks / 100</span>
+            </th>
+            <?php endforeach; ?>
+          </tr>
+        </thead>
+        <tbody>
+          <?php foreach ($students as $st): ?>
+          <tr>
+            <td style="font-weight:600;background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem">
+              <div><?= e($st['name']) ?></div>
+              <div style="font-size:.7rem;color:var(--MT)">Year <?= $st['year'] ?></div>
+            </td>
+            <?php foreach ($subjects as $s):
+              $existing_grade = $existing[$st['id']][$s['id']] ?? null;
+              $existing_marks = $existing_grade ? $existing_grade['marks'] : '';
+              $existing_letter = $existing_grade ? $existing_grade['grade'] : '';
+            ?>
+            <td style="padding:4px;text-align:center">
+              <input type="hidden" name="student_ids[]" value="<?= $st['id'] ?>">
+              <input type="hidden" name="subject_ids[]" value="<?= $s['id'] ?>">
+              <div style="display:flex;flex-direction:column;align-items:center;gap:3px">
+                <input type="number" name="marks[]"
+                  value="<?= $existing_marks ?>"
+                  min="0" max="100" step="0.5"
+                  placeholder="—"
+                  class="einput"
+                  style="width:70px;text-align:center"
+                  oninput="calcGrade(this)">
+                <span class="grade-badge" style="font-size:.72rem;font-weight:700;
+                  <?= $existing_letter ? 'display:inline-block' : 'display:none' ?>">
+                  <?= e($existing_letter) ?>
+                </span>
+              </div>
+            </td>
+            <?php endforeach; ?>
+          </tr>
+          <?php endforeach; ?>
+        </tbody>
+      </table>
+    </div>
+    <div style="padding:.85rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;font-size:.75rem;color:var(--MT)">
+      <i class="fas fa-info-circle"></i>
+      Grades auto-calculate as you type. Click <strong>Save & Notify Students</strong> to release results and send notifications.
+    </div>
+  </div>
+</form>
+
+<script>
+// Grade scale
+const scale = [
+  [90,'A+'],[80,'A'],[75,'A-'],[70,'B+'],[65,'B'],
+  [60,'B-'],[55,'C+'],[50,'C'],[45,'C-'],[40,'D'],[0,'E']
+];
+const colors = {
+  'A+':'#1b5e20','A':'#1b5e20','A-':'#1b5e20',
+  'B+':'#0d47a1','B':'#0d47a1','B-':'#0d47a1',
+  'C+':'#bf360c','C':'#bf360c','C-':'#bf360c',
+  'D':'#880e4f','E':'#b71c1c'
+};
+const bgs = {
+  'A+':'#e8f5e9','A':'#e8f5e9','A-':'#e8f5e9',
+  'B+':'#e3f2fd','B':'#e3f2fd','B-':'#e3f2fd',
+  'C+':'#fff3e0','C':'#fff3e0','C-':'#fff3e0',
+  'D':'#fce4ec','E':'#ffebee'
+};
+
+function calcGrade(input) {
+  var val  = parseFloat(input.value);
+  var badge = input.parentElement.querySelector('.grade-badge');
+  if (isNaN(val) || input.value === '') {
+    badge.style.display = 'none';
+    badge.textContent = '';
+    return;
+  }
+  var pct = (val / 100) * 100;
+  var grade = 'E';
+  for (var i = 0; i < scale.length; i++) {
+    if (pct >= scale[i][0]) { grade = scale[i][1]; break; }
+  }
+  badge.textContent = grade;
+  badge.style.display = 'inline-block';
+  badge.style.color = colors[grade];
+  badge.style.background = bgs[grade];
+  badge.style.padding = '2px 8px';
+  badge.style.borderRadius = '6px';
+}
+</script>
+<?php endif; ?>
+<?php endif; ?>
 
       <!-- ── HOMEWORK OVERSIGHT ── -->
       <?php elseif ($tab === 'homework'): ?>

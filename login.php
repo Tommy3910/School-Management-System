@@ -23,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
             if ($password == $row['PASSWORD']) {
                 $_SESSION['user'] = [
+                    'id'    => $row['id'],
                     'role'  => $row['role'],
                     'name'  => $row['name'],
                     'email' => $row['useremail'],

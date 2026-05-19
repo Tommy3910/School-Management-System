@@ -112,3 +112,55 @@ if (!isset($_SESSION['hw_statuses'])) {
     $_SESSION['hw_statuses'][0] = 'submitted';
     $_SESSION['hw_statuses'][1] = 'submitted';
 }
+
+// ── Grade calculator ─────────────────────────────────
+function calcGrade($marks, $max = 100) {
+    $pct = ($max > 0) ? ($marks / $max) * 100 : 0;
+    if ($pct >= 90) return 'A+';
+    if ($pct >= 80) return 'A';
+    if ($pct >= 75) return 'A-';
+    if ($pct >= 70) return 'B+';
+    if ($pct >= 65) return 'B';
+    if ($pct >= 60) return 'B-';
+    if ($pct >= 55) return 'C+';
+    if ($pct >= 50) return 'C';
+    if ($pct >= 45) return 'C-';
+    if ($pct >= 40) return 'D';
+    return 'E';
+}
+
+function gradeColor($grade) {
+    if (in_array($grade, ['A+','A','A-']))  return ['#e8f5e9','#1b5e20'];
+    if (in_array($grade, ['B+','B','B-']))  return ['#e3f2fd','#0d47a1'];
+    if (in_array($grade, ['C+','C','C-']))  return ['#fff3e0','#bf360c'];
+    if ($grade === 'D')                     return ['#fce4ec','#880e4f'];
+    return ['#ffebee','#b71c1c']; // E
+}
+
+// ── Notification helpers ──────────────────────────────
+function sendNotification($conn, $user_id, $title, $message) {
+    $uid  = (int)$user_id;
+    $t    = $conn->real_escape_string($title);
+    $m    = $conn->real_escape_string($message);
+    $conn->query("INSERT INTO notifications (user_id, title, message)
+                  VALUES ($uid, '$t', '$m')");
+}
+
+function getUnreadCount($conn, $user_id) {
+    $uid = (int)$user_id;
+    $r   = $conn->query("SELECT COUNT(*) as cnt FROM notifications WHERE user_id=$uid AND is_read=0");
+    return $r ? (int)$r->fetch_assoc()['cnt'] : 0;
+}
+
+function getNotifications($conn, $user_id, $limit = 10) {
+    $uid = (int)$user_id;
+    $r   = $conn->query("SELECT * FROM notifications WHERE user_id=$uid ORDER BY created_at DESC LIMIT $limit");
+    $out = [];
+    if ($r) while ($row = $r->fetch_assoc()) $out[] = $row;
+    return $out;
+}
+
+function markAllRead($conn, $user_id) {
+    $uid = (int)$user_id;
+    $conn->query("UPDATE notifications SET is_read=1 WHERE user_id=$uid");
+}

@@ -4,6 +4,7 @@ require_once 'layout.php';
 requireAuth('student');
 
 $user = $_SESSION['user'];
+$userId = $_SESSION['user']['id'] ?? null;
 $tab  = $_GET['tab'] ?? 'courses';
 
 // Handle flash messages
@@ -13,6 +14,21 @@ pageHead('Student Dashboard');
 ?>
 <div id="student">
   <!-- HEADER -->
+   <!-- ═══════════════════════════════════════════
+     BELL ICON — paste inside .hright div
+     in the student header section
+════════════════════════════════════════════ -->
+   <?php
+  $notifs      = getNotifications($conn, $userId);
+  $unreadCount = getUnreadCount($conn, $userId);
+?>
+<?php
+// Mark all read when dropdown opened
+if (isset($_GET['markread'])) {
+    markAllRead($conn, $userId);
+    redirect("studentHomePage.php?tab=$tab");
+}
+?>
   <header class="hdr s-hdr">
     <div class="hbrand">
       <img src="maple_wood_logo.png" alt="Maplewood Logo" class="hlogo">
@@ -24,6 +40,41 @@ pageHead('Student Dashboard');
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
       </div>
       <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+      <div class="nbell" id="bellWrap">
+        <button class="nbtn" onclick="toggleNotifs()" title="Notifications">
+          <i class="fas fa-bell"></i>
+          <span>Notifications</span>
+          <?php if ($unreadCount > 0): ?>
+          <span class="nbadge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
+          <?php endif; ?>
+        </button>
+       
+        <!-- Dropdown panel -->
+        <div class="ndrop" id="notifDrop" style="display:none">
+          <div class="ndhdr">
+            <span><i class="fas fa-bell"></i> Notifications</span>
+            <?php if ($unreadCount > 0): ?>
+            <a href="?tab=<?= $tab ?>&markread=1" class="ndmark">Mark all read</a>
+            <?php endif; ?>
+          </div>
+          <div class="ndlist">
+            <?php if (empty($notifs)): ?>
+              <div class="ndempty"><i class="fas fa-check-circle"></i> You're all caught up!</div>
+            <?php else: ?>
+              <?php foreach ($notifs as $n): ?>
+              <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>">
+                <div class="ndicn"><i class="fas fa-chart-bar"></i></div>
+                <div class="ndcnt">
+                  <div class="ndtitle"><?= e($n['title']) ?></div>
+                  <div class="ndmsg"><?= e($n['message']) ?></div>
+                  <div class="ndtime"><i class="fas fa-clock"></i> <?= date('d M Y, g:i a', strtotime($n['created_at'])) ?></div>
+                </div>
+              </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
+          </div>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -92,6 +143,146 @@ pageHead('Student Dashboard');
         <?php endforeach; ?>
       </div>
 
+      <?php elseif ($tab === 'grades'): ?>
+<?php
+  $yr  = (int)$user['year'];
+  if ($yr <= 6)     $yg = '1-6';
+  elseif ($yr <= 9) $yg = '7-9';
+  else              $yg = '10-11';
+ 
+  $term = $_GET['term'] ?? 'Term 1';
+  $terms = ['Term 1','Term 2','Term 3'];
+ 
+  // Fetch grades for this student
+  $sid = (int)$userId;
+  $grades_res = $conn->query(
+      "SELECT g.*, s.name AS subject_name
+       FROM grades g
+       JOIN subjects s ON g.subject_id = s.id
+       WHERE g.student_id = $sid AND g.term = '{$conn->real_escape_string($term)}'
+       ORDER BY s.name"
+  );
+  $my_grades = [];
+  if ($grades_res) while ($r = $grades_res->fetch_assoc()) $my_grades[] = $r;
+ 
+  // Calculate overall
+  $total_marks = 0; $total_max = 0; $count = count($my_grades);
+  foreach ($my_grades as $g) { $total_marks += $g['marks']; $total_max += $g['max_marks']; }
+  $overall_pct   = $total_max > 0 ? round(($total_marks / $total_max) * 100, 1) : 0;
+  $overall_grade = $count > 0 ? calcGrade($total_marks, $total_max) : '—';
+?>
+<div class="phdr"><h2>My Grades</h2><p>Year <?= e($user['year']) ?> — Academic Results</p></div>
+ 
+<!-- Term selector -->
+<div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap">
+  <?php foreach ($terms as $t): ?>
+  <a href="?tab=grades&term=<?= urlencode($t) ?>"
+    style="padding:.38rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
+    background:<?= $t===$term ? 'var(--P)' : '#fff' ?>;
+    color:<?= $t===$term ? '#fff' : 'var(--F)' ?>">
+    <?= e($t) ?>
+  </a>
+  <?php endforeach; ?>
+</div>
+ 
+<!-- Summary stats -->
+<div class="srow" style="margin-bottom:1.2rem">
+  <div class="sc">
+    <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
+    <div class="sv"><?= $count ?></div>
+    <div class="sl">Subjects Graded</div>
+  </div>
+  <div class="sc">
+    <div class="sico" style="background:#e3f2fd;color:#0d47a1"><i class="fas fa-percentage"></i></div>
+    <div class="sv"><?= $overall_pct ?>%</div>
+    <div class="sl">Overall Score</div>
+  </div>
+  <div class="sc">
+    <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
+    <div class="sv"><?= $overall_grade ?></div>
+    <div class="sl">Overall Grade</div>
+  </div>
+  <div class="sc">
+    <div class="sico" style="background:#fce4ec;color:#880e4f"><i class="fas fa-trophy"></i></div>
+    <div class="sv">
+      <?php
+        $as = array_filter($my_grades, fn($g) => str_starts_with($g['grade'], 'A'));
+        echo count($as);
+      ?>
+    </div>
+    <div class="sl">A Grades</div>
+  </div>
+</div>
+ 
+<?php if (empty($my_grades)): ?>
+<div class="crd" style="padding:2.5rem;text-align:center;color:var(--MT)">
+  <i class="fas fa-hourglass-half" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
+  No grades released for <?= e($term) ?> yet. Check back soon!
+</div>
+<?php else: ?>
+<div class="crd">
+  <div class="crdhdr">
+    <h3><i class="fas fa-chart-bar"></i>&nbsp; <?= e($term) ?> Results</h3>
+  </div>
+  <div class="tw">
+    <table>
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th>Marks</th>
+          <th>Percentage</th>
+          <th>Grade</th>
+          <th>Performance</th>
+        </tr>
+      </thead>
+      <tbody>
+        <?php foreach ($my_grades as $g):
+          $pct   = round(($g['marks'] / $g['max_marks']) * 100, 1);
+          $color = gradeColor($g['grade']);
+        ?>
+        <tr>
+          <td style="font-weight:600"><?= e($g['subject_name']) ?></td>
+          <td style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700">
+            <?= $g['marks'] ?><span style="font-size:.72rem;color:var(--MT);font-family:'Plus Jakarta Sans',sans-serif"> / <?= $g['max_marks'] ?></span>
+          </td>
+          <td>
+            <div style="display:flex;align-items:center;gap:.6rem">
+              <div style="flex:1;height:7px;background:var(--W);border-radius:99px;overflow:hidden;min-width:80px">
+                <div style="height:100%;width:<?= $pct ?>%;background:<?= $pct>=70?'#52b788':($pct>=50?'#f4a261':'#e63946') ?>;border-radius:99px"></div>
+              </div>
+              <span style="font-size:.78rem;font-weight:600;color:var(--F);min-width:38px"><?= $pct ?>%</span>
+            </div>
+          </td>
+          <td>
+            <span style="display:inline-flex;align-items:center;justify-content:center;
+              width:42px;height:42px;border-radius:10px;font-weight:800;font-size:1rem;
+              background:<?= $color[0] ?>;color:<?= $color[1] ?>">
+              <?= e($g['grade']) ?>
+            </span>
+          </td>
+          <td style="font-size:.78rem;color:var(--MT)">
+            <?php
+              if ($pct >= 80)      echo '<span style="color:#1b5e20"><i class="fas fa-arrow-up"></i> Excellent</span>';
+              elseif ($pct >= 65)  echo '<span style="color:#0d47a1"><i class="fas fa-check"></i> Good</span>';
+              elseif ($pct >= 50)  echo '<span style="color:#bf360c"><i class="fas fa-minus"></i> Average</span>';
+              else                 echo '<span style="color:#b71c1c"><i class="fas fa-arrow-down"></i> Needs Improvement</span>';
+            ?>
+          </td>
+        </tr>
+        <?php endforeach; ?>
+      </tbody>
+    </table>
+  </div>
+  <!-- Overall bar -->
+  <div style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+    <span style="font-size:.8rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?>:</span>
+    <div style="flex:1;height:10px;background:var(--W);border-radius:99px;overflow:hidden;min-width:120px">
+      <div style="height:100%;width:<?= $overall_pct ?>%;background:linear-gradient(90deg,var(--P),#52b788);border-radius:99px;transition:width .5s ease"></div>
+    </div>
+    <span style="font-size:.88rem;font-weight:700;color:var(--P)"><?= $overall_pct ?>% — <?= $overall_grade ?></span>
+  </div>
+</div>
+<?php endif; ?>
       <!-- ── TIMETABLE TAB ── -->
 <?php elseif ($tab === 'timetable'): ?>
 <?php
@@ -404,4 +595,21 @@ pageHead('Student Dashboard');
     </main>
   </div>
 </div>
+<!-- ═══════════════════════════════════════════
+     JAVASCRIPT — add before </body> or in pageFoot
+════════════════════════════════════════════ -->
+<script>
+function toggleNotifs() {
+  var d = document.getElementById('notifDrop');
+  d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
+// Close when clicking outside
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('bellWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    var d = document.getElementById('notifDrop');
+    if (d) d.style.display = 'none';
+  }
+});
+</script>
 <?php pageFoot(); ?>
