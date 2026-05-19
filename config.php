@@ -1,6 +1,6 @@
 <?php
-require_once '../config.php';
-require_once '../layout.php';
+require_once 'config.php';
+require_once 'layout.php';
 requireAuth('teacher');
 
 $user = $_SESSION['user'];
@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $_SESSION['hw_statuses'][$idx] = 'missing';
         flash('toast', 'Marked as missing.');
     } elseif ($action === 'save_schedule') {
-        flash('toast', 'Schedule saved successfully.');
+        flash('toast', 'Schedule saved successfully.'); 
     } elseif ($action === 'save_timetable') {
         flash('toast', 'Timetable saved successfully.');
     } elseif ($action === 'send_invoice') {
