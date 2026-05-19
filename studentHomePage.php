@@ -1,6 +1,6 @@
 <?php
-require_once '../includes/config.php';
-require_once '../includes/layout.php';
+require_once '../config.php';
+require_once '../layout.php';
 requireAuth('student');
 
 $user = $_SESSION['user'];
@@ -11,7 +11,7 @@ $toast = flash('toast');
 
 pageHead('Student Dashboard');
 ?>
-<div id="student">
+a<div id="student">
   <!-- HEADER -->
   <header class="hdr s-hdr">
     <div class="hbrand">
