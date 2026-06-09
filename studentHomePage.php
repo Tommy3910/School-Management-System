@@ -3,6 +3,11 @@ require_once 'config.php';
 require_once 'layout.php';
 requireAuth('student');
 
+// Prevent browser caching so payment status refreshes correctly when returning from success page
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 $user = $_SESSION['user'];
 $userId = $_SESSION['user']['id'] ?? null;
 $tab = $_GET['tab'] ?? 'courses';
@@ -197,7 +202,8 @@ pageHead('Student Dashboard');
         </div>
         <div class="cgrid">
           <?php foreach ($COURSES as $c): ?>
-            <a class="cc" href="coursePage.php?code=<?= urlencode($c['code']) ?>" style="text-decoration:none;display:block;color:inherit">
+            <a class="cc" href="coursePage.php?code=<?= urlencode($c['code']) ?>"
+              style="text-decoration:none;display:block;color:inherit">
               <div class="cico"><?= $c['icon'] ?></div>
               <div class="cn"><?= e($c['code']) ?></div>
               <div class="cmeta"><?= e($c['name']) ?></div>
@@ -848,5 +854,18 @@ pageHead('Student Dashboard');
       if (d) d.style.display = 'none';
     }
   });
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('refresh') === '1') {
+      params.delete('refresh');
+      var newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+      window.history.replaceState(null, '', newUrl);
+    }
+  })();
 </script>
 <?php pageFoot(); ?>

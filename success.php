@@ -26,6 +26,12 @@ if ($paymentId > 0 && $conn) {
     $stmt->close();
     if ($payment) {
         $insertId = (int) $payment['id'];
+        if (strtolower($payment['status']) !== 'paid') {
+            $now = date('Y-m-d H:i:s');
+            $conn->query("UPDATE payments SET status='Paid', paid_at='$now' WHERE id=$paymentId");
+            $payment['status'] = 'Paid';
+            $payment['paid_at'] = $now;
+        }
     }
 }
 
@@ -65,7 +71,7 @@ pageHead('Payment Successful');
             <?php if ($insertId): ?>
                 <p><strong>Invoice/Record ID:</strong> <?= e($insertId) ?></p>
                 <p><a href="pay.php?id=<?= (int) $insertId ?>">View Invoice</a> &nbsp;|&nbsp; <a
-                        href="studentHomePage.php?tab=payment">Back to Payments</a></p>
+                        href="studentHomePage.php?tab=payment&refresh=1">Back to Payments</a></p>
             <?php else: ?>
                 <p style="color:var(--MT)">No database record was created (not logged in or DB unavailable).</p>
                 <p><a href="studentHomePage.php?tab=payment">Back to Payments</a></p>
