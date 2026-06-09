@@ -800,7 +800,8 @@ pageHead('Student Dashboard');
             <div style="font-size:.75rem;opacity:.65;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em">
               Current Balance Due</div>
             <div style="font-size:2.3rem;font-weight:700;font-family:'Playfair Display',serif">RM
-              <?= number_format($balance, 2) ?></div>
+              <?= number_format($balance, 2) ?>
+            </div>
             <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">Outstanding invoices</div>
           </div>
           <?php
@@ -824,29 +825,37 @@ pageHead('Student Dashboard');
           <?php endif; ?>
         </div>
         <?php foreach ($myPayments as $p): ?>
-          <div class="pcard">
-            <div>
-              <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?> —
-                Invoice
-              </div>
-              <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)">
-                <?= e(isset($p['amount_formatted']) ? $p['amount_formatted'] : (isset($p['amount']) ? (is_numeric($p['amount']) ? ('RM ' . number_format((float) $p['amount'], 2)) : $p['amount']) : 'RM 0.00')) ?>
-              </div>
-            </div>
-            <?php if (isset($p['status']) && strtolower($p['status']) === 'paid'): ?>
-              <span class="bpd"><i class="fas fa-check"></i> Paid</span>
+          <?php $hasId = isset($p['id']) && (int) $p['id'] > 0; ?>
+          <?php if ($hasId): ?>
+            <a class="pcard" href="pay.php?id=<?= (int) $p['id'] ?>">
             <?php else: ?>
-              <span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>
-              <?php if (isset($p['id'])): ?>
-                <a href="pay.php?id=<?= (int) $p['id'] ?>" style="margin-left:.6rem" class="bsd bsm">Pay</a>
+              <div class="pcard">
               <?php endif; ?>
-            <?php endif; ?>
-          </div>
-        <?php endforeach; ?>
+              <div>
+                <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?>
+                  — Invoice</div>
+                <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)">
+                  <?= e(isset($p['amount_formatted']) ? $p['amount_formatted'] : (isset($p['amount']) ? (is_numeric($p['amount']) ? ('RM ' . number_format((float) $p['amount'], 2)) : $p['amount']) : 'RM 0.00')) ?>
+                </div>
+              </div>
+              <?php if (isset($p['status']) && strtolower($p['status']) === 'paid'): ?>
+                <span class="bpd"><i class="fas fa-check"></i> Paid</span>
+              <?php else: ?>
+                <span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>
+                <?php if (!$hasId && isset($p['id'])): ?>
+                  <a href="pay.php?id=<?= (int) $p['id'] ?>" style="margin-left:.6rem" class="bsd bsm">Pay</a>
+                <?php endif; ?>
+              <?php endif; ?>
+              <?php if ($hasId): ?>
+            </a>
+          <?php else: ?>
+        </div>
       <?php endif; ?>
+    <?php endforeach; ?>
+  <?php endif; ?>
 
-    </main>
-  </div>
+  </main>
+</div>
 </div>
 <!-- ═══════════════════════════════════════════
      JAVASCRIPT — add before </body> or in pageFoot

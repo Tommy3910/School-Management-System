@@ -1,46 +1,55 @@
 <?php
-require_once 'config.php';
-requireAuth('student');
+// Your Stripe Secret Key (sk_test_...)
+$stripe_secret_key = "sk_test_51TWUKVRyNTo0JNBHUu8coRgaxIO73lqjhZuj7TAZQzGMvWzfX3jHArXFXZncfh8ERkl8sJDBOrQThjCZjY51q5kX00AsZKoNqp";
 
-$userId = $_SESSION['user']['id'] ?? null;
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+// Data we are sending to Stripe to create a checkout session
+$data = [
+    'payment_method_types' => ['card'],
 
-// Fetch payment
-$payment = null;
-if ($id > 0 && $conn) {
-    $res = $conn->query("SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.id=$id LIMIT 1");
-    if ($res)
-        $payment = $res->fetch_assoc();
+    'line_items' => [
+        [
+            'price_data' => [
+                'currency' => 'myr', // Malaysian Ringgit
+
+                'product_data' => [
+                    'name' => 'Maplewood Academy Fee'
+                ],
+
+                'unit_amount' => 45000, // Amount in CENTS (RM 100.00 = 10000 cents)
+            ],
+
+            'quantity' => 1,
+        ]
+    ],
+
+    'mode' => 'payment',
+
+    'success_url' => 'http://localhost/School-Management-system/success.php',
+    'cancel_url' => 'http://localhost/School-Management-System/studentHomePage.php?tab=payment',
+];
+
+// Initialize cURL to connect to Stripe API
+$ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
+
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+curl_setopt($ch, CURLOPT_USERPWD, $stripe_secret_key . ':');
+
+// Execute the API call
+$response = curl_exec($ch);
+
+curl_close($ch);
+
+// Decode the JSON response from Stripe
+$session = json_decode($response, true);
+
+// If successful, redirect the user to Stripe's secure payment page
+if (isset($session['url'])) {
+    header("Location: " . $session['url']);
+    exit();
+} else {
+    echo "Error connecting to Stripe: ";
+    print_r($session);
 }
-
-if (!$payment || (int) $payment['user_id'] !== (int) $userId) {
-    flash('toast', 'Invoice not found.');
-    redirect('studentHomePage.php?tab=payment');
-}
-
-pageHead('Pay Invoice');
 ?>
-<div style="max-width:720px;margin:2rem auto;padding:1.2rem">
-    <div class="crd">
-        <div class="crdhdr">
-            <h3>Invoice #<?= e($payment['id']) ?></h3>
-        </div>
-        <div style="padding:1rem">
-            <p><strong>Student:</strong> <?= e($payment['student_name']) ?></p>
-            <p><strong>Description:</strong> <?= e($payment['description'] ?? 'School fees') ?></p>
-            <p><strong>Amount:</strong>
-                <?= e(($payment['currency'] ?? 'RM') . ' ' . number_format((float) $payment['amount'], 2)) ?></p>
-            <p><strong>Status:</strong> <?= e($payment['status']) ?></p>
-
-            <?php if ($payment['status'] !== 'Paid'): ?>
-                <form method="POST" action="process_payment.php">
-                    <input type="hidden" name="payment_id" value="<?= (int) $payment['id'] ?>">
-                    <button type="submit" class="bpr bsm"><i class="fas fa-credit-card"></i> Pay Now (Simulated)</button>
-                </form>
-            <?php else: ?>
-                <div style="color:var(--MT)">This invoice was paid on <?= e($payment['paid_at']) ?></div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-<?php pageFoot(); ?>
