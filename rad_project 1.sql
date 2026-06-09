@@ -12,6 +12,13 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 
+
+--
+-- Indexes for table `payments`
+--
+
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`id`);
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -41,6 +48,19 @@ CREATE TABLE `grades` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Dumping data for table `grades`
+--
+
+INSERT INTO `grades` (`id`, `student_id`, `subject_id`, `marks`, `max_marks`, `grade`, `term`, `year`, `graded_by`, `created_at`, `updated_at`) VALUES
+(1, 1, 1, 87.50, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(2, 1, 2, 92.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(3, 1, 3, 78.50, 100, 'B+', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(4, 1, 4, 85.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(5, 1, 5, 88.75, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(6, 1, 6, 91.25, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(7, 1, 7, 80.00, 100, 'B+', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00');
+
 -- --------------------------------------------------------
 
 --
@@ -55,6 +75,17 @@ CREATE TABLE `notifications` (
   `is_read` tinyint(1) DEFAULT 0,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `notifications`
+--
+
+INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `created_at`) VALUES
+(1, 1, 'Term 1 Grades Released', 'Your Term 1 grades have been posted. Check your grades page to view your results.', 0, '2026-06-08 14:30:00'),
+(2, 1, 'Homework Submission Reminder', 'Remember to submit your Math assignment by Friday. Late submissions will not be accepted.', 0, '2026-06-07 10:15:00'),
+(3, 1, 'School Event Announcement', 'Annual Sports Day is scheduled for June 15, 2026. All students are required to participate.', 1, '2026-06-05 09:00:00'),
+(4, 1, 'Payment Due', 'Your school fees for June are now due. Please make payment before June 30, 2026.', 1, '2026-06-01 08:30:00'),
+(5, 1, 'Class Cancelled', 'Biology practical class on June 10 has been rescheduled to June 12 due to lab maintenance.', 0, '2026-06-06 15:45:00');
 
 -- --------------------------------------------------------
 
@@ -137,6 +168,31 @@ INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALU
 (1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
 (2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(8) NOT NULL DEFAULT 'RM',
+  `description` varchar(255) DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'Invoice Sent',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `paid_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`id`, `user_id`, `amount`, `currency`, `description`, `status`, `created_at`, `paid_at`) VALUES
+(1, 1, 450.00, 'RM', 'School fees - June 2026', 'Invoice Sent', '2026-06-01 08:00:00', NULL),
+(2, 1, 450.00, 'RM', 'School fees - May 2026', 'Paid', '2026-05-01 08:00:00', '2026-05-02 12:30:00');
+
 --
 -- Indexes for dumped tables
 --
@@ -180,13 +236,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `grades`
 --
 ALTER TABLE `grades`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `subjects`
@@ -204,6 +260,11 @@ ALTER TABLE `timetable`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 

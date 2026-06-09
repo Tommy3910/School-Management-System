@@ -81,9 +81,11 @@ pageHead('Student Dashboard');
       <span class="slbl s-slbl">Menu</span>
       <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses"> <i class="fas fa-book-open"></i>
         Courses</a>
-      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"> <i class="fas fa-calendar-alt"></i>
+      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"> <i
+          class="fas fa-calendar-alt"></i>
         Timetable</a>
-      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework"> <i class="fas fa-tasks"></i> Homework
+      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework"> <i class="fas fa-tasks"></i>
+        Homework
         Status</a>
       <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment"> <i class="fas fa-credit-card"></i>
         Payment</a>
@@ -743,29 +745,81 @@ pageHead('Student Dashboard');
           <h2>Payment</h2>
           <p>Your fee statements and invoice history</p>
         </div>
+        <?php
+        $uid = $_SESSION['user']['id'] ?? null;
+        $myPayments = [];
+        if ($uid && $conn) {
+          $r = $conn->query("SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.user_id=$uid ORDER BY p.created_at DESC");
+          if ($r)
+            while ($row = $r->fetch_assoc())
+              $myPayments[] = $row;
+        }
+        // Fallback: use global $PAYMENTS if DB not available
+        if (empty($myPayments)) {
+          foreach ($PAYMENTS as $p) {
+            $myPayments[] = $p;
+          }
+        }
+
+        // Calculate current balance (sum of unpaid invoices)
+        $balance = 0.0;
+        foreach ($myPayments as $mp) {
+          $amt = 0.0;
+          if (isset($mp['amount'])) {
+            // amount may be numeric or formatted like 'RM 450.00'
+            $a = preg_replace('/[^0-9.]/', '', (string) $mp['amount']);
+            $amt = $a !== '' ? (float) $a : 0.0;
+          }
+          if ((isset($mp['status']) && strtolower($mp['status']) !== 'paid') || (isset($mp['status']) && $mp['status'] === 'Invoice Sent'))
+            $balance += $amt;
+        }
+        ?>
         <div class="phero">
           <div>
             <div style="font-size:.75rem;opacity:.65;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em">
               Current Balance Due</div>
-            <div style="font-size:2.3rem;font-weight:700;font-family:'Playfair Display',serif">RM 450.00</div>
-            <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">May 2024 — Monthly Tuition Fee</div>
+            <div style="font-size:2.3rem;font-weight:700;font-family:'Playfair Display',serif">RM
+              <?= number_format($balance, 2) ?></div>
+            <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">Outstanding invoices</div>
           </div>
-          <button onclick="alert('Payment gateway not available in demo.')" style="background:var(--O);color:var(--F);border:none;padding:.8rem 1.4rem;border-radius:12px;
-          font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;cursor:pointer;font-size:.88rem">
-            Pay Now &nbsp;<i class="fas fa-arrow-right"></i>
-          </button>
+          <?php
+          // show Pay Now for first unpaid invoice
+          $firstUnpaid = null;
+          foreach ($myPayments as $mp) {
+            if (isset($mp['status']) && strtolower($mp['status']) !== 'paid') {
+              $firstUnpaid = $mp;
+              break;
+            }
+          }
+          ?>
+          <?php if ($firstUnpaid && isset($firstUnpaid['id'])): ?>
+            <a href="pay.php?id=<?= (int) $firstUnpaid['id'] ?>" class="bpr bsm"
+              style="display:inline-block;padding:.8rem 1.4rem;border-radius:12px">Pay Now &nbsp;<i
+                class="fas fa-arrow-right"></i></a>
+          <?php else: ?>
+            <button onclick="alert('No outstanding invoices.')" class="bpr bsm"
+              style="display:inline-block;padding:.8rem 1.4rem;border-radius:12px">All Paid &nbsp;<i
+                class="fas fa-check"></i></button>
+          <?php endif; ?>
         </div>
-        <?php foreach ($PAYMENTS as $p): ?>
+        <?php foreach ($myPayments as $p): ?>
           <div class="pcard">
             <div>
-              <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['date']) ?> — Monthly Tuition
+              <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?> —
+                Invoice
               </div>
               <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)">
-                <?= e($p['amount']) ?></div>
+                <?= e(isset($p['amount_formatted']) ? $p['amount_formatted'] : (isset($p['amount']) ? (is_numeric($p['amount']) ? ('RM ' . number_format((float) $p['amount'], 2)) : $p['amount']) : 'RM 0.00')) ?>
+              </div>
             </div>
-            <?= $p['status'] === 'Paid'
-              ? '<span class="bpd"><i class="fas fa-check"></i> Paid</span>'
-              : '<span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>' ?>
+            <?php if (isset($p['status']) && strtolower($p['status']) === 'paid'): ?>
+              <span class="bpd"><i class="fas fa-check"></i> Paid</span>
+            <?php else: ?>
+              <span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>
+              <?php if (isset($p['id'])): ?>
+                <a href="pay.php?id=<?= (int) $p['id'] ?>" style="margin-left:.6rem" class="bsd bsm">Pay</a>
+              <?php endif; ?>
+            <?php endif; ?>
           </div>
         <?php endforeach; ?>
       <?php endif; ?>
