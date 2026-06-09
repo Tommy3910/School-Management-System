@@ -65,7 +65,7 @@ $HOMEWORK = [
     ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
     ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
     ['item'=>'Science Lab Report',   'type'=>'Homework','due'=>'14 May 2024','status'=>'missing'],
-    ['item'=>'History Test',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
+    ['item'=>'History Test for Chapter 5',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
     ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2024','status'=>'missing'],
     ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2024','status'=>'missing'],
 ];
@@ -87,23 +87,23 @@ $SPORT = [
 $DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
 
 $GRADES = [
-    ['Ali Hassan',    10, 'A','A-','B+','A','B','A-'],
-    ['Siti Aminah',   10, 'B','B+','A-','B','A','B+'],
-    ['Rajan Kumar',   11, 'A-','A','A','A-','A','A'],
-    ['Mei Ling',      9,  'B+','B','B-','A-','B+','B'],
-    ['Hafiz Ismail',  8,  'C+','B','C','B-','C+','C+'],
-    ['Nurul Huda',    10, 'B','A-','B+','B','B+','B+'],
+    ['Aizul Azizul',    10, 'A','C','B+','D','C','B'],
+    ['Siti Aminah',   10, 'B','D','A','B','A','B'],
+    ['Rajan Kumar',   11, 'A','A','A','A','A','A'],
+    ['Leong Mei Ling',      9,  'B','B','B','A','B','B'],
+    ['Mohammad Bin Arman Kamarudin',  8,  'C','B','C','B','C','C'],
+    ['Nurul Aida',    10, 'B','C','B+','B','B','B'],
 ];
 // Add overall grade
 foreach ($GRADES as &$g) { $g[] = $g[2]; } unset($g);
 
 $ALL_STUDENTS = [
-    ['name'=>'Ali Hassan',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
+    ['name'=>'Aizul Azizul',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
     ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2024'],
     ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Science Lab Report',  'due'=>'14 May 2024'],
-    ['name'=>'Mei Ling',     'year'=>9, 'hw'=>'History Test',        'due'=>'16 May 2024'],
-    ['name'=>'Hafiz Ismail', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
-    ['name'=>'Nurul Huda',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
+    ['name'=>'Leong Mei Ling',     'year'=>9, 'hw'=>'History Test for Chapter 5',        'due'=>'16 May 2024'],
+    ['name'=>'Mohammad Bin Arman Kamarudin', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
+    ['name'=>'Nurul Aida',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
 ];
 
 // Init homework session statuses
