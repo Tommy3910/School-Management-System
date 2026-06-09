@@ -14,10 +14,6 @@ pageHead('Student Dashboard');
 ?>
 <div id="student">
   <!-- HEADER -->
-  <!-- ═══════════════════════════════════════════
-     BELL ICON — paste inside .hright div
-     in the student header section
-════════════════════════════════════════════ -->
   <?php
   $notifs = getNotifications($conn, $userId);
   $unreadCount = getUnreadCount($conn, $userId);
@@ -118,7 +114,6 @@ pageHead('Student Dashboard');
           const month = now.getMonth();
           const today = now.getDate();
 
-          // Month and year display
           const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
             'July', 'August', 'September', 'October', 'November', 'December'];
           const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
@@ -127,12 +122,10 @@ pageHead('Student Dashboard');
           document.getElementById('calMonthYear').textContent = shortMonths[month] + ' ' + year;
           document.getElementById('calMonthDisplay').textContent = monthNames[month] + ' ' + year;
 
-          // Day names
           const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
           const calendar = document.getElementById('calendarContainer');
           calendar.innerHTML = '';
 
-          // Add day name headers
           dayNames.forEach(day => {
             const dayEl = document.createElement('div');
             dayEl.className = 'dname';
@@ -140,16 +133,13 @@ pageHead('Student Dashboard');
             calendar.appendChild(dayEl);
           });
 
-          // Get first day of month and number of days
           const firstDay = new Date(year, month, 1).getDay();
           const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-          // Empty cells before first day
           for (let i = 0; i < firstDay; i++) {
             calendar.appendChild(document.createElement('div'));
           }
 
-          // Days of month
           for (let d = 1; d <= daysInMonth; d++) {
             const dayEl = document.createElement('div');
             dayEl.className = 'cday';
@@ -161,10 +151,7 @@ pageHead('Student Dashboard');
           }
         }
 
-        // Generate calendar on page load
         generateCalendar();
-
-        // Update calendar every minute to catch date changes at midnight
         setInterval(generateCalendar, 60000);
       </script>
     </aside>
@@ -208,7 +195,7 @@ pageHead('Student Dashboard');
         </div>
         <div class="cgrid">
           <?php foreach ($COURSES as $c): ?>
-            <div class="cc">
+            <a class="cc" href="coursePage.php?code=<?= urlencode($c['code']) ?>" style="text-decoration:none;display:block;color:inherit">
               <div class="cico"><?= $c['icon'] ?></div>
               <div class="cn"><?= e($c['code']) ?></div>
               <div class="cmeta"><?= e($c['name']) ?></div>
@@ -216,7 +203,7 @@ pageHead('Student Dashboard');
               <div class="pbar">
                 <div class="pfill" style="width:<?= $c['pct'] ?>%"></div>
               </div>
-            </div>
+            </a>
           <?php endforeach; ?>
         </div>
 
@@ -233,7 +220,6 @@ pageHead('Student Dashboard');
         $term = $_GET['term'] ?? 'Term 1';
         $terms = ['Term 1', 'Term 2', 'Term 3'];
 
-        // Fetch grades for this student
         $sid = (int) $userId;
         $grades_res = $conn->query(
           "SELECT g.*, s.name AS subject_name
@@ -247,7 +233,6 @@ pageHead('Student Dashboard');
           while ($r = $grades_res->fetch_assoc())
             $my_grades[] = $r;
 
-        // Calculate overall
         $total_marks = 0;
         $total_max = 0;
         $count = count($my_grades);
@@ -263,7 +248,6 @@ pageHead('Student Dashboard');
           <p>Year <?= e($user['year']) ?> — Academic Results</p>
         </div>
 
-        <!-- Term selector -->
         <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap">
           <?php foreach ($terms as $t): ?>
             <a href="?tab=grades&term=<?= urlencode($t) ?>" style="padding:.38rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
@@ -274,7 +258,6 @@ pageHead('Student Dashboard');
           <?php endforeach; ?>
         </div>
 
-        <!-- Summary stats -->
         <div class="srow" style="margin-bottom:1.2rem">
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
@@ -371,7 +354,6 @@ pageHead('Student Dashboard');
                 </tbody>
               </table>
             </div>
-            <!-- Overall bar -->
             <div
               style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
               <span style="font-size:.8rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?>:</span>
@@ -403,7 +385,6 @@ pageHead('Student Dashboard');
 
         <div class="crd">
           <?php if ($yg === '1-6'): ?>
-            <!-- ════ YEAR 1–6 : 5 periods, 1hr each ════ -->
             <div
               style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
               Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 12:45 pm &nbsp;·&nbsp; 1 hr classes
@@ -489,7 +470,6 @@ pageHead('Student Dashboard');
             </div>
 
           <?php elseif ($yg === '7-9'): ?>
-            <!-- ════ YEAR 7–9 : 7 periods, 45min, sport Tuesday ════ -->
             <div
               style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
               Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport:
@@ -543,7 +523,7 @@ pageHead('Student Dashboard');
                         <?php endforeach; ?>
                       <?php else: ?>
                         <?php foreach ($periods as $idx => $p): ?>
-                          <?php if ($idx === 3): // inject BREAK before p4 ?>
+                          <?php if ($idx === 3): ?>
                             <td style="padding:4px">
                               <div
                                 style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
@@ -552,7 +532,7 @@ pageHead('Student Dashboard');
                             </td>
                           <?php endif; ?>
 
-                          <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+                          <?php if ($idx === 2 || $idx === 6): ?>
                             <td style="padding:4px">
                               <div
                                 style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
@@ -591,7 +571,6 @@ pageHead('Student Dashboard');
             </div>
 
           <?php else: ?>
-            <!-- ════ YEAR 10–11 : 7 periods, 45min, sport Friday ════ -->
             <div
               style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
               Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport:
@@ -645,7 +624,7 @@ pageHead('Student Dashboard');
                         <?php endforeach; ?>
                       <?php else: ?>
                         <?php foreach ($periods as $idx => $p): ?>
-                          <?php if ($idx === 3): // inject BREAK before p4 ?>
+                          <?php if ($idx === 3): ?>
                             <td style="padding:4px">
                               <div
                                 style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
@@ -654,7 +633,7 @@ pageHead('Student Dashboard');
                             </td>
                           <?php endif; ?>
 
-                          <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+                          <?php if ($idx === 2 || $idx === 6): ?>
                             <td style="padding:4px">
                               <div
                                 style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
@@ -794,15 +773,11 @@ pageHead('Student Dashboard');
     </main>
   </div>
 </div>
-<!-- ═══════════════════════════════════════════
-     JAVASCRIPT — add before </body> or in pageFoot
-════════════════════════════════════════════ -->
 <script>
   function toggleNotifs() {
     var d = document.getElementById('notifDrop');
     d.style.display = d.style.display === 'none' ? 'block' : 'none';
   }
-  // Close when clicking outside
   document.addEventListener('click', function (e) {
     var wrap = document.getElementById('bellWrap');
     if (wrap && !wrap.contains(e.target)) {
