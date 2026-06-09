@@ -5,7 +5,7 @@ requireAuth('student');
 
 $user = $_SESSION['user'];
 $userId = $_SESSION['user']['id'] ?? null;
-$tab  = $_GET['tab'] ?? 'courses';
+$tab = $_GET['tab'] ?? 'courses';
 
 // Handle flash messages
 $toast = flash('toast');
@@ -14,21 +14,21 @@ pageHead('Student Dashboard');
 ?>
 <div id="student">
   <!-- HEADER -->
-   <!-- ═══════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════
      BELL ICON — paste inside .hright div
      in the student header section
 ════════════════════════════════════════════ -->
-   <?php
-  $notifs      = getNotifications($conn, $userId);
+  <?php
+  $notifs = getNotifications($conn, $userId);
   $unreadCount = getUnreadCount($conn, $userId);
-?>
-<?php
-// Mark all read when dropdown opened
-if (isset($_GET['markread'])) {
+  ?>
+  <?php
+  // Mark all read when dropdown opened
+  if (isset($_GET['markread'])) {
     markAllRead($conn, $userId);
     redirect("studentHomePage.php?tab=$tab");
-}
-?>
+  }
+  ?>
   <header class="hdr s-hdr">
     <div class="hbrand">
       <img src="maple_wood_logo.png" alt="Maplewood Logo" class="hlogo">
@@ -36,7 +36,7 @@ if (isset($_GET['markread'])) {
     </div>
     <div class="hright">
       <div class="ubadge">
-        <div class="av"><?= e(strtoupper(substr($user['name'],0,1))) ?></div>
+        <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
       </div>
       <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
@@ -45,16 +45,16 @@ if (isset($_GET['markread'])) {
           <i class="fas fa-bell"></i>
           <span>Notifications</span>
           <?php if ($unreadCount > 0): ?>
-          <span class="nbadge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
+            <span class="nbadge"><?= $unreadCount > 9 ? '9+' : $unreadCount ?></span>
           <?php endif; ?>
         </button>
-       
+
         <!-- Dropdown panel -->
         <div class="ndrop" id="notifDrop" style="display:none">
           <div class="ndhdr">
             <span><i class="fas fa-bell"></i> Notifications</span>
             <?php if ($unreadCount > 0): ?>
-            <a href="?tab=<?= $tab ?>&markread=1" class="ndmark">Mark all read</a>
+              <a href="?tab=<?= $tab ?>&markread=1" class="ndmark">Mark all read</a>
             <?php endif; ?>
           </div>
           <div class="ndlist">
@@ -62,14 +62,15 @@ if (isset($_GET['markread'])) {
               <div class="ndempty"><i class="fas fa-check-circle"></i> You're all caught up!</div>
             <?php else: ?>
               <?php foreach ($notifs as $n): ?>
-              <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>">
-                <div class="ndicn"><i class="fas fa-chart-bar"></i></div>
-                <div class="ndcnt">
-                  <div class="ndtitle"><?= e($n['title']) ?></div>
-                  <div class="ndmsg"><?= e($n['message']) ?></div>
-                  <div class="ndtime"><i class="fas fa-clock"></i> <?= date('d M Y, g:i a', strtotime($n['created_at'])) ?></div>
+                <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>">
+                  <div class="ndicn"><i class="fas fa-chart-bar"></i></div>
+                  <div class="ndcnt">
+                    <div class="ndtitle"><?= e($n['title']) ?></div>
+                    <div class="ndmsg"><?= e($n['message']) ?></div>
+                    <div class="ndtime"><i class="fas fa-clock"></i>
+                      <?= date('d M Y, g:i a', strtotime($n['created_at'])) ?></div>
+                  </div>
                 </div>
-              </div>
               <?php endforeach; ?>
             <?php endif; ?>
           </div>
@@ -82,514 +83,712 @@ if (isset($_GET['markread'])) {
     <!-- SIDEBAR -->
     <aside class="sb s-sb">
       <span class="slbl s-slbl">Menu</span>
-      <a class="nl s-nl <?= $tab==='courses'?'on':'' ?>"   href="?tab=courses">   <i class="fas fa-book-open"></i>   Courses</a>
-      <a class="nl s-nl <?= $tab==='timetable'?'on':'' ?>" href="?tab=timetable"> <i class="fas fa-calendar-alt"></i> Timetable</a>
-      <a class="nl s-nl <?= $tab==='homework'?'on':'' ?>"  href="?tab=homework">  <i class="fas fa-tasks"></i>        Homework Status</a>
-      <a class="nl s-nl <?= $tab==='payment'?'on':'' ?>"   href="?tab=payment">   <i class="fas fa-credit-card"></i>  Payment</a>
+      <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses"> <i class="fas fa-book-open"></i>
+        Courses</a>
+      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"> <i class="fas fa-calendar-alt"></i>
+        Timetable</a>
+      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework"> <i class="fas fa-tasks"></i> Homework
+        Status</a>
+      <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment"> <i class="fas fa-credit-card"></i>
+        Payment</a>
 
       <!-- To-Do Widget -->
       <div class="twid">
         <span class="wtl"><i class="fas fa-check-square"></i> To-Do</span>
-        <?php foreach (['Review Math notes','Submit BM essay','Study for History','Prepare sports kit','Complete Geo report'] as $i=>$t): ?>
-        <label class="titem"><input type="checkbox" <?= $i===0?'checked':'' ?>> <?= e($t) ?></label>
+        <?php foreach (['Review Math notes', 'Submit BM essay', 'Study for History', 'Prepare sports kit', 'Complete Geo report'] as $i => $t): ?>
+          <label class="titem"><input type="checkbox" <?= $i === 0 ? 'checked' : '' ?>> <?= e($t) ?></label>
         <?php endforeach; ?>
       </div>
 
       <!-- Mini Calendar -->
       <div class="cwid" style="margin-top:1.2rem">
-        <span class="wtl"><i class="fas fa-calendar"></i> May 2024</span>
+        <span class="wtl"><i class="fas fa-calendar"></i> <span id="calMonthYear">June 2026</span></span>
         <div class="calgrid">
-          <div class="calmo">May 2024</div>
-          <div class="caldays">
-            <?php foreach (['Su','Mo','Tu','We','Th','Fr','Sa'] as $d): ?>
-            <div class="dname"><?= $d ?></div>
-            <?php endforeach; ?>
-            <?php for ($i=0;$i<3;$i++) echo '<div></div>'; ?>
-            <?php for ($d=1;$d<=31;$d++): ?>
-            <div class="cday <?= $d===9?'ctoday':'' ?>"><?= $d ?></div>
-            <?php endfor; ?>
+          <div class="calmo" id="calMonthDisplay">June 2026</div>
+          <div class="caldays" id="calendarContainer">
+            <!-- Generated by JavaScript -->
           </div>
         </div>
       </div>
+
+      <script>
+        function generateCalendar() {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = now.getMonth();
+          const today = now.getDate();
+
+          // Month and year display
+          const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'];
+          const shortMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+          document.getElementById('calMonthYear').textContent = shortMonths[month] + ' ' + year;
+          document.getElementById('calMonthDisplay').textContent = monthNames[month] + ' ' + year;
+
+          // Day names
+          const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+          const calendar = document.getElementById('calendarContainer');
+          calendar.innerHTML = '';
+
+          // Add day name headers
+          dayNames.forEach(day => {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'dname';
+            dayEl.textContent = day;
+            calendar.appendChild(dayEl);
+          });
+
+          // Get first day of month and number of days
+          const firstDay = new Date(year, month, 1).getDay();
+          const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+          // Empty cells before first day
+          for (let i = 0; i < firstDay; i++) {
+            calendar.appendChild(document.createElement('div'));
+          }
+
+          // Days of month
+          for (let d = 1; d <= daysInMonth; d++) {
+            const dayEl = document.createElement('div');
+            dayEl.className = 'cday';
+            if (d === today) {
+              dayEl.classList.add('ctoday');
+            }
+            dayEl.textContent = d;
+            calendar.appendChild(dayEl);
+          }
+        }
+
+        // Generate calendar on page load
+        generateCalendar();
+
+        // Update calendar every minute to catch date changes at midnight
+        setInterval(generateCalendar, 60000);
+      </script>
     </aside>
 
     <!-- MAIN CONTENT -->
     <main class="mc s-mc">
 
       <?php if ($toast): ?>
-      <div class="toast"><i class="fas fa-check-circle"></i> <?= e($toast) ?></div>
+        <div class="toast"><i class="fas fa-check-circle"></i> <?= e($toast) ?></div>
       <?php endif; ?>
 
       <?php // variables $COURSES,$TIMETABLE,$HOMEWORK,$PAYMENTS are in scope from config.php ?>
 
       <!-- ── COURSES TAB ── -->
       <?php if ($tab === 'courses'): ?>
-      <div class="phdr"><h2>Your Courses</h2><p>Year <?= e($user['year']) ?> — Semester 1, 2024</p></div>
-      <div class="srow">
-        <div class="sc"><div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div><div class="sv">8</div><div class="sl">Enrolled</div></div>
-        <div class="sc"><div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-tasks"></i></div><div class="sv">3</div><div class="sl">Pending</div></div>
-        <div class="sc"><div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div><div class="sv">12</div><div class="sl">Submitted</div></div>
-        <div class="sc"><div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div><div class="sv">B+</div><div class="sl">Grade</div></div>
-      </div>
-      <div class="cgrid">
-        <?php foreach ($COURSES as $c): ?>
-        <div class="cc">
-          <div class="cico"><?= $c['icon'] ?></div>
-          <div class="cn"><?= e($c['code']) ?></div>
-          <div class="cmeta"><?= e($c['name']) ?></div>
-          <div class="ppct"><span>Progress</span><span><?= $c['pct'] ?>%</span></div>
-          <div class="pbar"><div class="pfill" style="width:<?= $c['pct'] ?>%"></div></div>
+        <div class="phdr">
+          <h2>Your Courses</h2>
+          <p>Year <?= e($user['year']) ?> — Semester 1, 2024</p>
         </div>
-        <?php endforeach; ?>
-      </div>
+        <div class="srow">
+          <div class="sc">
+            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
+            <div class="sv">8</div>
+            <div class="sl">Enrolled</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-tasks"></i></div>
+            <div class="sv">3</div>
+            <div class="sl">Pending</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
+            <div class="sv">12</div>
+            <div class="sl">Submitted</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
+            <div class="sv">B+</div>
+            <div class="sl">Grade</div>
+          </div>
+        </div>
+        <div class="cgrid">
+          <?php foreach ($COURSES as $c): ?>
+            <div class="cc">
+              <div class="cico"><?= $c['icon'] ?></div>
+              <div class="cn"><?= e($c['code']) ?></div>
+              <div class="cmeta"><?= e($c['name']) ?></div>
+              <div class="ppct"><span>Progress</span><span><?= $c['pct'] ?>%</span></div>
+              <div class="pbar">
+                <div class="pfill" style="width:<?= $c['pct'] ?>%"></div>
+              </div>
+            </div>
+          <?php endforeach; ?>
+        </div>
 
       <?php elseif ($tab === 'grades'): ?>
-<?php
-  $yr  = (int)$user['year'];
-  if ($yr <= 6)     $yg = '1-6';
-  elseif ($yr <= 9) $yg = '7-9';
-  else              $yg = '10-11';
- 
-  $term = $_GET['term'] ?? 'Term 1';
-  $terms = ['Term 1','Term 2','Term 3'];
- 
-  // Fetch grades for this student
-  $sid = (int)$userId;
-  $grades_res = $conn->query(
-      "SELECT g.*, s.name AS subject_name
+        <?php
+        $yr = (int) $user['year'];
+        if ($yr <= 6)
+          $yg = '1-6';
+        elseif ($yr <= 9)
+          $yg = '7-9';
+        else
+          $yg = '10-11';
+
+        $term = $_GET['term'] ?? 'Term 1';
+        $terms = ['Term 1', 'Term 2', 'Term 3'];
+
+        // Fetch grades for this student
+        $sid = (int) $userId;
+        $grades_res = $conn->query(
+          "SELECT g.*, s.name AS subject_name
        FROM grades g
        JOIN subjects s ON g.subject_id = s.id
        WHERE g.student_id = $sid AND g.term = '{$conn->real_escape_string($term)}'
        ORDER BY s.name"
-  );
-  $my_grades = [];
-  if ($grades_res) while ($r = $grades_res->fetch_assoc()) $my_grades[] = $r;
- 
-  // Calculate overall
-  $total_marks = 0; $total_max = 0; $count = count($my_grades);
-  foreach ($my_grades as $g) { $total_marks += $g['marks']; $total_max += $g['max_marks']; }
-  $overall_pct   = $total_max > 0 ? round(($total_marks / $total_max) * 100, 1) : 0;
-  $overall_grade = $count > 0 ? calcGrade($total_marks, $total_max) : '—';
-?>
-<div class="phdr"><h2>My Grades</h2><p>Year <?= e($user['year']) ?> — Academic Results</p></div>
- 
-<!-- Term selector -->
-<div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap">
-  <?php foreach ($terms as $t): ?>
-  <a href="?tab=grades&term=<?= urlencode($t) ?>"
-    style="padding:.38rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
-    background:<?= $t===$term ? 'var(--P)' : '#fff' ?>;
-    color:<?= $t===$term ? '#fff' : 'var(--F)' ?>">
-    <?= e($t) ?>
-  </a>
-  <?php endforeach; ?>
-</div>
- 
-<!-- Summary stats -->
-<div class="srow" style="margin-bottom:1.2rem">
-  <div class="sc">
-    <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
-    <div class="sv"><?= $count ?></div>
-    <div class="sl">Subjects Graded</div>
-  </div>
-  <div class="sc">
-    <div class="sico" style="background:#e3f2fd;color:#0d47a1"><i class="fas fa-percentage"></i></div>
-    <div class="sv"><?= $overall_pct ?>%</div>
-    <div class="sl">Overall Score</div>
-  </div>
-  <div class="sc">
-    <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
-    <div class="sv"><?= $overall_grade ?></div>
-    <div class="sl">Overall Grade</div>
-  </div>
-  <div class="sc">
-    <div class="sico" style="background:#fce4ec;color:#880e4f"><i class="fas fa-trophy"></i></div>
-    <div class="sv">
-      <?php
-        $as = array_filter($my_grades, fn($g) => str_starts_with($g['grade'], 'A'));
-        echo count($as);
-      ?>
-    </div>
-    <div class="sl">A Grades</div>
-  </div>
-</div>
- 
-<?php if (empty($my_grades)): ?>
-<div class="crd" style="padding:2.5rem;text-align:center;color:var(--MT)">
-  <i class="fas fa-hourglass-half" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
-  No grades released for <?= e($term) ?> yet. Check back soon!
-</div>
-<?php else: ?>
-<div class="crd">
-  <div class="crdhdr">
-    <h3><i class="fas fa-chart-bar"></i>&nbsp; <?= e($term) ?> Results</h3>
-  </div>
-  <div class="tw">
-    <table>
-      <thead>
-        <tr>
-          <th>Subject</th>
-          <th>Marks</th>
-          <th>Percentage</th>
-          <th>Grade</th>
-          <th>Performance</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($my_grades as $g):
-          $pct   = round(($g['marks'] / $g['max_marks']) * 100, 1);
-          $color = gradeColor($g['grade']);
+        );
+        $my_grades = [];
+        if ($grades_res)
+          while ($r = $grades_res->fetch_assoc())
+            $my_grades[] = $r;
+
+        // Calculate overall
+        $total_marks = 0;
+        $total_max = 0;
+        $count = count($my_grades);
+        foreach ($my_grades as $g) {
+          $total_marks += $g['marks'];
+          $total_max += $g['max_marks'];
+        }
+        $overall_pct = $total_max > 0 ? round(($total_marks / $total_max) * 100, 1) : 0;
+        $overall_grade = $count > 0 ? calcGrade($total_marks, $total_max) : '—';
         ?>
-        <tr>
-          <td style="font-weight:600"><?= e($g['subject_name']) ?></td>
-          <td style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700">
-            <?= $g['marks'] ?><span style="font-size:.72rem;color:var(--MT);font-family:'Plus Jakarta Sans',sans-serif"> / <?= $g['max_marks'] ?></span>
-          </td>
-          <td>
-            <div style="display:flex;align-items:center;gap:.6rem">
-              <div style="flex:1;height:7px;background:var(--W);border-radius:99px;overflow:hidden;min-width:80px">
-                <div style="height:100%;width:<?= $pct ?>%;background:<?= $pct>=70?'#52b788':($pct>=50?'#f4a261':'#e63946') ?>;border-radius:99px"></div>
-              </div>
-              <span style="font-size:.78rem;font-weight:600;color:var(--F);min-width:38px"><?= $pct ?>%</span>
+        <div class="phdr">
+          <h2>My Grades</h2>
+          <p>Year <?= e($user['year']) ?> — Academic Results</p>
+        </div>
+
+        <!-- Term selector -->
+        <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap">
+          <?php foreach ($terms as $t): ?>
+            <a href="?tab=grades&term=<?= urlencode($t) ?>" style="padding:.38rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
+    background:<?= $t === $term ? 'var(--P)' : '#fff' ?>;
+    color:<?= $t === $term ? '#fff' : 'var(--F)' ?>">
+              <?= e($t) ?>
+            </a>
+          <?php endforeach; ?>
+        </div>
+
+        <!-- Summary stats -->
+        <div class="srow" style="margin-bottom:1.2rem">
+          <div class="sc">
+            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
+            <div class="sv"><?= $count ?></div>
+            <div class="sl">Subjects Graded</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#e3f2fd;color:#0d47a1"><i class="fas fa-percentage"></i></div>
+            <div class="sv"><?= $overall_pct ?>%</div>
+            <div class="sl">Overall Score</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
+            <div class="sv"><?= $overall_grade ?></div>
+            <div class="sl">Overall Grade</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#fce4ec;color:#880e4f"><i class="fas fa-trophy"></i></div>
+            <div class="sv">
+              <?php
+              $as = array_filter($my_grades, fn($g) => str_starts_with($g['grade'], 'A'));
+              echo count($as);
+              ?>
             </div>
-          </td>
-          <td>
-            <span style="display:inline-flex;align-items:center;justify-content:center;
+            <div class="sl">A Grades</div>
+          </div>
+        </div>
+
+        <?php if (empty($my_grades)): ?>
+          <div class="crd" style="padding:2.5rem;text-align:center;color:var(--MT)">
+            <i class="fas fa-hourglass-half" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
+            No grades released for <?= e($term) ?> yet. Check back soon!
+          </div>
+        <?php else: ?>
+          <div class="crd">
+            <div class="crdhdr">
+              <h3><i class="fas fa-chart-bar"></i>&nbsp; <?= e($term) ?> Results</h3>
+            </div>
+            <div class="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>Performance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($my_grades as $g):
+                    $pct = round(($g['marks'] / $g['max_marks']) * 100, 1);
+                    $color = gradeColor($g['grade']);
+                    ?>
+                    <tr>
+                      <td style="font-weight:600"><?= e($g['subject_name']) ?></td>
+                      <td style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700">
+                        <?= $g['marks'] ?><span
+                          style="font-size:.72rem;color:var(--MT);font-family:'Plus Jakarta Sans',sans-serif"> /
+                          <?= $g['max_marks'] ?></span>
+                      </td>
+                      <td>
+                        <div style="display:flex;align-items:center;gap:.6rem">
+                          <div
+                            style="flex:1;height:7px;background:var(--W);border-radius:99px;overflow:hidden;min-width:80px">
+                            <div
+                              style="height:100%;width:<?= $pct ?>%;background:<?= $pct >= 70 ? '#52b788' : ($pct >= 50 ? '#f4a261' : '#e63946') ?>;border-radius:99px">
+                            </div>
+                          </div>
+                          <span style="font-size:.78rem;font-weight:600;color:var(--F);min-width:38px"><?= $pct ?>%</span>
+                        </div>
+                      </td>
+                      <td>
+                        <span style="display:inline-flex;align-items:center;justify-content:center;
               width:42px;height:42px;border-radius:10px;font-weight:800;font-size:1rem;
               background:<?= $color[0] ?>;color:<?= $color[1] ?>">
-              <?= e($g['grade']) ?>
-            </span>
-          </td>
-          <td style="font-size:.78rem;color:var(--MT)">
-            <?php
-              if ($pct >= 80)      echo '<span style="color:#1b5e20"><i class="fas fa-arrow-up"></i> Excellent</span>';
-              elseif ($pct >= 65)  echo '<span style="color:#0d47a1"><i class="fas fa-check"></i> Good</span>';
-              elseif ($pct >= 50)  echo '<span style="color:#bf360c"><i class="fas fa-minus"></i> Average</span>';
-              else                 echo '<span style="color:#b71c1c"><i class="fas fa-arrow-down"></i> Needs Improvement</span>';
-            ?>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <!-- Overall bar -->
-  <div style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-    <span style="font-size:.8rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?>:</span>
-    <div style="flex:1;height:10px;background:var(--W);border-radius:99px;overflow:hidden;min-width:120px">
-      <div style="height:100%;width:<?= $overall_pct ?>%;background:linear-gradient(90deg,var(--P),#52b788);border-radius:99px;transition:width .5s ease"></div>
-    </div>
-    <span style="font-size:.88rem;font-weight:700;color:var(--P)"><?= $overall_pct ?>% — <?= $overall_grade ?></span>
-  </div>
-</div>
-<?php endif; ?>
-      <!-- ── TIMETABLE TAB ── -->
-<?php elseif ($tab === 'timetable'): ?>
-<?php
-  $yr = (int)$user['year'];
-  if ($yr <= 6)     $yg = '1-6';
-  elseif ($yr <= 9) $yg = '7-9';
-  else              $yg = '10-11';
-?>
-<div class="phdr"><h2>My Timetable</h2><p>Year <?= e($user['year']) ?> — Weekly Schedule</p></div>
-
-<div class="crd">
-  <?php if ($yg === '1-6'): ?>
-  <!-- ════ YEAR 1–6 : 5 periods, 1hr each ════ -->
-  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
-    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 12:45 pm &nbsp;·&nbsp; 1 hr classes
-  </div>
-  <div class="tw">
-    <table>
-      <thead><tr>
-        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
-        <th>8:00–9:00</th>
-        <th>9:00–10:00</th>
-        <th>10:00–10:45<br><span style="font-weight:400;font-size:.65rem">(Break 45 min)</span></th>
-        <th>10:45–11:45</th>
-        <th>11:45–12:45</th>
-      </tr></thead>
-      <tbody>
-        <?php foreach ($TIMETABLE as $row):
-          $periods    = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5']];
-          $is_sport   = (bool)$row['sport_day'];
-        ?>
-        <tr>
-          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
-            <?= e($row['day']) ?>
-          </td>
-          <?php if ($is_sport): ?>
-            <td colspan="2" style="padding:4px">
-              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
-                ⚽ Sport Session (2 hrs)
-              </div>
-            </td>
-            <td style="padding:4px">
-              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-                Break (45 min)
-              </div>
-            </td>
-            <?php foreach (array_slice($periods, 3) as $p): ?>
-            <td style="padding:4px">
-              <div style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-                <?= e($p) ?>
-              </div>
-            </td>
-            <?php endforeach; ?>
-          <?php else: ?>
-            <?php foreach ($periods as $idx => $p): ?>
-              <?php if ($p === 'BREAK'): ?>
-              <td style="padding:4px">
-                <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-                  Break (45 min)
+                          <?= e($g['grade']) ?>
+                        </span>
+                      </td>
+                      <td style="font-size:.78rem;color:var(--MT)">
+                        <?php
+                        if ($pct >= 80)
+                          echo '<span style="color:#1b5e20"><i class="fas fa-arrow-up"></i> Excellent</span>';
+                        elseif ($pct >= 65)
+                          echo '<span style="color:#0d47a1"><i class="fas fa-check"></i> Good</span>';
+                        elseif ($pct >= 50)
+                          echo '<span style="color:#bf360c"><i class="fas fa-minus"></i> Average</span>';
+                        else
+                          echo '<span style="color:#b71c1c"><i class="fas fa-arrow-down"></i> Needs Improvement</span>';
+                        ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+            <!-- Overall bar -->
+            <div
+              style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+              <span style="font-size:.8rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?>:</span>
+              <div style="flex:1;height:10px;background:var(--W);border-radius:99px;overflow:hidden;min-width:120px">
+                <div
+                  style="height:100%;width:<?= $overall_pct ?>%;background:linear-gradient(90deg,var(--P),#52b788);border-radius:99px;transition:width .5s ease">
                 </div>
-              </td>
-              <?php else: ?>
-              <td style="padding:4px">
-                <div style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-                  <?= e($p) ?>
-                </div>
-              </td>
-              <?php endif; ?>
-            <?php endforeach; ?>
-          <?php endif; ?>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:rgba(45,106,79,.08);border-radius:3px"></span>Class (1 hr)</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Monday</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (45 min)</span>
-  </div>
-
-  <?php elseif ($yg === '7-9'): ?>
-  <!-- ════ YEAR 7–9 : 7 periods, 45min, sport Tuesday ════ -->
-  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
-    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport: Tuesday
-  </div>
-  <div class="tw">
-    <table>
-      <thead><tr>
-        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
-        <th>8:00–8:45</th>
-        <th>8:45–9:30</th>
-        <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
-        <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
-        <th>11:00–11:45</th>
-        <th>11:45–12:30</th>
-        <th>12:30–1:15</th>
-        <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
-      </tr></thead>
-      <tbody>
-        <?php foreach ($TIMETABLE as $row):
-          $periods  = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5'],$row['p6'],$row['p7']];
-          $is_sport = (bool)$row['sport_day'];
+              </div>
+              <span style="font-size:.88rem;font-weight:700;color:var(--P)"><?= $overall_pct ?>% —
+                <?= $overall_grade ?></span>
+            </div>
+          </div>
+        <?php endif; ?>
+        <!-- ── TIMETABLE TAB ── -->
+      <?php elseif ($tab === 'timetable'): ?>
+        <?php
+        $yr = (int) $user['year'];
+        if ($yr <= 6)
+          $yg = '1-6';
+        elseif ($yr <= 9)
+          $yg = '7-9';
+        else
+          $yg = '10-11';
         ?>
-        <tr>
-          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
-            <?= e($row['day']) ?>
-          </td>
-          <?php if ($is_sport): ?>
-            <td colspan="2" style="padding:4px">
-              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
-                ⚽ Sport (2 hrs)
-              </div>
-            </td>
-            <td colspan="2" style="padding:4px">
-              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-                Break (1 hr 30 min)
-              </div>
-            </td>
-            <?php foreach (array_slice($periods, 3) as $p): ?>
-            <td style="padding:4px">
-              <div style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-                <?= e($p) ?>
-              </div>
-            </td>
-            <?php endforeach; ?>
-          <?php else: ?>
-           <?php foreach ($periods as $idx => $p): ?>
-  <?php if ($idx === 3): // inject BREAK before p4 ?>
-    <td style="padding:4px">
-      <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-        Break (1 hr)
-      </div>
-    </td>
-  <?php endif; ?>
+        <div class="phdr">
+          <h2>My Timetable</h2>
+          <p>Year <?= e($user['year']) ?> — Weekly Schedule</p>
+        </div>
 
-  <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
-  <td style="padding:4px">
-    <div style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
-      <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
-    </div>
-  </td>
-  <?php else: ?>
-  <td style="padding:4px">
-    <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-      <?= e($p) ?>
-    </div>
-  </td>
-  <?php endif; ?>
-<?php endforeach; ?>
+        <div class="crd">
+          <?php if ($yg === '1-6'): ?>
+            <!-- ════ YEAR 1–6 : 5 periods, 1hr each ════ -->
+            <div
+              style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+              Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 12:45 pm &nbsp;·&nbsp; 1 hr classes
+            </div>
+            <div class="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+                    <th>8:00–9:00</th>
+                    <th>9:00–10:00</th>
+                    <th>10:00–10:45<br><span style="font-weight:400;font-size:.65rem">(Break 45 min)</span></th>
+                    <th>10:45–11:45</th>
+                    <th>11:45–12:45</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($TIMETABLE as $row):
+                    $periods = [$row['p1'], $row['p2'], $row['p3'], $row['p4'], $row['p5']];
+                    $is_sport = (bool) $row['sport_day'];
+                    ?>
+                    <tr>
+                      <td
+                        style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+                        <?= e($row['day']) ?>
+                      </td>
+                      <?php if ($is_sport): ?>
+                        <td colspan="2" style="padding:4px">
+                          <div
+                            style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                            ⚽ Sport Session (2 hrs)
+                          </div>
+                        </td>
+                        <td style="padding:4px">
+                          <div
+                            style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                            Break (45 min)
+                          </div>
+                        </td>
+                        <?php foreach (array_slice($periods, 3) as $p): ?>
+                          <td style="padding:4px">
+                            <div
+                              style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                              <?= e($p) ?>
+                            </div>
+                          </td>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <?php foreach ($periods as $idx => $p): ?>
+                          <?php if ($p === 'BREAK'): ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                                Break (45 min)
+                              </div>
+                            </td>
+                          <?php else: ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:rgba(45,106,79,.08);color:var(--P);border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                                <?= e($p) ?>
+                              </div>
+                            </td>
+                          <?php endif; ?>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+            <div
+              style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:rgba(45,106,79,.08);border-radius:3px"></span>Class
+                (1 hr)</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2
+                hrs) — Monday</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (45
+                min)</span>
+            </div>
+
+          <?php elseif ($yg === '7-9'): ?>
+            <!-- ════ YEAR 7–9 : 7 periods, 45min, sport Tuesday ════ -->
+            <div
+              style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+              Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport:
+              Tuesday
+            </div>
+            <div class="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+                    <th>8:00–8:45</th>
+                    <th>8:45–9:30</th>
+                    <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+                    <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
+                    <th>11:00–11:45</th>
+                    <th>11:45–12:30</th>
+                    <th>12:30–1:15</th>
+                    <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($TIMETABLE as $row):
+                    $periods = [$row['p1'], $row['p2'], $row['p3'], $row['p4'], $row['p5'], $row['p6'], $row['p7']];
+                    $is_sport = (bool) $row['sport_day'];
+                    ?>
+                    <tr>
+                      <td
+                        style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+                        <?= e($row['day']) ?>
+                      </td>
+                      <?php if ($is_sport): ?>
+                        <td colspan="2" style="padding:4px">
+                          <div
+                            style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                            ⚽ Sport (2 hrs)
+                          </div>
+                        </td>
+                        <td colspan="2" style="padding:4px">
+                          <div
+                            style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                            Break (1 hr 30 min)
+                          </div>
+                        </td>
+                        <?php foreach (array_slice($periods, 3) as $p): ?>
+                          <td style="padding:4px">
+                            <div
+                              style="background:#dbeafe;color:#1e40af;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                              <?= e($p) ?>
+                            </div>
+                          </td>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <?php foreach ($periods as $idx => $p): ?>
+                          <?php if ($idx === 3): // inject BREAK before p4 ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                                Break (1 hr)
+                              </div>
+                            </td>
+                          <?php endif; ?>
+
+                          <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+                                <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
+                              </div>
+                            </td>
+                          <?php else: ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                                <?= e($p) ?>
+                              </div>
+                            </td>
+                          <?php endif; ?>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+            <div
+              style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#dbeafe;border-radius:3px"></span>Class (45
+                min)</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short
+                period (30 min)</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2
+                hrs) — Tuesday</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1
+                hr)</span>
+            </div>
+
+          <?php else: ?>
+            <!-- ════ YEAR 10–11 : 7 periods, 45min, sport Friday ════ -->
+            <div
+              style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
+              Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport:
+              Friday
+            </div>
+            <div class="tw">
+              <table>
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+                    <th>8:00–8:45</th>
+                    <th>8:45–9:30</th>
+                    <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+                    <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
+                    <th>11:00–11:45</th>
+                    <th>11:45–12:30</th>
+                    <th>12:30–1:15</th>
+                    <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <?php foreach ($TIMETABLE as $row):
+                    $periods = [$row['p1'], $row['p2'], $row['p3'], $row['p4'], $row['p5'], $row['p6'], $row['p7']];
+                    $is_sport = (bool) $row['sport_day'];
+                    ?>
+                    <tr>
+                      <td
+                        style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
+                        <?= e($row['day']) ?>
+                      </td>
+                      <?php if ($is_sport): ?>
+                        <td colspan="2" style="padding:4px">
+                          <div
+                            style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
+                            ⚽ Sport (2 hrs)
+                          </div>
+                        </td>
+                        <td colspan="2" style="padding:4px">
+                          <div
+                            style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                            Break (1 hr 30 min)
+                          </div>
+                        </td>
+                        <?php foreach (array_slice($periods, 3) as $p): ?>
+                          <td style="padding:4px">
+                            <div
+                              style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                              <?= e($p) ?>
+                            </div>
+                          </td>
+                        <?php endforeach; ?>
+                      <?php else: ?>
+                        <?php foreach ($periods as $idx => $p): ?>
+                          <?php if ($idx === 3): // inject BREAK before p4 ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
+                                Break (1 hr)
+                              </div>
+                            </td>
+                          <?php endif; ?>
+
+                          <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+                                <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
+                              </div>
+                            </td>
+                          <?php else: ?>
+                            <td style="padding:4px">
+                              <div
+                                style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
+                                <?= e($p) ?>
+                              </div>
+                            </td>
+                          <?php endif; ?>
+                        <?php endforeach; ?>
+                      <?php endif; ?>
+                    </tr>
+                  <?php endforeach; ?>
+                </tbody>
+              </table>
+            </div>
+            <div
+              style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:rgba(212,168,71,.15);border-radius:3px"></span>Class
+                (45 min)</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short
+                period (30 min)</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2
+                hrs) — Friday</span>
+              <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span
+                  style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1
+                hr)</span>
+            </div>
           <?php endif; ?>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#dbeafe;border-radius:3px"></span>Class (45 min)</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short period (30 min)</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Tuesday</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1 hr)</span>
-  </div>
+        </div>
 
-  <?php else: ?>
-  <!-- ════ YEAR 10–11 : 7 periods, 45min, sport Friday ════ -->
-  <div style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
-    Year <?= e($user['year']) ?> &nbsp;·&nbsp; 8:00 am – 1:45 pm &nbsp;·&nbsp; 45 min classes &nbsp;·&nbsp; Sport: Friday
-  </div>
-  <div class="tw">
-    <table>
-      <thead><tr>
-        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
-        <th>8:00–8:45</th>
-        <th>8:45–9:30</th>
-        <th>9:30–10:00<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
-        <th>10:00–11:00<br><span style="font-weight:400;font-size:.65rem">(Break 1hr)</span></th>
-        <th>11:00–11:45</th>
-        <th>11:45–12:30</th>
-        <th>12:30–1:15</th>
-        <th>1:15–1:45<br><span style="font-weight:400;font-size:.65rem">(30 min)</span></th>
-      </tr></thead>
-      <tbody>
-        <?php foreach ($TIMETABLE as $row):
-          $periods  = [$row['p1'],$row['p2'],$row['p3'],$row['p4'],$row['p5'],$row['p6'],$row['p7']];
-          $is_sport = (bool)$row['sport_day'];
-        ?>
-        <tr>
-          <td style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
-            <?= e($row['day']) ?>
-          </td>
-          <?php if ($is_sport): ?>
-            <td colspan="2" style="padding:4px">
-              <div style="background:#fef3c7;color:#92400e;border-radius:8px;padding:5px 8px;font-size:.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;height:36px">
-                ⚽ Sport (2 hrs)
-              </div>
-            </td>
-            <td colspan="2" style="padding:4px">
-              <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;padding:5px 4px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-                Break (1 hr 30 min)
-              </div>
-            </td>
-            <?php foreach (array_slice($periods, 3) as $p): ?>
-            <td style="padding:4px">
-              <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-                <?= e($p) ?>
-              </div>
-            </td>
-            <?php endforeach; ?>
-          <?php else: ?>
-           <?php foreach ($periods as $idx => $p): ?>
-  <?php if ($idx === 3): // inject BREAK before p4 ?>
-    <td style="padding:4px">
-      <div style="background:#f3f4f6;color:#6b7280;border-radius:8px;font-size:.72rem;display:flex;align-items:center;justify-content:center;height:36px">
-        Break (1 hr)
-      </div>
-    </td>
-  <?php endif; ?>
-
-  <?php if ($idx === 2 || $idx === 6): // p3 and p7 are 30min ?>
-  <td style="padding:4px">
-    <div style="background:#ede9fe;color:#5b21b6;border-radius:8px;padding:5px 4px;font-size:.72rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
-      <?= e($p) ?><br><span style="font-weight:400;font-size:.65rem">30 min</span>
-    </div>
-  </td>
-  <?php else: ?>
-  <td style="padding:4px">
-    <div style="background:rgba(212,168,71,.15);color:#8a6200;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px">
-      <?= e($p) ?>
-    </div>
-  </td>
-  <?php endif; ?>
-<?php endforeach; ?>
- <?php endif; ?>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-  <div style="display:flex;gap:1.2rem;padding:.85rem 1.25rem;flex-wrap:wrap;border-top:1.5px solid var(--W);background:#fafaf7">
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:rgba(212,168,71,.15);border-radius:3px"></span>Class (45 min)</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#ede9fe;border-radius:3px"></span>Short period (30 min)</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#fef3c7;border-radius:3px"></span>Sport (2 hrs) — Friday</span>
-    <span style="display:flex;align-items:center;gap:.4rem;font-size:.73rem;color:#6b7280"><span style="display:inline-block;width:12px;height:12px;background:#f3f4f6;border-radius:3px"></span>Break (1 hr)</span>
-  </div>
-  <?php endif; ?>
-</div>
-
-      <!-- ── HOMEWORK TAB ── -->
+        <!-- ── HOMEWORK TAB ── -->
       <?php elseif ($tab === 'homework'): ?>
-      <div class="phdr"><h2>Homework Status</h2><p>Track your assignments, quizzes and tests</p></div>
-      <div class="srow">
-        <?php $ok=array_filter($HOMEWORK,fn($h)=>$h['status']==='submitted'); $ms=array_filter($HOMEWORK,fn($h)=>$h['status']==='missing'); ?>
-        <div class="sc"><div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div><div class="sv"><?= count($ok) ?></div><div class="sl">Submitted</div></div>
-        <div class="sc"><div class="sico" style="background:#ffebee;color:#b71c1c"><i class="fas fa-times-circle"></i></div><div class="sv"><?= count($ms) ?></div><div class="sl">Missing</div></div>
-        <div class="sc"><div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-clock"></i></div><div class="sv">0</div><div class="sl">Late</div></div>
-        <div class="sc"><div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i></div>
-          <div class="sv"><?= count($HOMEWORK)?round(count($ok)/count($HOMEWORK)*100).'%':'0%' ?></div><div class="sl">Completion</div></div>
-      </div>
-      <div class="crd"><div class="tw">
-        <table>
-          <thead><tr><th>Item Name</th><th>Type</th><th>Due Date</th><th>Status</th></tr></thead>
-          <tbody>
-            <?php foreach ($HOMEWORK as $h): ?>
-            <tr>
-              <td style="font-weight:600"><?= e($h['item']) ?></td>
-              <td><?php
-                $cls = $h['type']==='Homework' ? 'bhw' : ($h['type']==='Quiz' ? 'bqz' : 'bts');
-                echo "<span class=\"{$cls}\">{$h['type']}</span>";
-              ?></td>
-              <td style="color:var(--MT)"><?= e($h['due']) ?></td>
-              <td><?php if ($h['status']==='submitted'):?>
-                <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
-                <?php else: ?>
-                <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
-              <?php endif; ?></td>
-            </tr>
-            <?php endforeach; ?>
-          </tbody>
-        </table>
-      </div></div>
+        <div class="phdr">
+          <h2>Homework Status</h2>
+          <p>Track your assignments, quizzes and tests</p>
+        </div>
+        <div class="srow">
+          <?php $ok = array_filter($HOMEWORK, fn($h) => $h['status'] === 'submitted');
+          $ms = array_filter($HOMEWORK, fn($h) => $h['status'] === 'missing'); ?>
+          <div class="sc">
+            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
+            <div class="sv"><?= count($ok) ?></div>
+            <div class="sl">Submitted</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#ffebee;color:#b71c1c"><i class="fas fa-times-circle"></i></div>
+            <div class="sv"><?= count($ms) ?></div>
+            <div class="sl">Missing</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-clock"></i></div>
+            <div class="sv">0</div>
+            <div class="sl">Late</div>
+          </div>
+          <div class="sc">
+            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i>
+            </div>
+            <div class="sv"><?= count($HOMEWORK) ? round(count($ok) / count($HOMEWORK) * 100) . '%' : '0%' ?></div>
+            <div class="sl">Completion</div>
+          </div>
+        </div>
+        <div class="crd">
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item Name</th>
+                  <th>Type</th>
+                  <th>Due Date</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php foreach ($HOMEWORK as $h): ?>
+                  <tr>
+                    <td style="font-weight:600"><?= e($h['item']) ?></td>
+                    <td><?php
+                    $cls = $h['type'] === 'Homework' ? 'bhw' : ($h['type'] === 'Quiz' ? 'bqz' : 'bts');
+                    echo "<span class=\"{$cls}\">{$h['type']}</span>";
+                    ?></td>
+                    <td style="color:var(--MT)"><?= e($h['due']) ?></td>
+                    <td><?php if ($h['status'] === 'submitted'): ?>
+                        <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
+                      <?php else: ?>
+                        <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-      <!-- ── PAYMENT TAB ── -->
+        <!-- ── PAYMENT TAB ── -->
       <?php elseif ($tab === 'payment'): ?>
-      <div class="phdr"><h2>Payment</h2><p>Your fee statements and invoice history</p></div>
-      <div class="phero">
-        <div>
-          <div style="font-size:.75rem;opacity:.65;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em">Current Balance Due</div>
-          <div style="font-size:2.3rem;font-weight:700;font-family:'Playfair Display',serif">RM 450.00</div>
-          <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">May 2024 — Monthly Tuition Fee</div>
+        <div class="phdr">
+          <h2>Payment</h2>
+          <p>Your fee statements and invoice history</p>
         </div>
-        <button onclick="alert('Payment gateway not available in demo.')"
-          style="background:var(--O);color:var(--F);border:none;padding:.8rem 1.4rem;border-radius:12px;
+        <div class="phero">
+          <div>
+            <div style="font-size:.75rem;opacity:.65;margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.05em">
+              Current Balance Due</div>
+            <div style="font-size:2.3rem;font-weight:700;font-family:'Playfair Display',serif">RM 450.00</div>
+            <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">May 2024 — Monthly Tuition Fee</div>
+          </div>
+          <button onclick="alert('Payment gateway not available in demo.')" style="background:var(--O);color:var(--F);border:none;padding:.8rem 1.4rem;border-radius:12px;
           font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;cursor:pointer;font-size:.88rem">
-          Pay Now &nbsp;<i class="fas fa-arrow-right"></i>
-        </button>
-      </div>
-      <?php foreach ($PAYMENTS as $p): ?>
-      <div class="pcard">
-        <div>
-          <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['date']) ?> — Monthly Tuition</div>
-          <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)"><?= e($p['amount']) ?></div>
+            Pay Now &nbsp;<i class="fas fa-arrow-right"></i>
+          </button>
         </div>
-        <?= $p['status']==='Paid'
-          ? '<span class="bpd"><i class="fas fa-check"></i> Paid</span>'
-          : '<span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>' ?>
-      </div>
-      <?php endforeach; ?>
+        <?php foreach ($PAYMENTS as $p): ?>
+          <div class="pcard">
+            <div>
+              <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['date']) ?> — Monthly Tuition
+              </div>
+              <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)">
+                <?= e($p['amount']) ?></div>
+            </div>
+            <?= $p['status'] === 'Paid'
+              ? '<span class="bpd"><i class="fas fa-check"></i> Paid</span>'
+              : '<span class="binv"><i class="fas fa-file-invoice"></i> Invoice Sent</span>' ?>
+          </div>
+        <?php endforeach; ?>
       <?php endif; ?>
 
     </main>
@@ -599,17 +798,17 @@ if (isset($_GET['markread'])) {
      JAVASCRIPT — add before </body> or in pageFoot
 ════════════════════════════════════════════ -->
 <script>
-function toggleNotifs() {
-  var d = document.getElementById('notifDrop');
-  d.style.display = d.style.display === 'none' ? 'block' : 'none';
-}
-// Close when clicking outside
-document.addEventListener('click', function(e) {
-  var wrap = document.getElementById('bellWrap');
-  if (wrap && !wrap.contains(e.target)) {
+  function toggleNotifs() {
     var d = document.getElementById('notifDrop');
-    if (d) d.style.display = 'none';
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
   }
-});
+  // Close when clicking outside
+  document.addEventListener('click', function (e) {
+    var wrap = document.getElementById('bellWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      var d = document.getElementById('notifDrop');
+      if (d) d.style.display = 'none';
+    }
+  });
 </script>
 <?php pageFoot(); ?>
