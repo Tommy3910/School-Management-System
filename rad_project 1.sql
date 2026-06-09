@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: May 19, 2026 at 06:25 PM
+-- Generation Time: Jun 09, 2026 at 05:13 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -74,13 +74,13 @@ CREATE TABLE `subjects` (
 --
 
 INSERT INTO `subjects` (`id`, `year_group`, `name`, `created_at`) VALUES
-(1, '10-11', 'BM', '2026-05-19 15:49:09'),
-(2, '10-11', 'Math', '2026-05-19 15:49:09'),
-(3, '10-11', 'English', '2026-05-19 15:49:09'),
-(4, '10-11', 'Science', '2026-05-19 15:49:09'),
-(5, '10-11', 'History', '2026-05-19 15:49:09'),
-(6, '10,11', 'Account', '2026-05-19 15:49:09'),
-(7, '10-11', 'Geography', '2026-05-19 15:49:09');
+(1, '10-11', 'BM', '2026-06-02 12:12:04'),
+(2, '10-11', 'Math', '2026-06-02 12:12:04'),
+(3, '10-11', 'English', '2026-06-02 12:12:04'),
+(4, '10-11', 'Science', '2026-06-02 12:12:04'),
+(5, '10-11', 'History', '2026-06-02 12:12:04'),
+(6, '10,11', 'Account', '2026-06-02 12:12:04'),
+(7, '10-11', 'Geography', '2026-06-02 12:12:04');
 
 -- --------------------------------------------------------
 
@@ -108,11 +108,11 @@ CREATE TABLE `timetable` (
 --
 
 INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p4`, `p5`, `p6`, `p7`, `sport_day`) VALUES
-(1, '10-11', 10, 'Monday', 'BM', 'Math', 'English', 'Science', 'Geography', 'BM', 'Account', 0),
-(2, '10-11', 10, 'Tuesday', 'Math', 'Science', 'BM', 'History', 'AddMath', 'Science', 'Math', 0),
-(3, '10-11', 10, 'Wednesday', 'Science', 'English', 'Account', 'Math', 'Science', 'English', 'History', 0),
-(4, '10-11', 10, 'Thursday', 'History', 'Geography', 'Math', 'BM', 'English', 'AddMath', 'Account', 0),
-(5, '10-11', 10, 'Friday', 'SPORT', 'SPORT', 'BREAK', 'Geography', 'BM', 'English', 'Account', 1);
+(1, '10-11', 11, 'Monday', 'BM', 'ENG', 'HIS', 'MAN', 'ACC', 'ECO', 'SCI', 0),
+(2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'SCI', 'HIS', 'ACC', 'ECO', 0),
+(3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'HIS', 'ACC', 0),
+(4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'ACC', 0),
+(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1);
 
 -- --------------------------------------------------------
 
@@ -134,8 +134,8 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALUES
-(252564, 'Aminah@teacher.edu.my', 'Cikgu Aminah', NULL, 'teacher123$', 'teacher'),
-(275486, 'Ali_Hassan@student.edu.my', 'Ali Hassan', 10, '989856', 'student');
+(1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
+(2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher');
 
 --
 -- Indexes for dumped tables
@@ -192,7 +192,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `timetable`
@@ -204,7 +204,7 @@ ALTER TABLE `timetable`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=275488;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
