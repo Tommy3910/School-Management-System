@@ -12,6 +12,13 @@ START TRANSACTION;
 SET time_zone = "+00:00";
 
 
+
+--
+-- Indexes for table `payments`
+--
+
+ALTER TABLE `payments`
+  ADD PRIMARY KEY (`id`);
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
@@ -161,6 +168,31 @@ INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALU
 (1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
 (2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher');
 
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `payments`
+--
+
+CREATE TABLE `payments` (
+  `id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `amount` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `currency` varchar(8) NOT NULL DEFAULT 'RM',
+  `description` varchar(255) DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'Invoice Sent',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `paid_at` timestamp NULL DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `payments`
+--
+
+INSERT INTO `payments` (`id`, `user_id`, `amount`, `currency`, `description`, `status`, `created_at`, `paid_at`) VALUES
+(1, 1, 450.00, 'RM', 'School fees - June 2026', 'Invoice Sent', '2026-06-01 08:00:00', NULL),
+(2, 1, 450.00, 'RM', 'School fees - May 2026', 'Paid', '2026-05-01 08:00:00', '2026-05-02 12:30:00');
+
 --
 -- Indexes for dumped tables
 --
@@ -228,6 +260,11 @@ ALTER TABLE `timetable`
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+--
+-- AUTO_INCREMENT for table `payments`
+--
+ALTER TABLE `payments`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 COMMIT;
 

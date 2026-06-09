@@ -5,18 +5,30 @@ session_start();
 $conn = mysqli_connect("localhost", "root", "", "rad_project");
 
 // ── Helpers ──────────────────────────────────────────────
-function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+function e($s)
+{
+    return htmlspecialchars((string) $s, ENT_QUOTES, 'UTF-8');
+}
 
-function flash($key, $val = null) {
-    if ($val !== null) { $_SESSION['_flash'][$key] = $val; return; }
+function flash($key, $val = null)
+{
+    if ($val !== null) {
+        $_SESSION['_flash'][$key] = $val;
+        return;
+    }
     $v = $_SESSION['_flash'][$key] ?? null;
     unset($_SESSION['_flash'][$key]);
     return $v;
 }
 
-function redirect($url) { header("Location: $url"); exit; }
+function redirect($url)
+{
+    header("Location: $url");
+    exit;
+}
 
-function requireAuth($role) {
+function requireAuth($role)
+{
     if (empty($_SESSION['user']) || $_SESSION['user']['role'] !== $role) {
         redirect('login.php');
     }
@@ -24,31 +36,34 @@ function requireAuth($role) {
 
 // ── Demo users ────────────────────────────────────────────
 define('USERS', [
-    'student1' => ['password' => 'pass123', 'role' => 'student', 'name' => 'Ali Hassan',    'year' => 10],
-    'teacher1' => ['password' => 'pass123', 'role' => 'teacher', 'name' => 'Cikgu Aminah',  'year' => null],
+    'student1' => ['password' => 'pass123', 'role' => 'student', 'name' => 'Ali Hassan', 'year' => 10],
+    'teacher1' => ['password' => 'pass123', 'role' => 'teacher', 'name' => 'Cikgu Aminah', 'year' => null],
 ]);
 
 // ── Student data ──────────────────────────────────────────
 $COURSES = [
-    ['code'=>'BM101',  'name'=>'Bahasa Malaysia',  'icon'=>'📖', 'pct'=>78],
-    ['code'=>'MT102',  'name'=>'Mathematics',       'icon'=>'📐', 'pct'=>85],
-    ['code'=>'SC103',  'name'=>'Science',           'icon'=>'🔬', 'pct'=>72],
-    ['code'=>'EN104',  'name'=>'English',           'icon'=>'✏️', 'pct'=>90],
-    ['code'=>'HI105',  'name'=>'History',           'icon'=>'🏛️', 'pct'=>65],
-    ['code'=>'GE106',  'name'=>'Geography',         'icon'=>'🌍', 'pct'=>70],
-    ['code'=>'PE107',  'name'=>'Physical Education','icon'=>'⚽', 'pct'=>95],
-    ['code'=>'AR108',  'name'=>'Art',               'icon'=>'🎨', 'pct'=>88],
+    ['code' => 'BM101', 'name' => 'Bahasa Malaysia', 'icon' => '📖', 'pct' => 78],
+    ['code' => 'MT102', 'name' => 'Mathematics', 'icon' => '📐', 'pct' => 85],
+    ['code' => 'SC103', 'name' => 'Science', 'icon' => '🔬', 'pct' => 72],
+    ['code' => 'EN104', 'name' => 'English', 'icon' => '✏️', 'pct' => 90],
+    ['code' => 'HI105', 'name' => 'History', 'icon' => '🏛️', 'pct' => 65],
+    ['code' => 'GE106', 'name' => 'Geography', 'icon' => '🌍', 'pct' => 70],
+    ['code' => 'PE107', 'name' => 'Physical Education', 'icon' => '⚽', 'pct' => 95],
+    ['code' => 'AR108', 'name' => 'Art', 'icon' => '🎨', 'pct' => 88],
 ];
 
 // ── Load timetable from DB ──────────────────────────
 $TIMETABLE = [];
-$TT_GROUP  = '10-11'; // default
+$TT_GROUP = '10-11'; // default
 
 if (isset($_SESSION['user']['year'])) {
-    $yr = (int)$_SESSION['user']['year'];
-    if ($yr <= 6)      $TT_GROUP = '1-6';
-    elseif ($yr <= 9)  $TT_GROUP = '7-9';
-    else               $TT_GROUP = '10-11';
+    $yr = (int) $_SESSION['user']['year'];
+    if ($yr <= 6)
+        $TT_GROUP = '1-6';
+    elseif ($yr <= 9)
+        $TT_GROUP = '7-9';
+    else
+        $TT_GROUP = '10-11';
 
     $tt_res = $conn->query(
         "SELECT * FROM timetable
@@ -62,48 +77,75 @@ if (isset($_SESSION['user']['year'])) {
     }
 }
 $HOMEWORK = [
-    ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
-    ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
-    ['item'=>'Science Lab Report',   'type'=>'Homework','due'=>'14 May 2024','status'=>'missing'],
-    ['item'=>'History Test',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
-    ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2024','status'=>'missing'],
-    ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2024','status'=>'missing'],
+    ['item' => 'Chapter 5 Essay', 'type' => 'Homework', 'due' => '10 May 2024', 'status' => 'submitted'],
+    ['item' => 'Algebra Quiz', 'type' => 'Quiz', 'due' => '12 May 2024', 'status' => 'submitted'],
+    ['item' => 'Science Lab Report', 'type' => 'Homework', 'due' => '14 May 2024', 'status' => 'missing'],
+    ['item' => 'History Test', 'type' => 'Test', 'due' => '16 May 2024', 'status' => 'submitted'],
+    ['item' => 'English Composition', 'type' => 'Homework', 'due' => '18 May 2024', 'status' => 'missing'],
+    ['item' => 'Geography Map Work', 'type' => 'Homework', 'due' => '20 May 2024', 'status' => 'missing'],
 ];
 
-$PAYMENTS = [
-    ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['student'=>'Siti Aminah', 'year'=>10, 'date'=>'1 Apr 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['student'=>'Rajan Kumar', 'year'=>11, 'date'=>'1 Mar 2024', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
-];
+$PAYMENTS = [];
+
+// Try load payments from DB if table exists. Fallback to demo list if DB unavailable.
+if ($conn) {
+    $pRes = $conn->query(
+        "SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC"
+    );
+    if ($pRes) {
+        while ($r = $pRes->fetch_assoc()) {
+            $PAYMENTS[] = [
+                'id' => (int) $r['id'],
+                'student_id' => (int) $r['user_id'],
+                'student' => $r['student_name'] ?? ('User #' . (int) $r['user_id']),
+                'year' => null,
+                'date' => $r['created_at'],
+                'amount' => ($r['currency'] ?? 'RM') . ' ' . number_format((float) $r['amount'], 2),
+                'status' => $r['status'] ?? 'Invoice Sent'
+            ];
+        }
+    }
+}
+
+if (empty($PAYMENTS)) {
+    $PAYMENTS = [
+        ['student' => 'Ali Hassan', 'year' => 10, 'date' => '1 May 2024', 'amount' => 'RM 450.00', 'status' => 'Paid'],
+        ['student' => 'Siti Aminah', 'year' => 10, 'date' => '1 Apr 2024', 'amount' => 'RM 450.00', 'status' => 'Paid'],
+        ['student' => 'Rajan Kumar', 'year' => 11, 'date' => '1 Mar 2024', 'amount' => 'RM 450.00', 'status' => 'Invoice Sent'],
+    ];
+}
 
 // ── Teacher data ──────────────────────────────────────────
 $SPORT = [
-    ['group'=>'Year 7',  'day'=>'Monday',    'bg'=>'rgba(212,168,71,.08)', 'col'=>'#8a6200'],
-    ['group'=>'Year 8',  'day'=>'Tuesday',   'bg'=>'rgba(45,106,79,.08)',  'col'=>'#1b5e20'],
-    ['group'=>'Year 9',  'day'=>'Wednesday', 'bg'=>'rgba(212,168,71,.08)', 'col'=>'#8a6200'],
-    ['group'=>'Year 10', 'day'=>'Thursday',  'bg'=>'rgba(45,106,79,.08)',  'col'=>'#1b5e20'],
-    ['group'=>'Year 11', 'day'=>'Friday',    'bg'=>'rgba(212,168,71,.08)', 'col'=>'#8a6200'],
+    ['group' => 'Year 7', 'day' => 'Monday', 'bg' => 'rgba(212,168,71,.08)', 'col' => '#8a6200'],
+    ['group' => 'Year 8', 'day' => 'Tuesday', 'bg' => 'rgba(45,106,79,.08)', 'col' => '#1b5e20'],
+    ['group' => 'Year 9', 'day' => 'Wednesday', 'bg' => 'rgba(212,168,71,.08)', 'col' => '#8a6200'],
+    ['group' => 'Year 10', 'day' => 'Thursday', 'bg' => 'rgba(45,106,79,.08)', 'col' => '#1b5e20'],
+    ['group' => 'Year 11', 'day' => 'Friday', 'bg' => 'rgba(212,168,71,.08)', 'col' => '#8a6200'],
 ];
-$DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday'];
+$DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
 $GRADES = [
-    ['Ali Hassan',    10, 'A','A-','B+','A','B','A-'],
-    ['Siti Aminah',   10, 'B','B+','A-','B','A','B+'],
-    ['Rajan Kumar',   11, 'A-','A','A','A-','A','A'],
-    ['Mei Ling',      9,  'B+','B','B-','A-','B+','B'],
-    ['Hafiz Ismail',  8,  'C+','B','C','B-','C+','C+'],
-    ['Nurul Huda',    10, 'B','A-','B+','B','B+','B+'],
+    ['Ali Hassan', 10, 'A', 'A-', 'B+', 'A', 'B', 'A-'],
+    ['Siti Aminah', 10, 'B', 'B+', 'A-', 'B', 'A', 'B+'],
+    ['Rajan Kumar', 11, 'A-', 'A', 'A', 'A-', 'A', 'A'],
+    ['Mei Ling', 9, 'B+', 'B', 'B-', 'A-', 'B+', 'B'],
+    ['Hafiz Ismail', 8, 'C+', 'B', 'C', 'B-', 'C+', 'C+'],
+    ['Nurul Huda', 10, 'B', 'A-', 'B+', 'B', 'B+', 'B+'],
 ];
 // Add overall grade
-foreach ($GRADES as &$g) { $g[] = $g[2]; } unset($g);
+foreach ($GRADES as &$g) {
+    $g[] = $g[2];
+}
+unset($g);
 
 $ALL_STUDENTS = [
-    ['name'=>'Ali Hassan',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
-    ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2024'],
-    ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Science Lab Report',  'due'=>'14 May 2024'],
-    ['name'=>'Mei Ling',     'year'=>9, 'hw'=>'History Test',        'due'=>'16 May 2024'],
-    ['name'=>'Hafiz Ismail', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
-    ['name'=>'Nurul Huda',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
+    ['name' => 'Ali Hassan', 'year' => 10, 'hw' => 'Chapter 5 Essay', 'due' => '10 May 2024'],
+    ['name' => 'Siti Aminah', 'year' => 10, 'hw' => 'Algebra Quiz', 'due' => '12 May 2024'],
+    ['name' => 'Rajan Kumar', 'year' => 11, 'hw' => 'Science Lab Report', 'due' => '14 May 2024'],
+    ['name' => 'Mei Ling', 'year' => 9, 'hw' => 'History Test', 'due' => '16 May 2024'],
+    ['name' => 'Hafiz Ismail', 'year' => 8, 'hw' => 'English Composition', 'due' => '18 May 2024'],
+    ['name' => 'Nurul Huda', 'year' => 10, 'hw' => 'Geography Map Work', 'due' => '20 May 2024'],
 ];
 
 // Init homework session statuses
@@ -114,53 +156,75 @@ if (!isset($_SESSION['hw_statuses'])) {
 }
 
 // ── Grade calculator ─────────────────────────────────
-function calcGrade($marks, $max = 100) {
+function calcGrade($marks, $max = 100)
+{
     $pct = ($max > 0) ? ($marks / $max) * 100 : 0;
-    if ($pct >= 90) return 'A+';
-    if ($pct >= 80) return 'A';
-    if ($pct >= 75) return 'A-';
-    if ($pct >= 70) return 'B+';
-    if ($pct >= 65) return 'B';
-    if ($pct >= 60) return 'B-';
-    if ($pct >= 55) return 'C+';
-    if ($pct >= 50) return 'C';
-    if ($pct >= 45) return 'C-';
-    if ($pct >= 40) return 'D';
+    if ($pct >= 90)
+        return 'A+';
+    if ($pct >= 80)
+        return 'A';
+    if ($pct >= 75)
+        return 'A-';
+    if ($pct >= 70)
+        return 'B+';
+    if ($pct >= 65)
+        return 'B';
+    if ($pct >= 60)
+        return 'B-';
+    if ($pct >= 55)
+        return 'C+';
+    if ($pct >= 50)
+        return 'C';
+    if ($pct >= 45)
+        return 'C-';
+    if ($pct >= 40)
+        return 'D';
     return 'E';
 }
 
-function gradeColor($grade) {
-    if (in_array($grade, ['A+','A','A-']))  return ['#e8f5e9','#1b5e20'];
-    if (in_array($grade, ['B+','B','B-']))  return ['#e3f2fd','#0d47a1'];
-    if (in_array($grade, ['C+','C','C-']))  return ['#fff3e0','#bf360c'];
-    if ($grade === 'D')                     return ['#fce4ec','#880e4f'];
-    return ['#ffebee','#b71c1c']; // E
+function gradeColor($grade)
+{
+    if (in_array($grade, ['A+', 'A', 'A-']))
+        return ['#e8f5e9', '#1b5e20'];
+    if (in_array($grade, ['B+', 'B', 'B-']))
+        return ['#e3f2fd', '#0d47a1'];
+    if (in_array($grade, ['C+', 'C', 'C-']))
+        return ['#fff3e0', '#bf360c'];
+    if ($grade === 'D')
+        return ['#fce4ec', '#880e4f'];
+    return ['#ffebee', '#b71c1c']; // E
 }
 
 // ── Notification helpers ──────────────────────────────
-function sendNotification($conn, $user_id, $title, $message) {
-    $uid  = (int)$user_id;
-    $t    = $conn->real_escape_string($title);
-    $m    = $conn->real_escape_string($message);
+function sendNotification($conn, $user_id, $title, $message)
+{
+    $uid = (int) $user_id;
+    $t = $conn->real_escape_string($title);
+    $m = $conn->real_escape_string($message);
     $conn->query("INSERT INTO notifications (user_id, title, message)
                   VALUES ($uid, '$t', '$m')");
 }
 
-function getUnreadCount($conn, $user_id) {
-    $uid = (int)$user_id;
-    $r   = $conn->query("SELECT COUNT(*) as cnt FROM notifications WHERE user_id=$uid AND is_read=0");
-    return $r ? (int)$r->fetch_assoc()['cnt'] : 0;
+function getUnreadCount($conn, $user_id)
+{
+    $uid = (int) $user_id;
+    $r = $conn->query("SELECT COUNT(*) as cnt FROM notifications WHERE user_id=$uid AND is_read=0");
+    return $r ? (int) $r->fetch_assoc()['cnt'] : 0;
 }
 
-function getNotifications($conn, $user_id, $limit = 10) {
-    $uid = (int)$user_id;
-    $r   = $conn->query("SELECT * FROM notifications WHERE user_id=$uid ORDER BY created_at DESC LIMIT $limit");
+function getNotifications($conn, $user_id, $limit = 10)
+{
+    $uid = (int) $user_id;
+    $r = $conn->query("SELECT * FROM notifications WHERE user_id=$uid ORDER BY created_at DESC LIMIT $limit");
     $out = [];
-    if ($r) while ($row = $r->fetch_assoc()) $out[] = $row;
+    if ($r)
+        while ($row = $r->fetch_assoc())
+            $out[] = $row;
     return $out;
 }
 
-function markAllRead($conn, $user_id) {
-    $uid = (int)$user_id;
+function markAllRead($conn, $user_id)
+{
+    $uid = (int) $user_id;
     $conn->query("UPDATE notifications SET is_read=1 WHERE user_id=$uid");
 }
