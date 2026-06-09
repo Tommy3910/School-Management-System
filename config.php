@@ -62,18 +62,18 @@ if (isset($_SESSION['user']['year'])) {
     }
 }
 $HOMEWORK = [
-    ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
-    ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
-    ['item'=>'Science Lab Report',   'type'=>'Homework','due'=>'14 May 2024','status'=>'missing'],
-    ['item'=>'History Test for Chapter 5',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
-    ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2024','status'=>'missing'],
-    ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2024','status'=>'missing'],
+    ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2026','status'=>'submitted'],
+    ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2026','status'=>'submitted'],
+    ['item'=>'Math Past year paper 0580 Oct/Nov',   'type'=>'Homework','due'=>'14 May 2026','status'=>'missing'],
+    ['item'=>'History Test for Chapter 5',         'type'=>'Test',    'due'=>'16 May 2026','status'=>'submitted'],
+    ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2026','status'=>'missing'],
+    ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2026','status'=>'missing'],
 ];
 
 $PAYMENTS = [
-    ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['student'=>'Siti Aminah', 'year'=>10, 'date'=>'1 Apr 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
-    ['student'=>'Rajan Kumar', 'year'=>11, 'date'=>'1 Mar 2024', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
+    ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2026', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Siti Aminah', 'year'=>10, 'date'=>'1 Apr 2026', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Rajan Kumar', 'year'=>11, 'date'=>'1 Mar 2026', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
 ];
 
 // ── Teacher data ──────────────────────────────────────────
@@ -98,12 +98,12 @@ $GRADES = [
 foreach ($GRADES as &$g) { $g[] = $g[2]; } unset($g);
 
 $ALL_STUDENTS = [
-    ['name'=>'Aizul Azizul',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
-    ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2024'],
-    ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Science Lab Report',  'due'=>'14 May 2024'],
-    ['name'=>'Leong Mei Ling',     'year'=>9, 'hw'=>'History Test for Chapter 5',        'due'=>'16 May 2024'],
-    ['name'=>'Mohammad Bin Arman Kamarudin', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
-    ['name'=>'Nurul Aida',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
+    ['name'=>'Aizul Azizul',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2026'],
+    ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2026'],
+    ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Math Past year paper 0580 Oct/Nov',  'due'=>'14 May 2026'],
+    ['name'=>'Leong Mei Ling',     'year'=>9, 'hw'=>'History Test for Chapter 5',        'due'=>'16 May 2026'],
+    ['name'=>'Mohammad Bin Arman Kamarudin', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2026'],
+    ['name'=>'Nurul Aida',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2026'],
 ];
 
 // Init homework session statuses
