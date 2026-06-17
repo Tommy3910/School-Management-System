@@ -42,7 +42,8 @@ pageHead('Student Dashboard');
       </div>
       <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
       <div class="nbell" id="bellWrap">
-        <button class="nbtn" onclick="toggleNotifs()" title="Notifications">
+        <!-- FIX: pass event to toggleNotifs to stop bubbling -->
+        <button class="nbtn" onclick="toggleNotifs(event)" title="Notifications">
           <i class="fas fa-bell"></i>
           <span>Notifications</span>
           <?php if ($unreadCount > 0): ?>
@@ -772,7 +773,6 @@ pageHead('Student Dashboard');
         foreach ($myPayments as $mp) {
           $amt = 0.0;
           if (isset($mp['amount'])) {
-            // amount may be numeric or formatted like 'RM 450.00'
             $a = preg_replace('/[^0-9.]/', '', (string) $mp['amount']);
             $amt = $a !== '' ? (float) $a : 0.0;
           }
@@ -790,7 +790,6 @@ pageHead('Student Dashboard');
             <div style="font-size:.8rem;opacity:.6;margin-top:.28rem">Outstanding invoices</div>
           </div>
           <?php
-          // show Pay Now for first unpaid invoice
           $firstUnpaid = null;
           foreach ($myPayments as $mp) {
             if (isset($mp['status']) && strtolower($mp['status']) !== 'paid') {
@@ -842,11 +841,16 @@ pageHead('Student Dashboard');
   </main>
 </div>
 </div>
+
 <script>
-  function toggleNotifs() {
+  // FIX: accept event parameter and stop propagation so the
+  // document click listener doesn't immediately close the dropdown
+  function toggleNotifs(e) {
+    e.stopPropagation();
     var d = document.getElementById('notifDrop');
     d.style.display = d.style.display === 'none' ? 'block' : 'none';
   }
+
   document.addEventListener('click', function (e) {
     var wrap = document.getElementById('bellWrap');
     if (wrap && !wrap.contains(e.target)) {
@@ -855,7 +859,12 @@ pageHead('Student Dashboard');
     }
   });
 
+  window.addEventListener('pageshow', function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
   });
+
   (function() {
     var params = new URLSearchParams(window.location.search);
     if (params.get('refresh') === '1') {
