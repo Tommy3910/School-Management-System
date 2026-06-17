@@ -9,21 +9,35 @@ if (!$userId) {
     redirect('login.php');
 }
 
-$amount = 450.00; // RM 450.00
+$amount = 450.00;
 $currency = 'RM';
 $description = 'Maplewood Academy Fee';
-$status = 'Invoice Sent';
 $now = date('Y-m-d H:i:s');
 
 $paymentId = 0;
+
 if ($conn) {
-    $stmt = $conn->prepare("INSERT INTO payments (user_id, amount, currency, description, status, created_at) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param('idssss', $userId, $amount, $currency, $description, $status, $now);
+    // Check if an existing unpaid invoice already exists for this user
+    $stmt = $conn->prepare("SELECT id FROM payments WHERE user_id = ? AND status = 'Invoice Sent' ORDER BY created_at DESC LIMIT 1");
+    $stmt->bind_param('i', $userId);
     $stmt->execute();
-    if ($stmt->affected_rows > 0) {
-        $paymentId = $stmt->insert_id;
-    }
+    $result = $stmt->get_result();
+    $existing = $result->fetch_assoc();
     $stmt->close();
+
+    if ($existing) {
+        // Reuse existing unpaid invoice — don't create a new one
+        $paymentId = $existing['id'];
+    } else {
+        // Only insert if no unpaid invoice exists
+        $stmt = $conn->prepare("INSERT INTO payments (user_id, amount, currency, description, status, created_at) VALUES (?, ?, ?, ?, 'Invoice Sent', ?)");
+        $stmt->bind_param('idsss', $userId, $amount, $currency, $description, $now);
+        $stmt->execute();
+        if ($stmt->affected_rows > 0) {
+            $paymentId = $stmt->insert_id;
+        }
+        $stmt->close();
+    }
 }
 
 if (!$paymentId) {
@@ -42,9 +56,7 @@ $data = [
         [
             'price_data' => [
                 'currency' => 'myr',
-                'product_data' => [
-                    'name' => 'Maplewood Academy Fee'
-                ],
+                'product_data' => ['name' => 'Maplewood Academy Fee'],
                 'unit_amount' => 45000,
             ],
             'quantity' => 1,
@@ -56,12 +68,10 @@ $data = [
 ];
 
 $ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
-
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 curl_setopt($ch, CURLOPT_POST, true);
 curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
 curl_setopt($ch, CURLOPT_USERPWD, $stripe_secret_key . ':');
-
 $response = curl_exec($ch);
 curl_close($ch);
 

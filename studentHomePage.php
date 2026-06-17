@@ -854,10 +854,7 @@ pageHead('Student Dashboard');
       if (d) d.style.display = 'none';
     }
   });
-  window.addEventListener('pageshow', function (event) {
-    if (event.persisted) {
-      window.location.reload();
-    }
+
   });
   (function() {
     var params = new URLSearchParams(window.location.search);
