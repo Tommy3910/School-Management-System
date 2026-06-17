@@ -31,5 +31,5 @@ $conn->query("UPDATE payments SET status='Paid', paid_at='$now' WHERE id=$pid");
 // Send a notification to the user
 sendNotification($conn, $userId, 'Payment Received', 'We received your payment for invoice #' . $pid . '. Thank you.');
 
-flash('toast', 'Payment successful (simulated).');
-redirect('studentHomePage.php?tab=payment');
+// Redirect to receipt page
+redirect('success.php?id=' . $pid);

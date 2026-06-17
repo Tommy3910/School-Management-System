@@ -2,45 +2,86 @@
 require_once 'config.php';
 requireAuth('student');
 
-$userId = $_SESSION['user']['id'] ?? null;
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$stripe_secret_key = "sk_test_51TWUKVRyNTo0JNBHUu8coRgaxIO73lqjhZuj7TAZQzGMvWzfX3jHArXFXZncfh8ERkl8sJDBOrQThjCZjY51q5kX00AsZKoNqp";
 
-// Fetch payment
-$payment = null;
-if ($id > 0 && $conn) {
-    $res = $conn->query("SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.id=$id LIMIT 1");
-    if ($res)
-        $payment = $res->fetch_assoc();
+$userId = $_SESSION['user']['id'] ?? 0;
+if (!$userId) {
+    redirect('login.php');
 }
 
-if (!$payment || (int) $payment['user_id'] !== (int) $userId) {
-    flash('toast', 'Invoice not found.');
+$amount = 450.00;
+$currency = 'RM';
+$description = 'Maplewood Academy Fee';
+$now = date('Y-m-d H:i:s');
+
+$paymentId = 0;
+
+if ($conn) {
+    // Check if an existing unpaid invoice already exists for this user
+    $stmt = $conn->prepare("SELECT id FROM payments WHERE user_id = ? AND status = 'Invoice Sent' ORDER BY created_at DESC LIMIT 1");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $existing = $result->fetch_assoc();
+    $stmt->close();
+
+    if ($existing) {
+        // Reuse existing unpaid invoice — don't create a new one
+        $paymentId = $existing['id'];
+    } else {
+        // Only insert if no unpaid invoice exists
+        $stmt = $conn->prepare("INSERT INTO payments (user_id, amount, currency, description, status, created_at) VALUES (?, ?, ?, ?, 'Invoice Sent', ?)");
+        $stmt->bind_param('idsss', $userId, $amount, $currency, $description, $now);
+        $stmt->execute();
+        if ($stmt->affected_rows > 0) {
+            $paymentId = $stmt->insert_id;
+        }
+        $stmt->close();
+    }
+}
+
+if (!$paymentId) {
+    flash('toast', 'Unable to create invoice. Please try again.');
     redirect('studentHomePage.php?tab=payment');
 }
 
-pageHead('Pay Invoice');
-?>
-<div style="max-width:720px;margin:2rem auto;padding:1.2rem">
-    <div class="crd">
-        <div class="crdhdr">
-            <h3>Invoice #<?= e($payment['id']) ?></h3>
-        </div>
-        <div style="padding:1rem">
-            <p><strong>Student:</strong> <?= e($payment['student_name']) ?></p>
-            <p><strong>Description:</strong> <?= e($payment['description'] ?? 'School fees') ?></p>
-            <p><strong>Amount:</strong>
-                <?= e(($payment['currency'] ?? 'RM') . ' ' . number_format((float) $payment['amount'], 2)) ?></p>
-            <p><strong>Status:</strong> <?= e($payment['status']) ?></p>
+$scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+$host = $_SERVER['HTTP_HOST'];
+$path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+$baseUrl = $scheme . '://' . $host . ($path === '/' ? '' : $path);
 
-            <?php if ($payment['status'] !== 'Paid'): ?>
-                <form method="POST" action="process_payment.php">
-                    <input type="hidden" name="payment_id" value="<?= (int) $payment['id'] ?>">
-                    <button type="submit" class="bpr bsm"><i class="fas fa-credit-card"></i> Pay Now (Simulated)</button>
-                </form>
-            <?php else: ?>
-                <div style="color:var(--MT)">This invoice was paid on <?= e($payment['paid_at']) ?></div>
-            <?php endif; ?>
-        </div>
-    </div>
-</div>
-<?php pageFoot(); ?>
+$data = [
+    'payment_method_types' => ['card'],
+    'line_items' => [
+        [
+            'price_data' => [
+                'currency' => 'myr',
+                'product_data' => ['name' => 'Maplewood Academy Fee'],
+                'unit_amount' => 45000,
+            ],
+            'quantity' => 1,
+        ]
+    ],
+    'mode' => 'payment',
+    'success_url' => $baseUrl . '/success.php?id=' . urlencode($paymentId),
+    'cancel_url' => $baseUrl . '/studentHomePage.php?tab=payment',
+];
+
+$ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+curl_setopt($ch, CURLOPT_USERPWD, $stripe_secret_key . ':');
+$response = curl_exec($ch);
+curl_close($ch);
+
+$session = json_decode($response, true);
+
+if (isset($session['url'])) {
+    header("Location: " . $session['url']);
+    exit();
+}
+
+echo "Error connecting to Stripe: ";
+print_r($session);
+?>
