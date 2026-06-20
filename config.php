@@ -77,43 +77,19 @@ if (isset($_SESSION['user']['year'])) {
     }
 }
 $HOMEWORK = [
-    ['item' => 'Chapter 5 Essay', 'type' => 'Homework', 'due' => '10 May 2024', 'status' => 'submitted'],
-    ['item' => 'Algebra Quiz', 'type' => 'Quiz', 'due' => '12 May 2024', 'status' => 'submitted'],
-    ['item' => 'Science Lab Report', 'type' => 'Homework', 'due' => '14 May 2024', 'status' => 'missing'],
-    ['item' => 'History Test', 'type' => 'Test', 'due' => '16 May 2024', 'status' => 'submitted'],
-    ['item' => 'English Composition', 'type' => 'Homework', 'due' => '18 May 2024', 'status' => 'missing'],
-    ['item' => 'Geography Map Work', 'type' => 'Homework', 'due' => '20 May 2024', 'status' => 'missing'],
+    ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
+    ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
+    ['item'=>'Science Lab Report',   'type'=>'Homework','due'=>'14 May 2024','status'=>'missing'],
+    ['item'=>'History Test for Chapter 5',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
+    ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2024','status'=>'missing'],
+    ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2024','status'=>'missing'],
 ];
 
-$PAYMENTS = [];
-
-// Try load payments from DB if table exists. Fallback to demo list if DB unavailable.
-if ($conn) {
-    $pRes = $conn->query(
-        "SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id = u.id ORDER BY p.created_at DESC"
-    );
-    if ($pRes) {
-        while ($r = $pRes->fetch_assoc()) {
-            $PAYMENTS[] = [
-                'id' => (int) $r['id'],
-                'student_id' => (int) $r['user_id'],
-                'student' => $r['student_name'] ?? ('User #' . (int) $r['user_id']),
-                'year' => null,
-                'date' => $r['created_at'],
-                'amount' => ($r['currency'] ?? 'RM') . ' ' . number_format((float) $r['amount'], 2),
-                'status' => $r['status'] ?? 'Invoice Sent'
-            ];
-        }
-    }
-}
-
-if (empty($PAYMENTS)) {
-    $PAYMENTS = [
-        ['student' => 'Ali Hassan', 'year' => 10, 'date' => '1 May 2024', 'amount' => 'RM 450.00', 'status' => 'Paid'],
-        ['student' => 'Siti Aminah', 'year' => 10, 'date' => '1 Apr 2024', 'amount' => 'RM 450.00', 'status' => 'Paid'],
-        ['student' => 'Rajan Kumar', 'year' => 11, 'date' => '1 Mar 2024', 'amount' => 'RM 450.00', 'status' => 'Invoice Sent'],
-    ];
-}
+$PAYMENTS = [
+    ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Siti Aminah', 'year'=>10, 'date'=>'1 Apr 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
+    ['student'=>'Rajan Kumar', 'year'=>11, 'date'=>'1 Mar 2024', 'amount'=>'RM 450.00','status'=>'Invoice Sent'],
+];
 
 // ── Teacher data ──────────────────────────────────────────
 $SPORT = [
@@ -140,12 +116,12 @@ foreach ($GRADES as &$g) {
 unset($g);
 
 $ALL_STUDENTS = [
-    ['name' => 'Ali Hassan', 'year' => 10, 'hw' => 'Chapter 5 Essay', 'due' => '10 May 2024'],
-    ['name' => 'Siti Aminah', 'year' => 10, 'hw' => 'Algebra Quiz', 'due' => '12 May 2024'],
-    ['name' => 'Rajan Kumar', 'year' => 11, 'hw' => 'Science Lab Report', 'due' => '14 May 2024'],
-    ['name' => 'Mei Ling', 'year' => 9, 'hw' => 'History Test', 'due' => '16 May 2024'],
-    ['name' => 'Hafiz Ismail', 'year' => 8, 'hw' => 'English Composition', 'due' => '18 May 2024'],
-    ['name' => 'Nurul Huda', 'year' => 10, 'hw' => 'Geography Map Work', 'due' => '20 May 2024'],
+    ['name'=>'Aizul Azizul',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
+    ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2024'],
+    ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Science Lab Report',  'due'=>'14 May 2024'],
+    ['name'=>'Leong Mei Ling',     'year'=>9, 'hw'=>'History Test for Chapter 5',        'due'=>'16 May 2024'],
+    ['name'=>'Mohammad Bin Arman Kamarudin', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
+    ['name'=>'Nurul Aida',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
 ];
 
 // Init homework session statuses
