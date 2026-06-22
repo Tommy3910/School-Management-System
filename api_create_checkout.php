@@ -58,10 +58,10 @@ if (!$paymentId) {
 }
 
 // Same Stripe Checkout Session creation as pay.php.
-// success_url/cancel_url point at your PHP pages — Stripe's hosted
-// checkout page opens in the phone's browser, so these are reachable
-// the same way they are from a desktop browser.
-$baseUrl = 'http://10.0.2.2/maplewood'; // ← change "maplewood" to your actual project folder name
+// success_url points at success_mobile.php (NOT success.php) — that
+// version doesn't require a PHP session, since the browser completing
+// checkout here is Chrome on the phone, not the Flutter app's session.
+$baseUrl = 'http://10.0.2.2/School-Management-System'; // ← update if your folder name changes
 
 $data = [
     'payment_method_types' => ['card'],
@@ -74,7 +74,7 @@ $data = [
         'quantity' => 1,
     ]],
     'mode' => 'payment',
-    'success_url' => $baseUrl . '/success.php?id=' . urlencode($paymentId),
+    'success_url' => $baseUrl . '/success_mobile.php?id=' . urlencode($paymentId),
     'cancel_url'  => $baseUrl . '/studentHomePage.php?tab=payment',
 ];
 
