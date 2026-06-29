@@ -143,7 +143,12 @@ INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p
 (2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'SCI', 'HIS', 'ACC', 'ECO', 0),
 (3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'HIS', 'ACC', 0),
 (4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'ACC', 0),
-(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1);
+(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1),
+(6, '1-6', 6, 'Monday', 'SPORT', 'Math', 'BREAK', 'BM', 'ENG', '', '', 1),
+(7, '1-6', 6, 'Tuesday', 'Eng', 'Math', 'BREAK', 'SCI', 'HIS', '', '', 0),
+(8, '1-6', 6, 'Wednesday', 'ENG', 'BM', 'BREAK', 'HIS', 'SCI', '', '', 0),
+(9, '1-6', 6, 'Thursday', 'HIS', 'ENG', 'BREAK', 'MATH', 'SCI', '', '', 0),
+(10, '1-6', 6, 'Friday', 'MATH', 'HIS', 'BREAK', 'BM', 'SCI', '', '', 0);
 
 -- --------------------------------------------------------
 

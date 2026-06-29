@@ -177,7 +177,7 @@ pageHead('Student Dashboard');
       <?php if ($tab === 'courses'): ?>
         <div class="phdr">
           <h2>Your Courses</h2>
-          <p>Year <?= e($user['year']) ?> — Semester 1, 2024</p>
+          <p>Year <?= e($user['year']) ?> — Semester 1, 2026</p>
         </div>
         <div class="srow">
           <div class="sc">
@@ -425,7 +425,7 @@ pageHead('Student Dashboard');
                     <?php foreach ($periods as $idx => $p): ?>
                       <td style="padding:4px">
                         <div
-                          style="background:<?= strtoupper($p) === 'SPORT' ? '#fef3c7' : 'rgba(45,106,79,.08)' ?>;color:<?= strtoupper($p) === 'SPORT' ? '#92400e' : 'var(--P)' ?>;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+                          style="background:<?= strtoupper($p) === 'SPORT' ? '#fef3c7' : (strtoupper($p) === 'BREAK' ? '#f3f4f6' : 'rgba(45,106,79,.08)') ?>;color:<?= strtoupper($p) === 'SPORT' ? '#92400e' : (strtoupper($p) === 'BREAK' ? '#6b7280' : 'var(--P)') ?>;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:<?= strtoupper($p) === 'BREAK' ? '400' : '600' ?>;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
                           <?= e($p !== '' ? $p : '—') ?>
                         </div>
                       </td>
