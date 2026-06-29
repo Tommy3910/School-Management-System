@@ -395,20 +395,63 @@ pageHead('Student Dashboard');
         <div class="crd">
           <div
             style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
-            Year <?= e($user['year']) ?> &nbsp;·&nbsp; Matches the timetable data from the database
+            Year <?= e($user['year']) ?> &nbsp;·&nbsp; 
           </div>
           <div class="tw">
             <table>
-              <thead>
-                <tr>
-                  <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
-                  <?php
-                  $periodKeys = ($yg === '1-6') ? ['p1', 'p2', 'p3', 'p4', 'p5'] : ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7'];
-                  foreach ($periodKeys as $key): ?>
-                    <th><?= e(strtoupper(str_replace('p', 'Period ', $key))) ?></th>
-                  <?php endforeach; ?>
-                </tr>
-              </thead>
+      <thead>
+    <tr>
+        <th style="text-align:left;padding-left:1rem;min-width:90px">Day</th>
+
+        <?php
+       if ($yg === '1-6') {
+
+    $periodKeys = ['p1','p2','p3','p4','p5'];
+
+    $headers = [
+        '8:00-9:00',
+        '9:00-10:00',
+        '10:00-10:45 (Break)',
+        '10:45-11:45',
+        '11:45-12:45'
+    ];
+
+} elseif ($yg === '7-9') {
+
+    $periodKeys = ['p1','p2','p3','p4','p5','p6','p7'];
+
+    $headers = [
+        '8:00-8:45',
+        '8:45-9:30',
+        '9:30-10:00 (30min)',
+        '10:00-11:00 (Break)',
+        '11:00-11:45',
+        '11:45-12:30',
+        '12:30-1:15'
+    ];
+
+} else {   // Year 10-11
+
+    $periodKeys = ['p1','p2','p3','p4','p5','p6','p7'];
+
+    $headers = [
+        '8:00-8:45',
+        '8:45-9:30',
+        '9:30-10:00 (30min)',
+        '10:00-11:00 (Break)',
+        '11:00-11:45',
+        '11:45-12:30',
+        '12:30-1:15'
+    ];
+
+}
+        foreach ($headers as $header):
+        ?>
+            <th><?= e($header) ?></th>
+        <?php endforeach; ?>
+
+    </tr>
+</thead>
               <tbody>
                 <?php foreach ($TIMETABLE as $row):
                   $periods = [];
