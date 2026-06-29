@@ -756,12 +756,16 @@ pageHead('Student Dashboard');
         $uid = $_SESSION['user']['id'] ?? null;
         $myPayments = [];
         if ($uid && $conn) {
-          $r = $conn->query("SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.user_id=$uid ORDER BY p.created_at DESC");
-          if ($r)
-            while ($row = $r->fetch_assoc())
-              $myPayments[] = $row;
+          try {
+            $r = $conn->query("SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.user_id=$uid ORDER BY p.created_at DESC");
+            if ($r)
+              while ($row = $r->fetch_assoc())
+                $myPayments[] = $row;
+          } catch (mysqli_sql_exception $e) {
+            // payments table doesn't exist yet — fall through to $PAYMENTS fallback below
+          }
         }
-        // Fallback: use global $PAYMENTS if DB not available
+        // Fallback: use global $PAYMENTS if DB not available or table missing
         if (empty($myPayments)) {
           foreach ($PAYMENTS as $p) {
             $myPayments[] = $p;
