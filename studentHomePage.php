@@ -208,10 +208,6 @@ pageHead('Student Dashboard');
               <div class="cico"><?= $c['icon'] ?></div>
               <div class="cn"><?= e($c['code']) ?></div>
               <div class="cmeta"><?= e($c['name']) ?></div>
-              <div class="ppct"><span>Progress</span><span><?= $c['pct'] ?>%</span></div>
-              <div class="pbar">
-                <div class="pfill" style="width:<?= $c['pct'] ?>%"></div>
-              </div>
             </a>
           <?php endforeach; ?>
         </div>
