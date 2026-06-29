@@ -65,14 +65,28 @@ if (isset($_SESSION['user']['year'])) {
     else
         $TT_GROUP = '10-11';
 
+    $tt_group_safe = $conn->real_escape_string($TT_GROUP);
     $tt_res = $conn->query(
         "SELECT * FROM timetable
-         WHERE year = $yr AND year_group = '$TT_GROUP'
+         WHERE year_group = '$tt_group_safe'
+           AND (year = 0 OR year = $yr)
          ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
     );
-    if ($tt_res) {
+
+    if ($tt_res && $tt_res->num_rows > 0) {
         while ($r = $tt_res->fetch_assoc()) {
             $TIMETABLE[] = $r;
+        }
+    } else {
+        $fallback_res = $conn->query(
+            "SELECT * FROM timetable
+             WHERE year_group = '$tt_group_safe'
+             ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
+        );
+        if ($fallback_res) {
+            while ($r = $fallback_res->fetch_assoc()) {
+                $TIMETABLE[] = $r;
+            }
         }
     }
 }

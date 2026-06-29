@@ -708,8 +708,47 @@ pageHead('Teacher Dashboard');
           <p>Monitor student fee status</p>
         </div>
         <div class="srow">
-          <?php $paid = count(array_filter($PAYMENTS, fn($p) => $p['status'] === 'Paid'));
-          $inv = count($PAYMENTS) - $paid; ?>
+          <?php
+          $paymentRows = [];
+          $studentsRes = $conn->query("SELECT id, name, year FROM users WHERE role='student' ORDER BY name");
+          if ($studentsRes) {
+            while ($row = $studentsRes->fetch_assoc()) {
+              $studentId = (int) $row['id'];
+              $latestPayment = null;
+              $paymentRes = $conn->query("SELECT * FROM payments WHERE user_id=$studentId ORDER BY created_at DESC, id DESC LIMIT 1");
+              if ($paymentRes && $paymentRes->num_rows > 0) {
+                $latestPayment = $paymentRes->fetch_assoc();
+              }
+
+              $status = $latestPayment['status'] ?? 'Invoice Sent';
+              $amountValue = $latestPayment ? (float) $latestPayment['amount'] : 450.00;
+              $amountDisplay = ($latestPayment['currency'] ?? 'RM') . ' ' . number_format($amountValue, 2);
+              $dateDisplay = $latestPayment ? date('j M Y', strtotime($latestPayment['created_at'])) : '—';
+
+              $paymentRows[] = [
+                'id' => $studentId,
+                'student' => $row['name'],
+                'year' => (int) $row['year'],
+                'amount' => $amountDisplay,
+                'amount_value' => $amountValue,
+                'date' => $dateDisplay,
+                'status' => $status,
+              ];
+            }
+          }
+          if (empty($paymentRows)) {
+            $paymentRows = $PAYMENTS;
+          }
+
+          $paid = count(array_filter($paymentRows, fn($p) => strtolower($p['status']) === 'paid'));
+          $inv = count($paymentRows) - $paid;
+          $outstanding = 0;
+          foreach ($paymentRows as $p) {
+            if (strtolower($p['status']) !== 'paid') {
+              $outstanding += (float) ($p['amount_value'] ?? 0);
+            }
+          }
+          ?>
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
             <div class="sv"><?= $paid ?></div>
@@ -727,7 +766,7 @@ pageHead('Teacher Dashboard');
           </div>
           <div class="sc">
             <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-coins"></i></div>
-            <div class="sv">RM <?= $inv * 450 ?></div>
+            <div class="sv">RM <?= number_format($outstanding, 2) ?></div>
             <div class="sl">Outstanding</div>
           </div>
         </div>
@@ -753,15 +792,15 @@ pageHead('Teacher Dashboard');
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($PAYMENTS as $p): ?>
+                <?php foreach ($paymentRows as $p): ?>
                   <tr>
                     <td style="font-weight:600"><?= e($p['student']) ?></td>
-                    <td>Year <?= $p['year'] ?></td>
+                    <td>Year <?= (int) $p['year'] ?></td>
                     <td style="font-weight:600"><?= e($p['amount']) ?></td>
                     <td style="color:var(--MT)"><?= e($p['date']) ?></td>
-                    <td><?= $p['status'] === 'Paid'
+                    <td><?= strtolower($p['status']) === 'paid'
                       ? '<span class="bpd"><i class="fas fa-check"></i> Paid</span>'
-                      : '<span class="binv"><i class="fas fa-envelope"></i> Invoice Sent</span>' ?></td>
+                      : '<span class="binv"><i class="fas fa-envelope"></i> ' . e($p['status']) . '</span>' ?></td>
                     <td>
                       <form method="POST" style="display:inline">
                         <input type="hidden" name="action" value="send_invoice">
