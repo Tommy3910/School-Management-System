@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 29, 2026 at 09:51 AM
+-- Generation Time: Jun 29, 2026 at 02:56 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -127,7 +127,8 @@ INSERT INTO `payments` (`id`, `user_id`, `amount`, `currency`, `description`, `s
 (11, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 08:59:32', '2026-06-22 09:00:04'),
 (12, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:00:59', '2026-06-22 09:01:31'),
 (13, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:04:40', '2026-06-22 09:05:11'),
-(14, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:04:40', '2026-06-23 02:16:37');
+(14, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:04:40', '2026-06-23 02:16:37'),
+(15, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Invoice Sent', '2026-06-29 01:54:23', NULL);
 
 -- --------------------------------------------------------
 
@@ -153,7 +154,12 @@ INSERT INTO `subjects` (`id`, `year_group`, `name`, `created_at`) VALUES
 (4, '10-11', 'Science', '2026-06-02 12:12:04'),
 (5, '10-11', 'History', '2026-06-02 12:12:04'),
 (6, '10,11', 'Account', '2026-06-02 12:12:04'),
-(7, '10-11', 'Geography', '2026-06-02 12:12:04');
+(7, '10-11', 'Geography', '2026-06-02 12:12:04'),
+(8, '4-6', 'History', '2026-06-02 12:12:04'),
+(9, '4-6', 'BM', '2026-06-02 12:12:04'),
+(10, '4-6', 'English', '2026-06-02 12:12:04'),
+(11, '4-6', 'Science', '2026-06-02 12:12:04'),
+(12, '4-6', 'Math', '2026-06-02 12:12:04');
 
 -- --------------------------------------------------------
 
@@ -185,7 +191,12 @@ INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p
 (2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'SCI', 'HIS', 'ACC', 'ECO', 0),
 (3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'HIS', 'ACC', 0),
 (4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'ACC', 0),
-(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1);
+(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1),
+(6, '1-6', 5, 'Monday', 'SPORT', 'Math', 'HIS', 'MAN', 'ENG', NULL, NULL, 1),
+(7, '1-6', 5, 'Tuesday', 'Eng', 'Math', 'BM', 'SCI', 'HIS', NULL, NULL, 0),
+(8, '1-6', 5, 'Wednesday', 'ENG', 'BM', 'MATH', 'HIS', 'SCI', NULL, NULL, 0),
+(9, '1-6', 5, 'Thursday', 'HIS', 'ENG', 'BM', 'MATH', 'SCI', NULL, NULL, 0),
+(10, '1-6', 5, 'Friday', 'MATH', 'HIS', 'ENG', 'BM', 'SCI', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -208,7 +219,8 @@ CREATE TABLE `users` (
 
 INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALUES
 (1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
-(2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher');
+(2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher'),
+(3, 'user@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
 
 --
 -- Indexes for dumped tables
@@ -271,25 +283,25 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `timetable`
 --
 ALTER TABLE `timetable`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
