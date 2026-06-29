@@ -425,11 +425,8 @@ pageHead('Student Dashboard');
                     <?php foreach ($periods as $idx => $p): ?>
                       <td style="padding:4px">
                         <div
-                          style="background:<?= $is_sport ? '#fef3c7' : 'rgba(45,106,79,.08)' ?>;color:<?= $is_sport ? '#92400e' : 'var(--P)' ?>;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
+                          style="background:<?= strtoupper($p) === 'SPORT' ? '#fef3c7' : 'rgba(45,106,79,.08)' ?>;color:<?= strtoupper($p) === 'SPORT' ? '#92400e' : 'var(--P)' ?>;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:600;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
                           <?= e($p !== '' ? $p : '—') ?>
-                          <?php if ($is_sport && $idx === 0): ?>
-                            <span style="display:block;font-size:.6rem;font-weight:700;opacity:.85">Sport</span>
-                          <?php endif; ?>
                         </div>
                       </td>
                     <?php endforeach; ?>
