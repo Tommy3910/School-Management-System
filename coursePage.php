@@ -255,39 +255,6 @@ pageHead('Course — ' . $c['name']);
   align-items: center;
   gap: .4rem;
 }
-.cp-pct-wrap {
-  text-align: right;
-  flex-shrink: 0;
-}
-.cp-pct-wrap .cp-pct-num {
-  font-size: 2rem;
-  font-weight: 800;
-  font-family: 'Playfair Display', serif;
-  color: <?= $c['accent'] ?>;
-  line-height: 1;
-}
-.cp-pct-wrap .cp-pct-lbl {
-  font-size: .7rem;
-  color: var(--MT);
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  margin-bottom: .45rem;
-}
-.cp-pct-bar {
-  width: 140px;
-  height: 8px;
-  background: var(--W);
-  border-radius: 99px;
-  overflow: hidden;
-  margin-top: .4rem;
-}
-.cp-pct-bar-fill {
-  height: 100%;
-  width: <?= $c['pct'] ?>%;
-  background: <?= $c['accent'] ?>;
-  border-radius: 99px;
-  transition: width .6s ease;
-}
 
 /* section grid */
 .cp-grid {
@@ -543,11 +510,6 @@ pageHead('Course — ' . $c['name']);
             <i class="fas fa-chalkboard-teacher"></i>
             <?= e($c['teacher']) ?>
           </div>
-        </div>
-        <div class="cp-pct-wrap">
-          <div class="cp-pct-lbl">Progress</div>
-          <div class="cp-pct-num"><?= $c['pct'] ?>%</div>
-          <div class="cp-pct-bar"><div class="cp-pct-bar-fill"></div></div>
         </div>
       </div>
 
