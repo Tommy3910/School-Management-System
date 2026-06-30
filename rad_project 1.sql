@@ -220,7 +220,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALUES
 (1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
 (2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher'),
-(3, 'user@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
+(3, 'user1@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
 
 --
 -- Indexes for dumped tables
