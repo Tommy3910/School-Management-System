@@ -8,9 +8,10 @@ $tab = $_REQUEST['tab'] ?? 'schedules';
 
 // Handle homework approve/mark-missing POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $action = $_POST['action'] ?? '';
-  $idx = (int) ($_POST['idx'] ?? -1);
-}elseif ($action === 'save_schedule') {
+    $action = $_POST['action'] ?? '';
+    $idx = (int) ($_POST['idx'] ?? -1);
+
+    if ($action === 'save_schedule') {
     flash('toast', 'Schedule saved successfully.');
   } elseif ($action === 'save_timetable') {
     $row_ids = $_POST['row_ids'] ?? [];
@@ -155,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $return_url .= '&year=' . (int) $_POST['tt_year'];
   }
   redirect($return_url);
-
+}
 $toast = flash('toast');
 pageHead('Teacher Dashboard');
 ?>
