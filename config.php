@@ -90,25 +90,33 @@ if (isset($_SESSION['user']['id']) && $_SESSION['user']['role'] === 'student') {
         else
             $TT_GROUP = '10-11';
 
-        $tt_res = $conn->query(
-            "SELECT * FROM timetable
-            WHERE year = $yr AND year_group = '$TT_GROUP'
-            ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
-        );
-        if ($tt_res) {
-            while ($r = $tt_res->fetch_assoc()) {
-                $TIMETABLE[] = $r;
-            }
+    $tt_res = $conn->query(
+        "SELECT * FROM timetable
+         WHERE year = $yr AND year_group = '$TT_GROUP'
+         ORDER BY FIELD(day,'Monday','Tuesday','Wednesday','Thursday','Friday')"
+    );
+    if ($tt_res) {
+        while ($r = $tt_res->fetch_assoc()) {
+            $TIMETABLE[] = $r;
         }
     }
-    $HOMEWORK = [
-        ['item'=>'Chapter 5 Essay',      'type'=>'Homework','due'=>'10 May 2024','status'=>'submitted'],
-        ['item'=>'Algebra Quiz',         'type'=>'Quiz',    'due'=>'12 May 2024','status'=>'submitted'],
-        ['item'=>'Science Lab Report',   'type'=>'Homework','due'=>'14 May 2024','status'=>'missing'],
-        ['item'=>'History Test for Chapter 5',         'type'=>'Test',    'due'=>'16 May 2024','status'=>'submitted'],
-        ['item'=>'English Composition',  'type'=>'Homework','due'=>'18 May 2024','status'=>'missing'],
-        ['item'=>'Geography Map Work',   'type'=>'Homework','due'=>'20 May 2024','status'=>'missing'],
-    ];
+}
+// ── Student's own homework (for studentHomePage.php) ─────
+$HOMEWORK = [];
+if ($conn && isset($_SESSION['user']['id']) && ($_SESSION['user']['role'] ?? '') === 'student') {
+    $sid = (int) $_SESSION['user']['id'];
+    $hwRes2 = $conn->query("SELECT * FROM homework WHERE student_id=$sid ORDER BY due_date ASC");
+    if ($hwRes2) {
+        while ($r = $hwRes2->fetch_assoc()) {
+            $HOMEWORK[] = [
+                'item'   => $r['title'],
+                'type'   => $r['type'],
+                'due'    => date('d M Y', strtotime($r['due_date'])),
+                'status' => $r['status'],
+            ];
+        }
+    }
+}
 
     $PAYMENTS = [
         ['student'=>'Ali Hassan', 'year'=>10, 'date'=>'1 May 2024', 'amount'=>'RM 450.00','status'=>'Paid'],
@@ -140,21 +148,45 @@ if (isset($_SESSION['user']['id']) && $_SESSION['user']['role'] === 'student') {
     }
     unset($g);
 
-    $ALL_STUDENTS = [
-        ['name'=>'Aizul Azizul',   'year'=>10,'hw'=>'Chapter 5 Essay',     'due'=>'10 May 2024'],
-        ['name'=>'Siti Aminah',  'year'=>10,'hw'=>'Algebra Quiz',        'due'=>'12 May 2024'],
-        ['name'=>'Rajan Kumar',  'year'=>11,'hw'=>'Science Lab Report',  'due'=>'14 May 2024'],
-        ['name'=>'Leong Mei Ling',     'year'=>9, 'hw'=>'History Test for Chapter 5',        'due'=>'16 May 2024'],
-        ['name'=>'Mohammad Bin Arman Kamarudin', 'year'=>8, 'hw'=>'English Composition', 'due'=>'18 May 2024'],
-        ['name'=>'Nurul Aida',   'year'=>10,'hw'=>'Geography Map Work',  'due'=>'20 May 2024'],
-    ];
-
-    // Init homework session statuses
-    if (!isset($_SESSION['hw_statuses'])) {
-        $_SESSION['hw_statuses'] = array_fill(0, count($ALL_STUDENTS), 'missing');
-        $_SESSION['hw_statuses'][0] = 'submitted';
-        $_SESSION['hw_statuses'][1] = 'submitted';
+// ── Load real students from DB ──────────────────────────
+$ALL_STUDENTS = [];
+if ($conn) {
+    $stuRes = $conn->query("SELECT id, name, year FROM users WHERE role='student' ORDER BY name");
+    if ($stuRes) {
+        while ($r = $stuRes->fetch_assoc()) {
+            $ALL_STUDENTS[] = [
+                'id'   => (int) $r['id'],
+                'name' => $r['name'],
+                'year' => (int) $r['year'],
+            ];
+        }
     }
+}
+
+// ── Load homework from DB ────────────────────────────────
+$HOMEWORK_ALL = [];
+if ($conn) {
+    $hwRes = $conn->query(
+        "SELECT h.*, u.name AS student_name, u.year AS student_year
+         FROM homework h JOIN users u ON h.student_id = u.id
+         ORDER BY h.due_date ASC"
+    );
+    if ($hwRes) {
+        while ($r = $hwRes->fetch_assoc()) {
+            $HOMEWORK_ALL[] = $r;
+        }
+    }
+}
+// Fallback to demo data only if DB has no students
+if (empty($ALL_STUDENTS)) {
+    $ALL_STUDENTS = [
+        ['name' => 'Ali Hassan', 'year' => 10, 'hw' => 'Chapter 5 Essay', 'due' => '10 May 2024'],
+        ['name' => 'Siti Aminah', 'year' => 10, 'hw' => 'Algebra Quiz', 'due' => '12 May 2024'],
+        ['name' => 'Rajan Kumar', 'year' => 11, 'hw' => 'Science Lab Report', 'due' => '14 May 2024'],
+    ];
+}
+
+
 
     // ── Grade calculator ─────────────────────────────────
     function calcGrade($marks, $max = 100)
