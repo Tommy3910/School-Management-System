@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $error = "Unknown role assigned to this account.";
                 }
             } else {
-                $error = "Incorrect password.";
+                $error = "Wrong password.";
             }
         } else {
             $error = "No account found with that email.";
@@ -529,6 +529,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </div>
 
         <form action="login.php" method="POST">
+
+            <?php if (!empty($error)) : ?>
+                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
 
             <div class="field">
                 <label for="email">Email Address</label>
