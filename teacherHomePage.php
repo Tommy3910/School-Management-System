@@ -10,13 +10,7 @@ $tab = $_REQUEST['tab'] ?? 'schedules';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   $action = $_POST['action'] ?? '';
   $idx = (int) ($_POST['idx'] ?? -1);
-  if ($action === 'approve' && isset($_SESSION['hw_statuses'][$idx])) {
-    $_SESSION['hw_statuses'][$idx] = 'submitted';
-    flash('toast', 'Submission approved.');
-  } elseif ($action === 'missing' && isset($_SESSION['hw_statuses'][$idx])) {
-    $_SESSION['hw_statuses'][$idx] = 'missing';
-    flash('toast', 'Marked as missing.');
-  } elseif ($action === 'save_schedule') {
+}elseif ($action === 'save_schedule') {
     flash('toast', 'Schedule saved successfully.');
   } elseif ($action === 'save_timetable') {
     $row_ids = $_POST['row_ids'] ?? [];
@@ -61,7 +55,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
       flash('toast', 'Please enter a valid subject name.');
     }
-  } elseif ($action === 'remove_subject') {
+    } elseif ($action === 'add_homework') {
+    $target = $_POST['hw_student'] ?? ''; // 'all' or a specific student id
+    $title  = trim($_POST['hw_title'] ?? '');
+    $type   = $_POST['hw_type'] ?? 'Homework';
+    $due    = $_POST['hw_due'] ?? '';
+
+    if ($title === '' || $due === '') {
+        flash('toast', 'Please fill in the assignment title and due date.');
+    } else {
+        $titleEsc = $conn->real_escape_string($title);
+        $typeEsc  = $conn->real_escape_string($type);
+        $dueEsc   = $conn->real_escape_string($due);
+        $createdBy = (int) $_SESSION['user']['id'];
+
+        if ($target === 'all') {
+            $res = $conn->query("SELECT id FROM users WHERE role='student'");
+            $count = 0;
+            if ($res) {
+                while ($r = $res->fetch_assoc()) {
+                    $sid = (int) $r['id'];
+                    $conn->query("INSERT INTO homework (student_id, title, type, due_date, status, created_by)
+                                  VALUES ($sid, '$titleEsc', '$typeEsc', '$dueEsc', 'missing', $createdBy)");
+                    sendNotification($conn, $sid, 'New ' . $type, "A new {$type} \"{$title}\" is due on " . date('d M Y', strtotime($due)) . ".");
+                    $count++;
+                }
+            }
+            flash('toast', "Assigned \"$title\" to $count students.");
+        } else {
+            $sid = (int) $target;
+            if ($sid > 0) {
+                $conn->query("INSERT INTO homework (student_id, title, type, due_date, status, created_by)
+                              VALUES ($sid, '$titleEsc', '$typeEsc', '$dueEsc', 'missing', $createdBy)");
+                sendNotification($conn, $sid, 'New ' . $type, "A new {$type} \"{$title}\" is due on " . date('d M Y', strtotime($due)) . ".");
+                flash('toast', "Assigned \"$title\" to the selected student.");
+            } else {
+                flash('toast', 'Please select a student.');
+            }
+        }
+    }
+}
+    elseif ($action === 'remove_subject') {
     $subj_id = (int) ($_POST['subj_id'] ?? 0);
     if ($subj_id > 0) {
       $conn->query("DELETE FROM subjects WHERE id=$subj_id");
@@ -121,7 +155,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $return_url .= '&year=' . (int) $_POST['tt_year'];
   }
   redirect($return_url);
-}
 
 $toast = flash('toast');
 pageHead('Teacher Dashboard');
@@ -619,15 +652,55 @@ pageHead('Teacher Dashboard');
 
         <!-- ── HOMEWORK OVERSIGHT ── -->
       <?php elseif ($tab === 'homework'): ?>
-        <?php
-        $hwSt = $_SESSION['hw_statuses'];
-        $ok = count(array_filter($hwSt, fn($s) => $s === 'submitted'));
-        $ms = count(array_filter($hwSt, fn($s) => $s === 'missing'));
-        $rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
-        ?>
+   <?php
+$ok = count(array_filter($HOMEWORK_ALL, fn($h) => $h['status'] === 'submitted'));
+$ms = count(array_filter($HOMEWORK_ALL, fn($h) => $h['status'] === 'missing'));
+$rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
+?>
         <div class="phdr">
           <h2>Homework Oversight</h2>
           <p>Review and manage all student submissions</p>
+          <div class="crd">
+  <div class="crdhdr">
+    <h3><i class="fas fa-plus-circle"></i>&nbsp; Assign New Homework</h3>
+  </div>
+  <form method="POST" style="padding:1.1rem 1.4rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end">
+    <input type="hidden" name="action" value="add_homework">
+
+    <div>
+      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">ASSIGN TO</label>
+      <select name="hw_student" style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
+        <option value="all">All Students</option>
+        <?php foreach ($ALL_STUDENTS as $s): ?>
+          <option value="<?= $s['id'] ?>"><?= e($s['name']) ?> (Year <?= $s['year'] ?>)</option>
+        <?php endforeach; ?>
+      </select>
+    </div>
+
+    <div>
+      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">TITLE</label>
+      <input type="text" name="hw_title" placeholder="e.g. Chapter 6 Worksheet" required
+        style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;min-width:200px">
+    </div>
+
+    <div>
+      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">TYPE</label>
+      <select name="hw_type" style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
+        <option>Homework</option>
+        <option>Quiz</option>
+        <option>Test</option>
+      </select>
+    </div>
+
+    <div>
+      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">DUE DATE</label>
+      <input type="date" name="hw_due" required
+        style="padding:.43rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
+    </div>
+
+    <button type="submit" class="bsm bpr"><i class="fas fa-plus"></i> Add Homework</button>
+  </form>
+</div>
         </div>
         <div class="srow">
           <div class="sc">
@@ -668,35 +741,35 @@ pageHead('Teacher Dashboard');
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                <?php foreach ($ALL_STUDENTS as $i => $s): ?>
-                  <tr>
-                    <td style="font-weight:600"><?= e($s['name']) ?></td>
-                    <td>Year <?= $s['year'] ?></td>
-                    <td><?= e($s['hw']) ?></td>
-                    <td style="color:var(--MT)"><?= e($s['due']) ?></td>
-                    <td><?php if ($hwSt[$i] === 'submitted'): ?>
-                        <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
-                      <?php else: ?>
-                        <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
-                      <?php endif; ?>
-                    </td>
-                    <td style="white-space:nowrap">
-                      <form method="POST" style="display:inline">
-                        <input type="hidden" name="action" value="approve">
-                        <input type="hidden" name="idx" value="<?= $i ?>">
-                        <button type="submit" class="bsm bap"><i class="fas fa-check"></i> Approve</button>
-                      </form>
-                      &nbsp;
-                      <form method="POST" style="display:inline">
-                        <input type="hidden" name="action" value="missing">
-                        <input type="hidden" name="idx" value="<?= $i ?>">
-                        <button type="submit" class="bsm bms"><i class="fas fa-times"></i> Missing</button>
-                      </form>
-                    </td>
-                  </tr>
-                <?php endforeach; ?>
-              </tbody>
+<tbody>
+  <?php foreach ($HOMEWORK_ALL as $h): ?>
+    <tr>
+      <td style="font-weight:600"><?= e($h['student_name']) ?></td>
+      <td>Year <?= $h['student_year'] ?></td>
+      <td><?= e($h['title']) ?></td>
+      <td style="color:var(--MT)"><?= date('d M Y', strtotime($h['due_date'])) ?></td>
+      <td><?php if ($h['status'] === 'submitted'): ?>
+          <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
+        <?php else: ?>
+          <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
+        <?php endif; ?>
+      </td>
+      <td style="white-space:nowrap">
+        <form method="POST" style="display:inline">
+          <input type="hidden" name="action" value="approve">
+          <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
+          <button type="submit" class="bsm bap"><i class="fas fa-check"></i> Approve</button>
+        </form>
+        &nbsp;
+        <form method="POST" style="display:inline">
+          <input type="hidden" name="action" value="missing">
+          <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
+          <button type="submit" class="bsm bms"><i class="fas fa-times"></i> Missing</button>
+        </form>
+      </td>
+    </tr>
+  <?php endforeach; ?>
+</tbody>
             </table>
           </div>
         </div>
@@ -708,8 +781,47 @@ pageHead('Teacher Dashboard');
           <p>Monitor student fee status</p>
         </div>
         <div class="srow">
-          <?php $paid = count(array_filter($PAYMENTS, fn($p) => $p['status'] === 'Paid'));
-          $inv = count($PAYMENTS) - $paid; ?>
+          <?php
+          $paymentRows = [];
+          $studentsRes = $conn->query("SELECT id, name, year FROM users WHERE role='student' ORDER BY name");
+          if ($studentsRes) {
+            while ($row = $studentsRes->fetch_assoc()) {
+              $studentId = (int) $row['id'];
+              $latestPayment = null;
+              $paymentRes = $conn->query("SELECT * FROM payments WHERE user_id=$studentId ORDER BY created_at DESC, id DESC LIMIT 1");
+              if ($paymentRes && $paymentRes->num_rows > 0) {
+                $latestPayment = $paymentRes->fetch_assoc();
+              }
+
+              $status = $latestPayment['status'] ?? 'Invoice Sent';
+              $amountValue = $latestPayment ? (float) $latestPayment['amount'] : 450.00;
+              $amountDisplay = ($latestPayment['currency'] ?? 'RM') . ' ' . number_format($amountValue, 2);
+              $dateDisplay = $latestPayment ? date('j M Y', strtotime($latestPayment['created_at'])) : '—';
+
+              $paymentRows[] = [
+                'id' => $studentId,
+                'student' => $row['name'],
+                'year' => (int) $row['year'],
+                'amount' => $amountDisplay,
+                'amount_value' => $amountValue,
+                'date' => $dateDisplay,
+                'status' => $status,
+              ];
+            }
+          }
+          if (empty($paymentRows)) {
+            $paymentRows = $PAYMENTS;
+          }
+
+          $paid = count(array_filter($paymentRows, fn($p) => strtolower($p['status']) === 'paid'));
+          $inv = count($paymentRows) - $paid;
+          $outstanding = 0;
+          foreach ($paymentRows as $p) {
+            if (strtolower($p['status']) !== 'paid') {
+              $outstanding += (float) ($p['amount_value'] ?? 0);
+            }
+          }
+          ?>
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
             <div class="sv"><?= $paid ?></div>
@@ -727,7 +839,7 @@ pageHead('Teacher Dashboard');
           </div>
           <div class="sc">
             <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-coins"></i></div>
-            <div class="sv">RM <?= $inv * 450 ?></div>
+            <div class="sv">RM <?= number_format($outstanding, 2) ?></div>
             <div class="sl">Outstanding</div>
           </div>
         </div>
@@ -753,15 +865,15 @@ pageHead('Teacher Dashboard');
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($PAYMENTS as $p): ?>
+                <?php foreach ($paymentRows as $p): ?>
                   <tr>
                     <td style="font-weight:600"><?= e($p['student']) ?></td>
-                    <td>Year <?= $p['year'] ?></td>
+                    <td>Year <?= (int) $p['year'] ?></td>
                     <td style="font-weight:600"><?= e($p['amount']) ?></td>
                     <td style="color:var(--MT)"><?= e($p['date']) ?></td>
-                    <td><?= $p['status'] === 'Paid'
+                    <td><?= strtolower($p['status']) === 'paid'
                       ? '<span class="bpd"><i class="fas fa-check"></i> Paid</span>'
-                      : '<span class="binv"><i class="fas fa-envelope"></i> Invoice Sent</span>' ?></td>
+                      : '<span class="binv"><i class="fas fa-envelope"></i> ' . e($p['status']) . '</span>' ?></td>
                     <td>
                       <form method="POST" style="display:inline">
                         <input type="hidden" name="action" value="send_invoice">

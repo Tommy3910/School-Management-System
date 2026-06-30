@@ -205,41 +205,48 @@
         <tr>
           <td class="day-label">Monday</td>
           <td colspan="2" style="padding:4px"><div class="cell sport">⚽ Sport Session (8:00 – 10:00, 2 hrs)</div></td>
-          <td><div class="cell brk">Break<br>(45 min)</div></td>
-          <td><div class="cell cls">Period 1</div></td>
-          <td><div class="cell cls">Period 2</div></td>
+
+          <td><div class="cell cls-b">P2</div></td>
+          <td><div class="cell short">P3<br><span style="font-weight:400">(30 min)</span></div></td>
+          <td><div class="cell brk">Break<br>(1 hr)</div></td>
+          <td><div class="cell cls-b">P4</div></td>
+          <td><div class="cell cls-b">P5</div></td>
         </tr>
         <tr>
           <td class="day-label">Tuesday</td>
-          <td><div class="cell cls">Period 1</div></td>
-          <td><div class="cell cls">Period 2</div></td>
-          <td><div class="cell brk">Break<br>(45 min)</div></td>
-          <td><div class="cell cls">Period 3</div></td>
-          <td><div class="cell cls">Period 4</div></td>
+          <td><div class="cell cls-b">P1</div></td>
+          <td><div class="cell cls-b">P2</div></td>
+          <td><div class="cell short">P3<br><span style="font-weight:400">(30 min)</span></div></td>
+          <td><div class="cell brk">Break<br>(1 hr)</div></td>
+          <td><div class="cell cls-b">P4</div></td>
+          <td><div class="cell cls-b">P5</div></td>
         </tr>
         <tr>
           <td class="day-label">Wednesday</td>
-          <td><div class="cell cls">Period 1</div></td>
-          <td><div class="cell cls">Period 2</div></td>
-          <td><div class="cell brk">Break<br>(45 min)</div></td>
-          <td><div class="cell cls">Period 3</div></td>
-          <td><div class="cell cls">Period 4</div></td>
+          <td><div class="cell cls-b">P1</div></td>
+          <td><div class="cell cls-b">P2</div></td>
+          <td><div class="cell short">P3<br><span style="font-weight:400">(30 min)</span></div></td>
+          <td><div class="cell brk">Break<br>(1 hr)</div></td>
+          <td><div class="cell cls-b">P4</div></td>
+          <td><div class="cell cls-b">P5</div></td>
         </tr>
         <tr>
           <td class="day-label">Thursday</td>
-          <td><div class="cell cls">Period 1</div></td>
-          <td><div class="cell cls">Period 2</div></td>
-          <td><div class="cell brk">Break<br>(45 min)</div></td>
-          <td><div class="cell cls">Period 3</div></td>
-          <td><div class="cell cls">Period 4</div></td>
+          <td><div class="cell cls-b">P1</div></td>
+          <td><div class="cell cls-b">P2</div></td>
+          <td><div class="cell short">P3<br><span style="font-weight:400">(30 min)</span></div></td>
+          <td><div class="cell brk">Break<br>(1 hr)</div></td>
+          <td><div class="cell cls-b">P4</div></td>
+          <td><div class="cell cls-b">P5</div></td>
         </tr>
         <tr>
           <td class="day-label">Friday</td>
-          <td><div class="cell cls">Period 1</div></td>
-          <td><div class="cell cls">Period 2</div></td>
-          <td><div class="cell brk">Break<br>(45 min)</div></td>
-          <td><div class="cell cls">Period 3</div></td>
-          <td><div class="cell cls">Period 4</div></td>
+          <td><div class="cell cls-b">P1</div></td>
+          <td><div class="cell cls-b">P2</div></td>
+          <td><div class="cell short">P3<br><span style="font-weight:400">(30 min)</span></div></td>
+          <td><div class="cell brk">Break<br>(1 hr)</div></td>
+          <td><div class="cell cls-b">P4</div></td>
+          <td><div class="cell cls-b">P5</div></td>
         </tr>
       </tbody>
     </table>
