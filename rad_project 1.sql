@@ -191,7 +191,12 @@ INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p
 (2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'SCI', 'HIS', 'ACC', 'ECO', 0),
 (3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'HIS', 'ACC', 0),
 (4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'ACC', 0),
-(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1);
+(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1),
+(6, '1-6', 5, 'Monday', 'SPORT', 'Math', 'HIS', 'MAN', 'ENG', NULL, NULL, 1),
+(7, '1-6', 5, 'Tuesday', 'Eng', 'Math', 'BM', 'SCI', 'HIS', NULL, NULL, 0),
+(8, '1-6', 5, 'Wednesday', 'ENG', 'BM', 'MATH', 'HIS', 'SCI', NULL, NULL, 0),
+(9, '1-6', 5, 'Thursday', 'HIS', 'ENG', 'BM', 'MATH', 'SCI', NULL, NULL, 0),
+(10, '1-6', 5, 'Friday', 'MATH', 'HIS', 'ENG', 'BM', 'SCI', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -215,7 +220,7 @@ CREATE TABLE `users` (
 INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALUES
 (1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
 (2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher'),
-(3, 'user1@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
+(3, 'user@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
 
 --
 -- Indexes for dumped tables

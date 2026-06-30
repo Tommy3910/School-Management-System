@@ -562,7 +562,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
 
         <div class="card-footer">
-            <p>Need an account? <a href="register.php">Contact your administrator</a></p>
+            <p>If need to register acc then Call Us: [+6016-2219815] 📧 Email: [enquiry@maplewood.com.my] 🌐 Visit Us: [www.maplewood.com.my]</p>
         </div>
 
     </div>
