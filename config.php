@@ -1,6 +1,22 @@
     <?php
 
+    ini_set('session.gc_maxlifetime', 186400);
+    session_set_cookie_params([
+        'lifetime' => 186400,
+        'path' => '/',
+        'secure' => false,
+        'httponly' => true,
+        'samesite' => 'Lax',
+    ]);
     session_start();
+
+    if (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > 86400) {
+        session_unset();
+        session_destroy();
+        header('Location: login.php');
+        exit;
+    }
+    $_SESSION['last_activity'] = time();
 
     // DB connection MUST be first
     $conn = mysqli_connect("localhost", "root", "", "rad_project");

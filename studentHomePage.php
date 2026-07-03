@@ -1,4 +1,14 @@
 <?php
+if (isset($_SESSION['last_activity'])) {
+    if (time() - $_SESSION['last_activity'] > 186400) {
+        session_unset();
+        session_destroy();
+        header('Location: login.php');
+        exit;
+    }
+}
+$_SESSION['last_activity'] = time();
+
 require_once 'config.php';
 require_once 'layout.php';
 requireAuth('student');
@@ -15,6 +25,12 @@ $tab = $_GET['tab'] ?? 'courses';
 // Handle flash messages
 $toast = flash('toast');
 
+// Mark all read when dropdown opened
+if (isset($_GET['markread'])) {
+  markAllRead($conn, $userId);
+  redirect("studentHomePage.php?tab=$tab");
+}
+
 pageHead('Student Dashboard');
 ?>
 <div id="student">
@@ -22,13 +38,6 @@ pageHead('Student Dashboard');
   <?php
   $notifs = getNotifications($conn, $userId);
   $unreadCount = getUnreadCount($conn, $userId);
-  ?>
-  <?php
-  // Mark all read when dropdown opened
-  if (isset($_GET['markread'])) {
-    markAllRead($conn, $userId);
-    redirect("studentHomePage.php?tab=$tab");
-  }
   ?>
   <header class="hdr s-hdr">
     <div class="hbrand">
@@ -87,6 +96,8 @@ pageHead('Student Dashboard');
       <span class="slbl s-slbl">Menu</span>
       <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses"> <i class="fas fa-book-open"></i>
         Courses</a>
+      <a class="nl s-nl <?= $tab === 'grades' ? 'on' : '' ?>" href="?tab=grades"> <i class="fas fa-chart-bar"></i>
+        Grades</a>
       <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"> <i
           class="fas fa-calendar-alt"></i>
         Timetable</a>

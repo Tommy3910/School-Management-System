@@ -95,8 +95,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-}
-    elseif ($action === 'remove_subject') {
+  } elseif ($action === 'approve' || $action === 'missing') {
+      $hw_id = (int) ($_POST['hw_id'] ?? 0);
+      if ($hw_id > 0) {
+          $newStatus = $action === 'approve' ? 'submitted' : 'missing';
+          $conn->query("UPDATE homework SET status='$newStatus' WHERE id=$hw_id");
+          flash('toast', 'Homework status updated to ' . ($newStatus === 'submitted' ? 'Submitted' : 'Missing') . '.');
+      } else {
+          flash('toast', 'Invalid homework selection.');
+      }
+  } elseif ($action === 'remove_subject') {
     $subj_id = (int) ($_POST['subj_id'] ?? 0);
     if ($subj_id > 0) {
       $conn->query("DELETE FROM subjects WHERE id=$subj_id");
@@ -108,6 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $student_ids = $_POST['student_ids'] ?? [];
     $subject_ids = $_POST['subject_ids'] ?? [];
     $marks = $_POST['marks'] ?? [];
+    $notified = [];
     foreach ($student_ids as $idx => $sid) {
       $student_id = (int) $sid;
       $subject_id = (int) ($subject_ids[$idx] ?? 0);
@@ -118,7 +127,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->query("INSERT INTO grades (student_id, subject_id, year, term, marks, grade)
                     VALUES ($student_id, $subject_id, $gyear, '$gterm', $markVal, '$grade')
                     ON DUPLICATE KEY UPDATE marks=$markVal, grade='$grade'");
+        if (!in_array($student_id, $notified, true)) {
+          $notified[] = $student_id;
+        }
       }
+    }
+    foreach ($notified as $sid) {
+      sendNotification($conn, $sid, 'Grade Updated', "Your grades for $gterm have been updated. Check your dashboard for details.");
     }
     flash('toast', 'Grades saved and notifications queued.');
   } elseif ($action === 'send_invoice') {

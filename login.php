@@ -1,5 +1,13 @@
 <?php
 ob_start();
+ini_set('session.gc_maxlifetime', 186400);
+session_set_cookie_params([
+    'lifetime' => 186400,
+    'path' => '/',
+    'secure' => false,
+    'httponly' => true,
+    'samesite' => 'Lax',
+]);
 session_start();
 $conn = mysqli_connect("localhost", "root", "", "rad_project");
 
