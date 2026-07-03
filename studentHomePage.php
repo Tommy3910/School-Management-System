@@ -577,6 +577,18 @@ pageHead('Student Dashboard');
           if ((isset($mp['status']) && strtolower($mp['status']) !== 'paid') || (isset($mp['status']) && $mp['status'] === 'Invoice Sent'))
             $balance += $amt;
         }
+
+        // If an invoice id is requested, fetch it for inline viewing in the Payment tab
+        $viewInvoiceId = isset($_GET['invoice']) ? (int) $_GET['invoice'] : 0;
+        $viewInvoice = null;
+        if ($viewInvoiceId && $conn) {
+          $stmtInv = $conn->prepare('SELECT p.*, u.name AS student_name FROM payments p LEFT JOIN users u ON p.user_id=u.id WHERE p.id=? AND p.user_id=? LIMIT 1');
+          $stmtInv->bind_param('ii', $viewInvoiceId, $uid);
+          $stmtInv->execute();
+          $resInv = $stmtInv->get_result();
+          $viewInvoice = $resInv->fetch_assoc();
+          $stmtInv->close();
+        }
         ?>
         <div class="phero">
           <div>
@@ -606,13 +618,47 @@ pageHead('Student Dashboard');
                 class="fas fa-check"></i></button>
           <?php endif; ?>
         </div>
+          <?php if ($viewInvoice): ?>
+            <div class="crd" id="invoice-<?= (int) $viewInvoice['id'] ?>" style="margin-top:1rem">
+              <div class="crdhdr">
+                <h3>Invoice #<?= e($viewInvoice['id']) ?></h3>
+              </div>
+              <div style="padding:1rem">
+                <p><strong>Student:</strong> <?= e($viewInvoice['student_name'] ?? $user['name']) ?></p>
+                <p><strong>Amount:</strong> <?= e($viewInvoice['currency'] . ' ' . number_format($viewInvoice['amount'], 2)) ?></p>
+                <p><strong>Status:</strong> <?= e($viewInvoice['status']) ?></p>
+                <p><strong>Created:</strong> <?= e($viewInvoice['created_at']) ?></p>
+                <?php if (!empty($viewInvoice['paid_at'])): ?>
+                  <p><strong>Paid At:</strong> <?= e($viewInvoice['paid_at']) ?></p>
+                <?php endif; ?>
+                <div style="margin-top:.8rem;display:flex;gap:.6rem;flex-wrap:wrap">
+                  <a href="?tab=payment" class="bsd bsm">Close</a>
+                  <?php if (isset($viewInvoice['status']) && strtolower($viewInvoice['status']) !== 'paid'): ?>
+                    <a href="pay.php?id=<?= (int) $viewInvoice['id'] ?>" class="bpr bsm">Pay Now</a>
+                  <?php endif; ?>
+                  <button onclick="printInvoice(<?= (int) $viewInvoice['id'] ?>)" class="bsd bsm">Print</button>
+                </div>
+              </div>
+            </div>
+          <?php endif; ?>
         <?php foreach ($myPayments as $p): ?>
-          <?php $hasId = isset($p['id']) && (int) $p['id'] > 0; ?>
+          <?php
+            $hasId = isset($p['id']) && (int) $p['id'] > 0;
+            $cardHref = '';
+            if ($hasId) {
+              // If invoice already paid, open inline viewer; otherwise link to the pay flow
+              if (isset($p['status']) && strtolower($p['status']) === 'paid') {
+                $cardHref = 'studentHomePage.php?tab=payment&invoice=' . (int) $p['id'];
+              } else {
+                $cardHref = 'pay.php?id=' . (int) $p['id'];
+              }
+            }
+          ?>
           <?php if ($hasId): ?>
-            <a class="pcard" href="pay.php?id=<?= (int) $p['id'] ?>">
-            <?php else: ?>
-              <div class="pcard">
-              <?php endif; ?>
+            <a class="pcard" href="<?= e($cardHref) ?>">
+          <?php else: ?>
+            <div class="pcard">
+          <?php endif; ?>
               <div>
                 <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?>
                   — Invoice</div>
@@ -671,5 +717,16 @@ pageHead('Student Dashboard');
       window.history.replaceState(null, '', newUrl);
     }
   })();
+
+  function printInvoice(id) {
+    var el = document.getElementById('invoice-' + id);
+    if (!el) return alert('Invoice not found');
+    var w = window.open('', '_blank');
+    var styles = Array.from(document.querySelectorAll('link[rel="stylesheet"], style')).map(function(n){ return n.outerHTML }).join('\n');
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Invoice #' + id + '</title>' + styles + '</head><body>' + el.innerHTML + '</body></html>');
+    w.document.close();
+    w.focus();
+    setTimeout(function(){ w.print(); }, 300);
+  }
 </script>
 <?php pageFoot(); ?>

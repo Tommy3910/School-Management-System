@@ -70,8 +70,8 @@ pageHead('Payment Successful');
             <p><strong>Amount:</strong> <?= e($currency . ' ' . number_format($amount, 2)) ?></p>
             <?php if ($insertId): ?>
                 <p><strong>Invoice/Record ID:</strong> <?= e($insertId) ?></p>
-                <p><a href="pay.php?id=<?= (int) $insertId ?>">View Invoice</a> &nbsp;|&nbsp; <a
-                        href="studentHomePage.php?tab=payment&refresh=1">Back to Payments</a></p>
+                <p><a href="studentHomePage.php?tab=payment&invoice=<?= (int) $insertId ?>">View Invoice</a> &nbsp;|&nbsp; <a
+                    href="studentHomePage.php?tab=payment&refresh=1">Back to Payments</a></p>
             <?php else: ?>
                 <p style="color:var(--MT)">No database record was created (not logged in or DB unavailable).</p>
                 <p><a href="studentHomePage.php?tab=payment">Back to Payments</a></p>

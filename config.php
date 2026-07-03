@@ -1,4 +1,5 @@
     <?php
+
     session_start();
 
     // DB connection MUST be first
