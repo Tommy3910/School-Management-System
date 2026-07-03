@@ -41,7 +41,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                         $error = "Unknown role assigned to this account.";
                 }
             } else {
-                $error = "Incorrect password.";
+                $error = "Wrong password.";
             }
         } else {
             $error = "No account found with that email.";
@@ -530,6 +530,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         <form action="login.php" method="POST">
 
+            <?php if (!empty($error)) : ?>
+                <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
+            <?php endif; ?>
+
             <div class="field">
                 <label for="email">Email Address</label>
                 <div class="input-wrap">
@@ -562,7 +566,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         </form>
 
         <div class="card-footer">
-            <p>Need an account? <a href="register.php">Contact your administrator</a></p>
+            <p>If need to register acc then Call Us: [+6016-2219815] 📧 Email: [enquiry@maplewood.com.my] 🌐 Visit Us: [www.maplewood.com.my]</p>
         </div>
 
     </div>
