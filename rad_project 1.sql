@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jun 29, 2026 at 02:56 PM
+-- Generation Time: Jul 03, 2026 at 02:38 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -57,6 +57,31 @@ INSERT INTO `grades` (`id`, `student_id`, `subject_id`, `marks`, `max_marks`, `g
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `homework`
+--
+
+CREATE TABLE `homework` (
+  `id` int(11) NOT NULL,
+  `student_id` int(11) NOT NULL,
+  `title` varchar(150) NOT NULL,
+  `type` varchar(20) NOT NULL DEFAULT 'Homework',
+  `due_date` date NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'missing',
+  `created_by` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `homework`
+--
+
+INSERT INTO `homework` (`id`, `student_id`, `title`, `type`, `due_date`, `status`, `created_by`, `created_at`) VALUES
+(1, 1, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'missing', 2, '2026-07-03 12:35:03'),
+(2, 3, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'missing', 2, '2026-07-03 12:35:03');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `notifications`
 --
 
@@ -74,23 +99,26 @@ CREATE TABLE `notifications` (
 --
 
 INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `created_at`) VALUES
-(1, 1, 'Term 1 Grades Released', 'Your Term 1 grades have been posted. Check your grades page to view your results.', 0, '2026-06-08 14:30:00'),
-(2, 1, 'Homework Submission Reminder', 'Remember to submit your Math assignment by Friday. Late submissions will not be accepted.', 0, '2026-06-07 10:15:00'),
+(1, 1, 'Term 1 Grades Released', 'Your Term 1 grades have been posted. Check your grades page to view your results.', 1, '2026-06-08 14:30:00'),
+(2, 1, 'Homework Submission Reminder', 'Remember to submit your Math assignment by Friday. Late submissions will not be accepted.', 1, '2026-06-07 10:15:00'),
 (3, 1, 'School Event Announcement', 'Annual Sports Day is scheduled for June 15, 2026. All students are required to participate.', 1, '2026-06-05 09:00:00'),
 (4, 1, 'Payment Due', 'Your school fees for June are now due. Please make payment before June 30, 2026.', 1, '2026-06-01 08:30:00'),
-(5, 1, 'Class Cancelled', 'Biology practical class on June 10 has been rescheduled to June 12 due to lab maintenance.', 0, '2026-06-06 15:45:00'),
-(6, 1, 'Payment Received', 'We received your payment for invoice #6. Thank you.', 0, '2026-06-22 05:40:58'),
-(7, 1, 'Payment Received', 'We received your payment for invoice #5. Thank you.', 0, '2026-06-22 05:42:41'),
-(8, 1, 'Payment Received', 'We received your payment for invoice #4. Thank you.', 0, '2026-06-22 14:26:47'),
-(9, 1, 'Payment Received', 'We received your payment for invoice #3. Thank you.', 0, '2026-06-22 14:28:58'),
-(10, 1, 'Payment Received', 'We received your payment for invoice #1. Thank you.', 0, '2026-06-22 14:31:05'),
-(11, 1, 'Payment Received', 'We received your payment for invoice #7. Thank you.', 0, '2026-06-22 14:32:17'),
-(12, 1, 'Payment Received', 'We received your payment for invoice #8. Thank you.', 0, '2026-06-22 14:38:32'),
-(13, 1, 'Payment Received', 'We received your payment for invoice #9. Thank you.', 0, '2026-06-22 14:53:54'),
-(14, 1, 'Payment Received', 'We received your payment for invoice #10. Thank you.', 0, '2026-06-22 14:57:41'),
-(15, 1, 'Payment Received', 'We received your payment for invoice #11. Thank you.', 0, '2026-06-22 15:00:04'),
-(16, 1, 'Payment Received', 'We received your payment for invoice #12. Thank you.', 0, '2026-06-22 15:01:31'),
-(17, 1, 'Payment Received', 'We received your payment for invoice #13. Thank you.', 0, '2026-06-22 15:05:11');
+(5, 1, 'Class Cancelled', 'Biology practical class on June 10 has been rescheduled to June 12 due to lab maintenance.', 1, '2026-06-06 15:45:00'),
+(6, 1, 'Payment Received', 'We received your payment for invoice #6. Thank you.', 1, '2026-06-22 05:40:58'),
+(7, 1, 'Payment Received', 'We received your payment for invoice #5. Thank you.', 1, '2026-06-22 05:42:41'),
+(8, 1, 'Payment Received', 'We received your payment for invoice #4. Thank you.', 1, '2026-06-22 14:26:47'),
+(9, 1, 'Payment Received', 'We received your payment for invoice #3. Thank you.', 1, '2026-06-22 14:28:58'),
+(10, 1, 'Payment Received', 'We received your payment for invoice #1. Thank you.', 1, '2026-06-22 14:31:05'),
+(11, 1, 'Payment Received', 'We received your payment for invoice #7. Thank you.', 1, '2026-06-22 14:32:17'),
+(12, 1, 'Payment Received', 'We received your payment for invoice #8. Thank you.', 1, '2026-06-22 14:38:32'),
+(13, 1, 'Payment Received', 'We received your payment for invoice #9. Thank you.', 1, '2026-06-22 14:53:54'),
+(14, 1, 'Payment Received', 'We received your payment for invoice #10. Thank you.', 1, '2026-06-22 14:57:41'),
+(15, 1, 'Payment Received', 'We received your payment for invoice #11. Thank you.', 1, '2026-06-22 15:00:04'),
+(16, 1, 'Payment Received', 'We received your payment for invoice #12. Thank you.', 1, '2026-06-22 15:01:31'),
+(17, 1, 'Payment Received', 'We received your payment for invoice #13. Thank you.', 1, '2026-06-22 15:05:11'),
+(18, 1, 'New Homework', 'A new Homework \"chapter 6 work sheet\" is due on 17 Jul 2026.', 1, '2026-07-03 12:31:39'),
+(19, 1, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 0, '2026-07-03 12:35:03'),
+(20, 3, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 0, '2026-07-03 12:35:03');
 
 -- --------------------------------------------------------
 
@@ -187,16 +215,16 @@ CREATE TABLE `timetable` (
 --
 
 INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p4`, `p5`, `p6`, `p7`, `sport_day`) VALUES
-(1, '10-11', 11, 'Monday', 'BM', 'ENG', 'HIS', 'MAN', 'ACC', 'ECO', 'SCI', 0),
-(2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'SCI', 'HIS', 'ACC', 'ECO', 0),
-(3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'HIS', 'ACC', 0),
-(4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'MATH', 'MAN', 'SCI', 'ACC', 0),
-(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BM', 'ACC', 'ECO', 'SCI', 1),
-(6, '1-6', 5, 'Monday', 'SPORT', 'Math', 'HIS', 'MAN', 'ENG', NULL, NULL, 1),
-(7, '1-6', 5, 'Tuesday', 'Eng', 'Math', 'BM', 'SCI', 'HIS', NULL, NULL, 0),
-(8, '1-6', 5, 'Wednesday', 'ENG', 'BM', 'MATH', 'HIS', 'SCI', NULL, NULL, 0),
-(9, '1-6', 5, 'Thursday', 'HIS', 'ENG', 'BM', 'MATH', 'SCI', NULL, NULL, 0),
-(10, '1-6', 5, 'Friday', 'MATH', 'HIS', 'ENG', 'BM', 'SCI', NULL, NULL, 0);
+(1, '10-11', 11, 'Monday', 'BM', 'ENG', 'HIS', 'BREAK', 'ACC', 'ECO', 'SCI', 0),
+(2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'BREAK', 'HIS', 'ACC', 'ECO', 0),
+(3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'BREAK', 'SCI', 'HIS', 'ACC', 0),
+(4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'BREAK', 'MAN', 'SCI', 'ACC', 0),
+(5, '10-11', 11, 'Friday', 'SPORT', 'SPORT', 'ENG', 'BREAK', 'ACC', 'ECO', 'SCI', 1),
+(6, '1-6', 5, 'Monday', 'SPORT', 'Math', 'BREAK', 'MAN', 'ENG', NULL, NULL, 1),
+(7, '1-6', 5, 'Tuesday', 'Eng', 'Math', 'BREAK', 'SCI', 'HIS', NULL, NULL, 0),
+(8, '1-6', 5, 'Wednesday', 'ENG', 'BM', 'BREAK', 'HIS', 'SCI', NULL, NULL, 0),
+(9, '1-6', 5, 'Thursday', 'HIS', 'ENG', 'BREAK', 'MATH', 'SCI', NULL, NULL, 0),
+(10, '1-6', 5, 'Friday', 'MATH', 'HIS', 'BREAK', 'BM', 'SCI', NULL, NULL, 0);
 
 -- --------------------------------------------------------
 
@@ -218,9 +246,9 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALUES
-(1, 'user@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
+(1, 'isaac@student.maplewood.edu.my', 'Isaac', 11, '454567', 'student'),
 (2, 'admin@teacher.maplewood.edu.my', 'Tommy', 0, '878756', 'teacher'),
-(3, 'user@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
+(3, 'zixuan@student.maplewood.edu.my', 'Zi xuan', 6, '987654', 'student');
 
 --
 -- Indexes for dumped tables
@@ -232,6 +260,14 @@ INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALU
 ALTER TABLE `grades`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `unique_grade` (`student_id`,`subject_id`,`term`);
+
+--
+-- Indexes for table `homework`
+--
+ALTER TABLE `homework`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `student_id` (`student_id`),
+  ADD KEY `created_by` (`created_by`);
 
 --
 -- Indexes for table `notifications`
@@ -274,10 +310,16 @@ ALTER TABLE `grades`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
+-- AUTO_INCREMENT for table `homework`
+--
+ALTER TABLE `homework`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
 
 --
 -- AUTO_INCREMENT for table `payments`
