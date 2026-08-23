@@ -15,43 +15,6 @@ HTML;
     echo "</style>\n</head>\n<body>\n";
 }
 
-function pageFoot() {
-    renderChatWidget();
-    echo <<<HTML
-<script>
-function togglePw(id,btn){
-  var i=document.getElementById(id);
-  i.type=i.type==='password'?'text':'password';
-  btn.innerHTML=i.type==='text'?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>';
-}
-function otpMove(el,nextId){
-  if(el.value){el.classList.add('filled');if(nextId)document.getElementById(nextId).focus();}
-  else el.classList.remove('filled');
-}
-function otpBack(e,prevId,el){
-  if(e.key==='Backspace'&&!el.value&&prevId){
-    var p=document.getElementById(prevId);p.value='';p.classList.remove('filled');p.focus();
-  }
-}
-function checkStrength(pw,barPrefix,labelId){
-  var bars=[1,2,3,4].map(function(n){return document.getElementById(barPrefix+n);});
-  var lbl=document.getElementById(labelId);
-  var score=0;
-  if(pw.length>=8)score++;
-  if(/[A-Z]/.test(pw))score++;
-  if(/[0-9]/.test(pw))score++;
-  if(/[^A-Za-z0-9]/.test(pw))score++;
-  var colors=['#ef5350','#ff9800','#42a5f5','#66bb6a'];
-  var labels=['Weak','Fair','Good','Strong'];
-  bars.forEach(function(b,i){if(b)b.style.background=i<score?colors[score-1]:'#e8e0cc';});
-  if(lbl)lbl.textContent=pw.length===0?'Enter a password':(labels[score-1]||'Weak');
-  if(lbl)lbl.style.color=pw.length===0?'#5a6b60':colors[score-1];
-}
-</script>
-</body></html>
-HTML;
-}
-
 function renderChatWidget() {
     echo <<<HTML
 <style>
@@ -141,6 +104,10 @@ async function mwSendMsg(e){
 </script>
 HTML;
 }
+
+function pageFoot() {
+    renderChatWidget();
+    echo <<<HTML
 <script>
 function togglePw(id,btn){
   var i=document.getElementById(id);
