@@ -21,6 +21,9 @@
     // DB connection MUST be first
     $conn = mysqli_connect("localhost", "root", "", "rad_project");
 
+    // ── AI Chat Config ───────────────────────────────────────
+ define('GEMINI_API_KEY', 'AIzaSyDS6hfzx6-mvzJxp3dC-4dL3MAYBIMXhlo'); 
+
     // ── Helpers ──────────────────────────────────────────────
     function e($s)
     {

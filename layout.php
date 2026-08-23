@@ -16,7 +16,131 @@ HTML;
 }
 
 function pageFoot() {
+    renderChatWidget();
     echo <<<HTML
+<script>
+function togglePw(id,btn){
+  var i=document.getElementById(id);
+  i.type=i.type==='password'?'text':'password';
+  btn.innerHTML=i.type==='text'?'<i class="fas fa-eye-slash"></i>':'<i class="fas fa-eye"></i>';
+}
+function otpMove(el,nextId){
+  if(el.value){el.classList.add('filled');if(nextId)document.getElementById(nextId).focus();}
+  else el.classList.remove('filled');
+}
+function otpBack(e,prevId,el){
+  if(e.key==='Backspace'&&!el.value&&prevId){
+    var p=document.getElementById(prevId);p.value='';p.classList.remove('filled');p.focus();
+  }
+}
+function checkStrength(pw,barPrefix,labelId){
+  var bars=[1,2,3,4].map(function(n){return document.getElementById(barPrefix+n);});
+  var lbl=document.getElementById(labelId);
+  var score=0;
+  if(pw.length>=8)score++;
+  if(/[A-Z]/.test(pw))score++;
+  if(/[0-9]/.test(pw))score++;
+  if(/[^A-Za-z0-9]/.test(pw))score++;
+  var colors=['#ef5350','#ff9800','#42a5f5','#66bb6a'];
+  var labels=['Weak','Fair','Good','Strong'];
+  bars.forEach(function(b,i){if(b)b.style.background=i<score?colors[score-1]:'#e8e0cc';});
+  if(lbl)lbl.textContent=pw.length===0?'Enter a password':(labels[score-1]||'Weak');
+  if(lbl)lbl.style.color=pw.length===0?'#5a6b60':colors[score-1];
+}
+</script>
+</body></html>
+HTML;
+}
+
+function renderChatWidget() {
+    echo <<<HTML
+<style>
+#mwChatBtn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;
+  background:var(--F,#0f2318);color:#fff;border:none;box-shadow:0 6px 20px rgba(0,0,0,.25);
+  cursor:pointer;font-size:1.4rem;z-index:9999;display:flex;align-items:center;justify-content:center;
+  transition:transform .2s}
+#mwChatBtn:hover{transform:scale(1.06)}
+#mwChatWin{position:fixed;bottom:92px;right:24px;width:340px;max-width:calc(100vw - 32px);
+  height:460px;max-height:calc(100vh - 140px);background:#fff;border-radius:16px;
+  box-shadow:0 12px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:9999;
+  font-family:'Plus Jakarta Sans',sans-serif}
+#mwChatWin.open{display:flex}
+#mwChatHdr{background:var(--F,#0f2318);color:#fff;padding:.85rem 1.1rem;display:flex;
+  align-items:center;justify-content:space-between;font-weight:700;font-size:.9rem}
+#mwChatHdr button{background:none;border:none;color:#fff;cursor:pointer;font-size:1rem;opacity:.8}
+#mwChatHdr button:hover{opacity:1}
+#mwChatBody{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;
+  background:#f7f3ec}
+.mwMsg{max-width:82%;padding:.55rem .8rem;border-radius:12px;font-size:.82rem;line-height:1.45}
+.mwMsg.bot{background:#fff;color:#111a14;align-self:flex-start;border:1px solid #e8e0cc}
+.mwMsg.user{background:var(--F,#0f2318);color:#fff;align-self:flex-end}
+.mwMsg.typing{color:#5a6b60;font-style:italic}
+#mwChatForm{display:flex;border-top:1px solid #e8e0cc;padding:.6rem;gap:.5rem}
+#mwChatInput{flex:1;border:1.5px solid #e8e0cc;border-radius:10px;padding:.5rem .7rem;
+  font-family:'Plus Jakarta Sans',sans-serif;font-size:.82rem;outline:none}
+#mwChatInput:focus{border-color:var(--S,#2d6a4f)}
+#mwChatForm button{background:var(--F,#0f2318);color:#fff;border:none;border-radius:10px;
+  padding:0 1rem;cursor:pointer;font-size:.85rem}
+</style>
+
+<button id="mwChatBtn" onclick="mwToggleChat()" title="Ask Maplewood Assistant">
+  <i class="fas fa-comment-dots"></i>
+</button>
+
+<div id="mwChatWin">
+  <div id="mwChatHdr">
+    <span><i class="fas fa-leaf"></i> Maplewood Assistant</span>
+    <button onclick="mwToggleChat()"><i class="fas fa-times"></i></button>
+  </div>
+  <div id="mwChatBody">
+    <div class="mwMsg bot">Hi! I can answer questions about fees, timetables, and how to use the site. What would you like to know?</div>
+  </div>
+  <form id="mwChatForm" onsubmit="mwSendMsg(event)">
+    <input id="mwChatInput" type="text" placeholder="Ask a question..." autocomplete="off">
+    <button type="submit"><i class="fas fa-paper-plane"></i></button>
+  </form>
+</div>
+
+<script>
+function mwToggleChat(){
+  document.getElementById('mwChatWin').classList.toggle('open');
+}
+
+async function mwSendMsg(e){
+  e.preventDefault();
+  var input = document.getElementById('mwChatInput');
+  var body = document.getElementById('mwChatBody');
+  var msg = input.value.trim();
+  if(!msg) return;
+
+  body.insertAdjacentHTML('beforeend', '<div class="mwMsg user"></div>');
+  body.lastElementChild.textContent = msg;
+  input.value = '';
+  body.scrollTop = body.scrollHeight;
+
+  body.insertAdjacentHTML('beforeend', '<div class="mwMsg bot typing" id="mwTyping">Thinking...</div>');
+  body.scrollTop = body.scrollHeight;
+
+  try {
+    var res = await fetch('api_chat.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({message: msg})
+    });
+    var data = await res.json();
+    document.getElementById('mwTyping').remove();
+    var reply = data.reply || data.error || 'Something went wrong.';
+    body.insertAdjacentHTML('beforeend', '<div class="mwMsg bot"></div>');
+    body.lastElementChild.textContent = reply;
+  } catch(err) {
+    document.getElementById('mwTyping').remove();
+    body.insertAdjacentHTML('beforeend', '<div class="mwMsg bot">Connection error. Please try again.</div>');
+  }
+  body.scrollTop = body.scrollHeight;
+}
+</script>
+HTML;
+}
 <script>
 function togglePw(id,btn){
   var i=document.getElementById(id);
