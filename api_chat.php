@@ -59,7 +59,7 @@ $payload = [
         ['role' => 'user', 'parts' => [['text' => $userMessage]]]
     ],
     'generationConfig' => [
-        'maxOutputTokens' => 400
+        'maxOutputTokens' => 1024
     ]
 ];
 
