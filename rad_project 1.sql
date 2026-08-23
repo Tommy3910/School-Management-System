@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Jul 03, 2026 at 02:38 PM
+-- Generation Time: Aug 23, 2026 at 07:22 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -20,6 +20,29 @@ SET time_zone = "+00:00";
 --
 -- Database: `rad_project`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `chatbot_knowledge`
+--
+
+CREATE TABLE `chatbot_knowledge` (
+  `id` int(11) NOT NULL,
+  `topic` varchar(100) NOT NULL,
+  `content` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `chatbot_knowledge`
+--
+
+INSERT INTO `chatbot_knowledge` (`id`, `topic`, `content`, `created_at`) VALUES
+(1, 'Late fees', 'If school fees are not paid by the due date, a late fee notice will be sent. Contact the school office to arrange payment.', '2026-08-23 05:11:01'),
+(2, 'Uniform policy', 'Students must wear the official Maplewood uniform on all days except designated Sport Day sessions.', '2026-08-23 05:11:01'),
+(3, 'School hours', 'Year 1-6 classes run 8:00am to 12:45pm. Year 7-11 classes run 8:00am to 1:45pm.', '2026-08-23 05:11:01'),
+(4, 'Contacting the office', 'For issues not covered here (lost ID, medical concerns, enrolment questions), contact the school office directly rather than using this chat.', '2026-08-23 05:11:01');
 
 -- --------------------------------------------------------
 
@@ -47,11 +70,11 @@ CREATE TABLE `grades` (
 
 INSERT INTO `grades` (`id`, `student_id`, `subject_id`, `marks`, `max_marks`, `grade`, `term`, `year`, `graded_by`, `created_at`, `updated_at`) VALUES
 (1, 1, 1, 87.50, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
-(2, 1, 2, 92.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
-(3, 1, 3, 78.50, 100, 'B+', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(2, 1, 2, 80.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-07-06 12:58:30'),
+(3, 1, 3, 80.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-07-06 12:58:07'),
 (4, 1, 4, 85.00, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
 (5, 1, 5, 88.75, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
-(6, 1, 6, 91.25, 100, 'A', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00'),
+(6, 1, 6, 90.00, 100, 'A+', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-07-08 10:22:37'),
 (7, 1, 7, 80.00, 100, 'B+', 'Term 1', 11, 2, '2026-06-08 10:00:00', '2026-06-08 10:00:00');
 
 -- --------------------------------------------------------
@@ -76,8 +99,14 @@ CREATE TABLE `homework` (
 --
 
 INSERT INTO `homework` (`id`, `student_id`, `title`, `type`, `due_date`, `status`, `created_by`, `created_at`) VALUES
-(1, 1, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'missing', 2, '2026-07-03 12:35:03'),
-(2, 3, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'missing', 2, '2026-07-03 12:35:03');
+(1, 1, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'submitted', 2, '2026-07-03 12:35:03'),
+(2, 3, 'chapter 6 worksheet', 'Homework', '2026-07-08', 'missing', 2, '2026-07-03 12:35:03'),
+(3, 1, 'chapter 6 worksheet', 'Homework', '2026-07-09', 'submitted', 2, '2026-07-04 02:54:51'),
+(4, 1, 'final exam revision', 'Homework', '2026-07-07', 'missing', 2, '2026-07-06 12:59:31'),
+(5, 1, 'history chapter 3', 'Homework', '2026-08-26', 'missing', 2, '2026-07-06 13:16:29'),
+(6, 1, 'chapter 12 exercises', 'Homework', '2026-07-21', 'missing', 2, '2026-07-06 13:30:11'),
+(7, 1, 'exercises', 'Homework', '2026-07-07', 'missing', 2, '2026-07-06 13:55:33'),
+(8, 1, 'test 2', 'Test', '2026-07-09', 'missing', 2, '2026-07-08 12:27:20');
 
 -- --------------------------------------------------------
 
@@ -117,8 +146,19 @@ INSERT INTO `notifications` (`id`, `user_id`, `title`, `message`, `is_read`, `cr
 (16, 1, 'Payment Received', 'We received your payment for invoice #12. Thank you.', 1, '2026-06-22 15:01:31'),
 (17, 1, 'Payment Received', 'We received your payment for invoice #13. Thank you.', 1, '2026-06-22 15:05:11'),
 (18, 1, 'New Homework', 'A new Homework \"chapter 6 work sheet\" is due on 17 Jul 2026.', 1, '2026-07-03 12:31:39'),
-(19, 1, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 0, '2026-07-03 12:35:03'),
-(20, 3, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 0, '2026-07-03 12:35:03');
+(19, 1, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 1, '2026-07-03 12:35:03'),
+(20, 3, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 08 Jul 2026.', 1, '2026-07-03 12:35:03'),
+(21, 1, 'New Homework', 'A new Homework \"chapter 6 worksheet\" is due on 09 Jul 2026.', 1, '2026-07-04 02:54:51'),
+(22, 1, 'Grade Updated', 'Your grades for Term 1 have been updated. Check your dashboard for details.', 1, '2026-07-06 12:58:07'),
+(23, 1, 'Grade Updated', 'Your grades for Term 1 have been updated. Check your dashboard for details.', 1, '2026-07-06 12:58:30'),
+(24, 1, 'New Homework', 'A new Homework \"final exam revision\" is due on 07 Jul 2026.', 1, '2026-07-06 12:59:31'),
+(25, 1, 'New Homework', 'A new Homework \"history chapter 3\" is due on 26 Aug 2026.', 0, '2026-07-06 13:16:29'),
+(26, 1, 'Payment Received', 'We received your payment for invoice #15. Thank you.', 0, '2026-07-06 13:23:24'),
+(27, 1, 'New Homework', 'A new Homework \"chapter 12 exercises\" is due on 21 Jul 2026.', 0, '2026-07-06 13:30:11'),
+(28, 1, 'Payment Received', 'We received your payment for invoice #16. Thank you.', 0, '2026-07-06 13:53:49'),
+(29, 1, 'New Homework', 'A new Homework \"exercises\" is due on 07 Jul 2026.', 0, '2026-07-06 13:55:33'),
+(30, 1, 'Grade Updated', 'Your grades for Term 1 have been updated. Check your dashboard for details.', 0, '2026-07-08 10:22:37'),
+(31, 1, 'New Test', 'A new Test \"test 2\" is due on 09 Jul 2026.', 0, '2026-07-08 12:27:20');
 
 -- --------------------------------------------------------
 
@@ -156,7 +196,10 @@ INSERT INTO `payments` (`id`, `user_id`, `amount`, `currency`, `description`, `s
 (12, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:00:59', '2026-06-22 09:01:31'),
 (13, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:04:40', '2026-06-22 09:05:11'),
 (14, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-22 09:04:40', '2026-06-23 02:16:37'),
-(15, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Invoice Sent', '2026-06-29 01:54:23', NULL);
+(15, 1, 450.00, 'RM', 'Maplewood Academy Fee', 'Paid', '2026-06-29 01:54:23', '2026-07-06 07:23:24'),
+(16, 1, 450.00, 'RM', 'Monthly tuition fee', 'Paid', '2026-07-06 12:59:45', '2026-07-06 07:53:49'),
+(17, 3, 450.00, 'RM', 'Monthly tuition fee', 'Invoice Sent', '2026-07-06 13:17:27', NULL),
+(18, 1, 450.00, 'RM', 'Monthly tuition fee', 'Invoice Sent', '2026-07-08 10:27:37', NULL);
 
 -- --------------------------------------------------------
 
@@ -215,7 +258,7 @@ CREATE TABLE `timetable` (
 --
 
 INSERT INTO `timetable` (`id`, `year_group`, `year`, `day`, `p1`, `p2`, `p3`, `p4`, `p5`, `p6`, `p7`, `sport_day`) VALUES
-(1, '10-11', 11, 'Monday', 'BM', 'ENG', 'HIS', 'BREAK', 'ACC', 'ECO', 'SCI', 0),
+(1, '10-11', 11, 'Monday', 'MATH', 'ENG', 'HIS', 'BREAK', 'ACC', 'ECO', 'SCI', 0),
 (2, '10-11', 11, 'Tuesday', 'MATH', 'BM', 'MAN', 'BREAK', 'HIS', 'ACC', 'ECO', 0),
 (3, '10-11', 11, 'Wednesday', 'ENG', 'BM', 'MATH', 'BREAK', 'SCI', 'HIS', 'ACC', 0),
 (4, '10-11', 11, 'Thursday', 'ECO', 'ENG', 'BM', 'BREAK', 'MAN', 'SCI', 'ACC', 0),
@@ -253,6 +296,12 @@ INSERT INTO `users` (`id`, `useremail`, `name`, `year`, `PASSWORD`, `role`) VALU
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `chatbot_knowledge`
+--
+ALTER TABLE `chatbot_knowledge`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `grades`
@@ -304,34 +353,40 @@ ALTER TABLE `users`
 --
 
 --
+-- AUTO_INCREMENT for table `chatbot_knowledge`
+--
+ALTER TABLE `chatbot_knowledge`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
 -- AUTO_INCREMENT for table `grades`
 --
 ALTER TABLE `grades`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `homework`
 --
 ALTER TABLE `homework`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
 
 --
 -- AUTO_INCREMENT for table `notifications`
 --
 ALTER TABLE `notifications`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
 
 --
 -- AUTO_INCREMENT for table `payments`
 --
 ALTER TABLE `payments`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `subjects`
 --
 ALTER TABLE `subjects`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `timetable`
