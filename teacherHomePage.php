@@ -9,7 +9,7 @@ $tab = $_REQUEST['tab'] ?? 'schedules';
 // Handle homework approve/mark-missing POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    $idx = (int) ($_POST['idx'] ?? -1);
+    $idx = (int) ($_POST['idx'] ?? -1 );
 
     if ($action === 'save_schedule') {
     flash('toast', 'Schedule saved successfully.');
@@ -95,15 +95,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     }
-  } elseif ($action === 'approve' || $action === 'missing') {
-      $hw_id = (int) ($_POST['hw_id'] ?? 0);
-      if ($hw_id > 0) {
-          $newStatus = $action === 'approve' ? 'submitted' : 'missing';
-          $conn->query("UPDATE homework SET status='$newStatus' WHERE id=$hw_id");
-          flash('toast', 'Homework status updated to ' . ($newStatus === 'submitted' ? 'Submitted' : 'Missing') . '.');
+  } else if ($action === 'hw_approve') {
+    $hwid = (int) ($_POST['hw_id'] ?? 0);
+    if ($hwid > 0) {
+      $conn->query("UPDATE homework SET status='submitted' WHERE id=$hwid");
+      flash('toast', 'Submission approved.');
+    }
+  } elseif ($action === 'hw_missing') {
+    $hwid = (int) ($_POST['hw_id'] ?? 0);
+    if ($hwid > 0) {
+      $conn->query("UPDATE homework SET status='missing' WHERE id=$hwid");
+      flash('toast', 'Marked as missing.');
+    }
+  } elseif ($action === 'assign_homework') {
+    $hw_year = (int) ($_POST['hw_year'] ?? 0);
+    $hw_subject_id = (int) ($_POST['hw_subject_id'] ?? 0);
+    $hw_title = trim($_POST['hw_title'] ?? '');
+    $hw_type = $_POST['hw_type'] ?? 'Homework';
+    $hw_due = $_POST['hw_due_date'] ?? '';
+
+    if ($hw_year > 0 && $hw_subject_id > 0 && $hw_title !== '' && $hw_due !== '') {
+      $stud_res = $conn->query("SELECT id FROM users WHERE role='student' AND year=$hw_year");
+      $created = 0;
+      if ($stud_res && $stud_res->num_rows > 0) {
+        $uidTeacher = (int) $_SESSION['user']['id'];
+        $stmt = $conn->prepare("INSERT INTO homework (student_id, subject_id, title, type, due_date, status, created_by) VALUES (?,?,?,?,?, 'missing', ?)");
+        while ($s = $stud_res->fetch_assoc()) {
+          $sid = (int) $s['id'];
+          $stmt->bind_param('iisssi', $sid, $hw_subject_id, $hw_title, $hw_type, $hw_due, $uidTeacher);
+          $stmt->execute();
+          $created++;
+        }
+        $stmt->close();
+        flash('toast', "Homework assigned to $created student(s) in Year $hw_year.");
       } else {
-          flash('toast', 'Invalid homework selection.');
+        flash('toast', 'No students found for that year.');
       }
+    } else {
+      flash('toast', 'Please fill all fields.');
+    }
+ 
   } elseif ($action === 'remove_subject') {
     $subj_id = (int) ($_POST['subj_id'] ?? 0);
     if ($subj_id > 0) {
@@ -160,6 +191,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         flash('toast', 'Student not found: ' . e($target));
       }
     }
+    } elseif ($action === 'upload_material') {
+    $course_code = trim($_POST['course_code'] ?? '');
+    $title = trim($_POST['material_title'] ?? '');
+    $target_year = trim($_POST['target_year'] ?? '');
+    $target_year = ($target_year === '') ? null : (int) $target_year;
+    $allowedExt = ['pdf', 'doc', 'docx', 'ppt', 'pptx', 'xls', 'xlsx'];
+
+    if ($course_code === '' || $title === '' || empty($_FILES['material_file']['name'])) {
+      flash('toast', 'Please fill all fields and choose a file.');
+    } else {
+      $origName = $_FILES['material_file']['name'];
+      $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+      if (!in_array($ext, $allowedExt, true)) {
+        flash('toast', 'File type not allowed. Use PDF, DOC(X), PPT(X), or XLS(X).');
+      } elseif ($_FILES['material_file']['size'] > 10 * 1024 * 1024) {
+        flash('toast', 'File too large. Max 10MB.');
+      } else {
+        $uploadDir = __DIR__ . '/uploads/materials/';
+        if (!is_dir($uploadDir)) {
+          mkdir($uploadDir, 0755, true);
+        }
+        $safeName = uniqid('mat_', true) . '.' . $ext;
+
+        if (move_uploaded_file($_FILES['material_file']['tmp_name'], $uploadDir . $safeName)) {
+           $uid = (int) $_SESSION['user']['id'];
+          $extUp = strtoupper($ext);
+          $stmt = $conn->prepare("INSERT INTO course_materials (course_code, target_year, title, filename, original_name, file_type, uploaded_by) VALUES (?,?,?,?,?,?,?)");
+          $stmt->bind_param('sissssi', $course_code, $target_year, $title, $safeName, $origName, $extUp, $uid);
+          $stmt->execute();
+          $stmt->close();
+          flash('toast', 'Material uploaded successfully.');
+        } else {
+          flash('toast', 'Upload failed. Please try again.');
+        }
+      }
+    }
+  } elseif ($action === 'delete_material') {
+    $mid = (int) ($_POST['material_id'] ?? 0);
+    if ($mid > 0) {
+      $r = $conn->query("SELECT filename FROM course_materials WHERE id=$mid");
+      if ($r && ($row = $r->fetch_assoc())) {
+        $path = __DIR__ . '/uploads/materials/' . $row['filename'];
+        if (file_exists($path)) {
+          unlink($path);
+        }
+        $conn->query("DELETE FROM course_materials WHERE id=$mid");
+        flash('toast', 'Material removed.');
+      }
+    }
   }
   $return_url = "teacherHomePage.php?tab={$tab}";
   if ($tab === 'grades') {
@@ -204,7 +285,9 @@ pageHead('Teacher Dashboard');
         Oversight</a>
       <a class="nl t-nl <?= $tab === 'payments' ? 'on' : '' ?>" href="?tab=payments"> <i
           class="fas fa-file-invoice-dollar"></i> Payments</a>
-    </aside>
+      <a class="nl t-nl <?= $tab === 'materials' ? 'on' : '' ?>" href="?tab=materials"> <i
+          class="fas fa-folder-open"></i> Materials</a>
+        </aside>
 
     <!-- MAIN -->
     <main class="mc t-mc">
@@ -666,67 +749,41 @@ pageHead('Teacher Dashboard');
           <?php endif; ?>
         <?php endif; ?>
 
-        <!-- ── HOMEWORK OVERSIGHT ── -->
+<!-- ── HOMEWORK OVERSIGHT ── -->
       <?php elseif ($tab === 'homework'): ?>
-   <?php
-$ok = count(array_filter($HOMEWORK_ALL, fn($h) => $h['status'] === 'submitted'));
-$ms = count(array_filter($HOMEWORK_ALL, fn($h) => $h['status'] === 'missing'));
-$rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
-?>
+        <?php
+        $subjectsAll = [];
+        $subRes = $conn->query("SELECT * FROM subjects ORDER BY year_group, name");
+        if ($subRes) while ($r = $subRes->fetch_assoc()) $subjectsAll[] = $r;
+
+        $hwAll = [];
+        $hwRes2 = $conn->query(
+          "SELECT h.*, u.name AS student_name, u.year AS student_year, s.name AS subject_name
+           FROM homework h
+           LEFT JOIN users u ON h.student_id = u.id
+           LEFT JOIN subjects s ON h.subject_id = s.id
+           ORDER BY h.due_date DESC"
+        );
+        if ($hwRes2) while ($r = $hwRes2->fetch_assoc()) $hwAll[] = $r;
+
+        $hwOk = count(array_filter($hwAll, fn($h) => $h['status'] === 'submitted'));
+        $hwMs = count(array_filter($hwAll, fn($h) => $h['status'] === 'missing'));
+        $hwRate = ($hwOk + $hwMs) > 0 ? round($hwOk / ($hwOk + $hwMs) * 100) . '%' : '0%';
+        ?>
         <div class="phdr">
           <h2>Homework Oversight</h2>
-          <p>Review and manage all student submissions</p>
-          <div class="crd">
-  <div class="crdhdr">
-    <h3><i class="fas fa-plus-circle"></i>&nbsp; Assign New Homework</h3>
-  </div>
-  <form method="POST" style="padding:1.1rem 1.4rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-end">
-    <input type="hidden" name="action" value="add_homework">
-
-    <div>
-      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">ASSIGN TO</label>
-      <select name="hw_student" style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
-        <option value="all">All Students</option>
-        <?php foreach ($ALL_STUDENTS as $s): ?>
-          <option value="<?= $s['id'] ?>"><?= e($s['name']) ?> (Year <?= $s['year'] ?>)</option>
-        <?php endforeach; ?>
-      </select>
-    </div>
-
-    <div>
-      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">TITLE</label>
-      <input type="text" name="hw_title" placeholder="e.g. Chapter 6 Worksheet" required
-        style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem;min-width:200px">
-    </div>
-
-    <div>
-      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">TYPE</label>
-      <select name="hw_type" style="padding:.45rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
-        <option>Homework</option>
-        <option>Quiz</option>
-        <option>Test</option>
-      </select>
-    </div>
-
-    <div>
-      <label style="display:block;font-size:.7rem;font-weight:700;color:var(--MT);margin-bottom:.3rem">DUE DATE</label>
-      <input type="date" name="hw_due" required
-        style="padding:.43rem .7rem;border-radius:8px;border:1.5px solid var(--W);font-family:'Plus Jakarta Sans',sans-serif;font-size:.83rem">
-    </div>
-
-    <button type="submit" class="bsm bpr"><i class="fas fa-plus"></i> Add Homework</button>
-  </form>
-</div>
+          <p>Assign homework and review all student submissions</p>
         </div>
+
         <div class="srow">
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
-            <div class="sv"><?= $ok ?></div>
+            <div class="sv"><?= $hwOk ?></div>
             <div class="sl">Submitted</div>
           </div>
           <div class="sc">
             <div class="sico" style="background:#ffebee;color:#b71c1c"><i class="fas fa-times-circle"></i></div>
-            <div class="sv"><?= $ms ?></div>
+            <div class="sv"><?= $hwMs ?></div>
             <div class="sl">Missing</div>
           </div>
           <div class="sc">
@@ -737,10 +794,59 @@ $rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
           <div class="sc">
             <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i>
             </div>
-            <div class="sv"><?= $rt ?></div>
+            <div class="sv"><?= $hwRate ?></div>
             <div class="sl">Rate</div>
           </div>
         </div>
+
+        <div class="crd">
+          <div class="crdhdr">
+            <h3><i class="fas fa-plus-circle"></i>&nbsp; Assign New Homework</h3>
+          </div>
+          <div style="padding:1.1rem 1.4rem">
+            <form method="POST" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+              <input type="hidden" name="action" value="assign_homework">
+              <input type="hidden" name="tab" value="homework">
+              <div style="flex:1;min-width:110px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Year</label>
+                <select name="hw_year" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+                  <?php foreach (range(1, 11) as $y): ?>
+                    <option value="<?= $y ?>">Year <?= $y ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div style="flex:1;min-width:170px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Subject</label>
+                <select name="hw_subject_id" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+                  <?php foreach ($subjectsAll as $s): ?>
+                    <option value="<?= $s['id'] ?>"><?= e($s['name']) ?> (<?= e($s['year_group']) ?>)</option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div style="flex:1;min-width:170px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Title</label>
+                <input type="text" name="hw_title" placeholder="e.g. Chapter 7 Worksheet" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+              </div>
+              <div style="flex:1;min-width:120px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Type</label>
+                <select name="hw_type" style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+                  <option value="Homework">Homework</option>
+                  <option value="Quiz">Quiz</option>
+                  <option value="Test">Test</option>
+                </select>
+              </div>
+              <div style="flex:1;min-width:150px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Due Date</label>
+                <input type="date" name="hw_due_date" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+              </div>
+              <button type="submit" class="bsm bpr"><i class="fas fa-paper-plane"></i> Assign to Year</button>
+            </form>
+            <p style="font-size:.75rem;color:var(--MT);margin-top:.6rem">
+              <i class="fas fa-info-circle"></i> This creates one homework record for every student currently in the selected Year.
+            </p>
+          </div>
+        </div>
+
         <div class="crd">
           <div class="crdhdr">
             <h3><i class="fas fa-tasks"></i>&nbsp; Submission Status</h3>
@@ -751,41 +857,49 @@ $rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
                 <tr>
                   <th>Student</th>
                   <th>Year</th>
+                  <th>Subject</th>
                   <th>Assignment</th>
                   <th>Due Date</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-<tbody>
-  <?php foreach ($HOMEWORK_ALL as $h): ?>
-    <tr>
-      <td style="font-weight:600"><?= e($h['student_name']) ?></td>
-      <td>Year <?= $h['student_year'] ?></td>
-      <td><?= e($h['title']) ?></td>
-      <td style="color:var(--MT)"><?= date('d M Y', strtotime($h['due_date'])) ?></td>
-      <td><?php if ($h['status'] === 'submitted'): ?>
-          <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
-        <?php else: ?>
-          <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
-        <?php endif; ?>
-      </td>
-      <td style="white-space:nowrap">
-        <form method="POST" style="display:inline">
-          <input type="hidden" name="action" value="approve">
-          <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
-          <button type="submit" class="bsm bap"><i class="fas fa-check"></i> Approve</button>
-        </form>
-        &nbsp;
-        <form method="POST" style="display:inline">
-          <input type="hidden" name="action" value="missing">
-          <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
-          <button type="submit" class="bsm bms"><i class="fas fa-times"></i> Missing</button>
-        </form>
-      </td>
-    </tr>
-  <?php endforeach; ?>
-</tbody>
+              <tbody>
+                <?php if (empty($hwAll)): ?>
+                  <tr>
+                    <td colspan="7" style="text-align:center;color:var(--MT);padding:1.5rem">No homework assigned yet.</td>
+                  </tr>
+                <?php else: foreach ($hwAll as $h): ?>
+                  <tr>
+                    <td style="font-weight:600"><?= e($h['student_name'] ?? ('#' . $h['student_id'])) ?></td>
+                    <td>Year <?= (int) $h['student_year'] ?></td>
+                    <td><?= e($h['subject_name'] ?? '—') ?></td>
+                    <td><?= e($h['title']) ?></td>
+                    <td style="color:var(--MT)"><?= date('d M Y', strtotime($h['due_date'])) ?></td>
+                    <td><?php if ($h['status'] === 'submitted'): ?>
+                        <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
+                      <?php else: ?>
+                        <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
+                      <?php endif; ?>
+                    </td>
+                    <td style="white-space:nowrap">
+                      <form method="POST" style="display:inline">
+                        <input type="hidden" name="action" value="hw_approve">
+                        <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
+                        <input type="hidden" name="tab" value="homework">
+                        <button type="submit" class="bsm bap"><i class="fas fa-check"></i> Approve</button>
+                      </form>
+                      &nbsp;
+                      <form method="POST" style="display:inline">
+                        <input type="hidden" name="action" value="hw_missing">
+                        <input type="hidden" name="hw_id" value="<?= $h['id'] ?>">
+                        <input type="hidden" name="tab" value="homework">
+                        <button type="submit" class="bsm bms"><i class="fas fa-times"></i> Missing</button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; endif; ?>
+              </tbody>
             </table>
           </div>
         </div>
@@ -903,7 +1017,102 @@ $rt = ($ok + $ms) > 0 ? round($ok / ($ok + $ms) * 100) . '%' : '0%';
             </table>
           </div>
         </div>
+
+       <!-- ── MATERIALS ── -->
+      <?php elseif ($tab === 'materials'): ?>
+        <div class="phdr">
+          <h2>Course Materials</h2>
+          <p>Upload files for students to download on their course page</p>
+        </div>
+
+        <div class="crd">
+          <div class="crdhdr">
+            <h3><i class="fas fa-upload"></i>&nbsp; Upload New Material</h3>
+          </div>
+          <div style="padding:1.1rem 1.4rem">
+            <form method="POST" enctype="multipart/form-data" style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+              <input type="hidden" name="action" value="upload_material">
+              <input type="hidden" name="tab" value="materials">
+              <div style="flex:1;min-width:160px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Course</label>
+                <select name="course_code" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+                  <?php foreach ($COURSES as $co): ?>
+                    <option value="<?= e($co['code']) ?>"><?= e($co['code']) ?> — <?= e($co['name']) ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+                <div style="flex:1;min-width:140px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Target Year</label>
+                <select name="target_year" style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+                  <option value="">All Years</option>
+                  <?php foreach (range(1, 11) as $y): ?>
+                    <option value="<?= $y ?>">Year <?= $y ?></option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+              <div style="flex:1;min-width:180px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">Material Title</label>
+                <input type="text" name="material_title" placeholder="e.g. Chapter 4 Notes" required style="width:100%;padding:.5rem .7rem;border-radius:8px;border:1.5px solid var(--W)">
+              </div>
+              <div style="flex:1;min-width:180px">
+                <label style="display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;color:var(--MT);margin-bottom:.3rem">File (PDF, DOC, PPT, XLS)</label>
+                <input type="file" name="material_file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" required style="width:100%">
+              </div>
+              <button type="submit" class="bsm bpr"><i class="fas fa-upload"></i> Upload</button>
+            </form>
+          </div>
+        </div>
+
+        <?php
+        $allMaterials = [];
+        $mres = $conn->query("SELECT * FROM course_materials ORDER BY created_at DESC");
+        if ($mres) while ($r = $mres->fetch_assoc()) $allMaterials[] = $r;
+        ?>
+        <div class="crd">
+          <div class="crdhdr">
+            <h3><i class="fas fa-folder-open"></i>&nbsp; Uploaded Materials</h3>
+          </div>
+          <div class="tw">
+            <table>
+              <thead>
+                <tr>
+                  <th>Course</th>
+                  <th>Year</th>
+                  <th>Title</th>
+                  <th>File</th>
+                  <th>Uploaded</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <?php if (empty($allMaterials)): ?>
+                  <tr>
+                    <td colspan="5" style="text-align:center;color:var(--MT);padding:1.5rem">No materials uploaded yet.</td>
+                  </tr>
+                <?php else: foreach ($allMaterials as $m): ?>
+                  <tr>
+                    <td style="font-weight:600"><?= e($m['course_code']) ?></td>
+                    <td><?= $m['target_year'] ? 'Year ' . (int) $m['target_year'] : 'All Years' ?></td>
+                    <td><?= e($m['title']) ?></td>
+                    <td><span class="bhw"><?= e($m['file_type']) ?></span> <?= e($m['original_name']) ?></td>
+                    <td style="color:var(--MT);font-size:.78rem"><?= date('d M Y', strtotime($m['created_at'])) ?></td>
+                    <td>
+                      <form method="POST" style="display:inline" onsubmit="return confirm('Delete this material?')">
+                        <input type="hidden" name="action" value="delete_material">
+                        <input type="hidden" name="material_id" value="<?= $m['id'] ?>">
+                        <input type="hidden" name="tab" value="materials">
+                        <button type="submit" class="bsm bms"><i class="fas fa-trash"></i> Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                <?php endforeach; endif; ?>
+              </tbody>
+            </table>
+          </div>
+        </div>
       <?php endif; ?>
+
+     
 
     </main>
   </div>

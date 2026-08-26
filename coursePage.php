@@ -203,6 +203,18 @@ if (!$code || !isset($CATALOGUE[$code])) {
 
 $c = $CATALOGUE[$code];
 
+// ── Pull real uploaded materials for this course, filtered to this student's year ──
+$dbMaterials = [];
+$studentYear = (int) ($user['year'] ?? 0);
+$stmt = $conn->prepare("SELECT * FROM course_materials WHERE course_code = ? AND (target_year IS NULL OR target_year = ?) ORDER BY created_at DESC");
+$stmt->bind_param('si', $code, $studentYear);
+$stmt->execute();
+$mres = $stmt->get_result();
+while ($r = $mres->fetch_assoc()) {
+    $dbMaterials[] = $r;
+}
+$stmt->close();
+
 pageHead('Course — ' . $c['name']);
 ?>
 
@@ -552,25 +564,34 @@ pageHead('Course — ' . $c['name']);
           </div>
         </div>
 
-        <!-- Course Materials -->
+               <!-- Course Materials -->
         <div class="cp-section">
           <div class="cp-section-hdr" style="color:<?= $c['accent'] ?>">
             <i class="fas fa-folder-open"></i> Course Materials
           </div>
           <div class="cp-section-body">
-            <?php foreach ($c['materials'] as $mat): ?>
-              <a href="#" class="cp-mat-item" onclick="alert('File download not available in demo.');return false;">
-                <div class="cp-mat-ico" style="background:<?= $mat['color'] ?>;color:<?= $mat['tc'] ?>">
-                  <i class="<?= $mat['icon'] ?>"></i>
-                </div>
-                <span class="cp-mat-name"><?= e($mat['title']) ?></span>
-                <span class="cp-mat-type"><?= e($mat['type']) ?></span>
-                <i class="fas fa-download" style="color:var(--MT);font-size:.75rem"></i>
-              </a>
-            <?php endforeach; ?>
+            <?php if (empty($dbMaterials)): ?>
+              <p style="color:var(--MT);font-size:.82rem">No materials uploaded yet. Check back soon!</p>
+            <?php else: ?>
+              <?php foreach ($dbMaterials as $mat):
+                $ftype = strtolower($mat['file_type']);
+                if ($ftype === 'pdf') { $ico = 'fas fa-file-pdf'; }
+                elseif (in_array($ftype, ['doc', 'docx'])) { $ico = 'fas fa-file-word'; }
+                elseif (in_array($ftype, ['ppt', 'pptx'])) { $ico = 'fas fa-file-powerpoint'; }
+                else { $ico = 'fas fa-file-excel'; }
+              ?>
+                <a href="download_material.php?id=<?= (int) $mat['id'] ?>" class="cp-mat-item">
+                  <div class="cp-mat-ico" style="background:<?= $c['color'] ?>;color:<?= $c['accent'] ?>">
+                    <i class="<?= $ico ?>"></i>
+                  </div>
+                  <span class="cp-mat-name"><?= e($mat['title']) ?></span>
+                  <span class="cp-mat-type"><?= e($mat['file_type']) ?></span>
+                  <i class="fas fa-download" style="color:var(--MT);font-size:.75rem"></i>
+                </a>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
-
         <!-- Upcoming -->
         <div class="cp-section">
           <div class="cp-section-hdr" style="color:<?= $c['accent'] ?>">
