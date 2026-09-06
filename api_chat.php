@@ -17,69 +17,229 @@ if ($userMessage === '') {
     exit;
 }
 
-// ── Pull live subjects from DB so the bot reflects real data ──
+$msgLower = strtolower($userMessage);
+$userId = $_SESSION['user']['id'] ?? 0;
+$stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'user', ?)");
+$stmt->bind_param('is', $userId, $userMessage);
+$stmt->execute();
+$stmt->close();
+
+// ── Step 1: Detect planning-style questions FIRST ─────────
+// These need real AI reasoning, not keyword matching, so they're
+// checked before the rule-based system and routed differently.
+$planningKeywords = [
+    'plan my', 'plan for', 'plan the week', 'plan this week',
+    'how should i study', 'how do i study', 'study plan',
+    'organize my', 'manage my time', 'time management',
+    'catch up on', 'prioritize', 'prioritise',
+    'what should i do first', 'which subject should i',
+    'help me plan', 'busy week', 'too much homework',
+    'falling behind', 'overwhelmed'
+];
+
+$isPlanningQuestion = false;
+foreach ($planningKeywords as $kw) {
+    if (str_contains($msgLower, $kw)) {
+        $isPlanningQuestion = true;
+        break;
+    }
+}
+
+// ── Step 2a: Planning question → build personalized AI prompt ──
+if ($isPlanningQuestion) {
+
+    // Pull this student's upcoming/overdue homework
+    $hwList = [];
+    $stmt = $conn->prepare("SELECT title, type, due_date, status FROM homework WHERE student_id = ? AND status != 'submitted' ORDER BY due_date ASC LIMIT 10");
+    $stmt->bind_param('i', $userId);
+    $stmt->execute();
+    $hwRes = $stmt->get_result();
+    while ($r = $hwRes->fetch_assoc()) $hwList[] = $r;
+    $stmt->close();
+
+    $today = new DateTime('today');
+    $hwText = '';
+    if (empty($hwList)) {
+        $hwText = "No pending homework, quizzes, or tests right now.";
+    } else {
+        foreach ($hwList as $h) {
+            $due = new DateTime($h['due_date']);
+            $diffDays = (int) $today->diff($due)->format('%r%a');
+            if ($diffDays < 0) {
+                $status = 'OVERDUE by ' . abs($diffDays) . ' day(s)';
+            } elseif ($diffDays === 0) {
+                $status = 'DUE TODAY';
+            } else {
+                $status = 'due in ' . $diffDays . ' day(s)';
+            }
+            $hwText .= "- {$h['title']} ({$h['type']}), {$status}\n";
+        }
+    }
+
+    // Pull this student's weekly timetable (already loaded by config.php for their year group)
+    $ttText = '';
+    if (!empty($TIMETABLE)) {
+        foreach ($TIMETABLE as $row) {
+            $periods = array_filter([
+                $row['p1'] ?? '', $row['p2'] ?? '', $row['p3'] ?? '', $row['p4'] ?? '',
+                $row['p5'] ?? '', $row['p6'] ?? '', $row['p7'] ?? ''
+            ]);
+            $sportNote = !empty($row['sport_day']) ? ' (Sport Day)' : '';
+            $ttText .= "- {$row['day']}{$sportNote}: " . implode(', ', $periods) . "\n";
+        }
+    } else {
+        $ttText = "Timetable not available.";
+    }
+
+    $planningSystemPrompt = <<<PROMPT
+You are the Maplewood Learning Center study planning assistant. A student is asking for help planning their time. Use ONLY the real data below — do not invent homework or classes that aren't listed.
+
+STUDENT'S PENDING HOMEWORK/TESTS/QUIZZES:
+{$hwText}
+
+STUDENT'S WEEKLY TIMETABLE:
+{$ttText}
+
+Give short, practical, encouraging advice in 60-80 words maximum. Do not exceed this length under any circumstances.
+PROMPT;
+
+    $geminiContents = [];
+    $hstmt = $conn->prepare("SELECT role, message FROM chatbot_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
+    $hstmt->bind_param('i', $userId);
+    $hstmt->execute();
+    $hres = $hstmt->get_result();
+    $recentRows = [];
+    while ($r = $hres->fetch_assoc()) $recentRows[] = $r;
+    $hstmt->close();
+    $recentRows = array_reverse($recentRows); // put back in chronological order
+
+    foreach ($recentRows as $r) {
+        $geminiContents[] = [
+            'role' => $r['role'] === 'user' ? 'user' : 'model',
+            'parts' => [['text' => $r['message']]]
+        ];
+    }
+    if (empty($geminiContents)) {
+        $geminiContents[] = ['role' => 'user', 'parts' => [['text' => $userMessage]]];
+    }
+
+    $payload = [
+        'system_instruction' => [
+            'parts' => [['text' => $planningSystemPrompt]]
+        ],
+        'contents' => $geminiContents,
+        'generationConfig' => [
+            'maxOutputTokens' => 1024
+        ]
+    ];
+
+    $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . GEMINI_API_KEY;
+
+    $ch = curl_init($url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $data = json_decode($response, true);
+    $replyText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+    if ($httpCode !== 200 || !$replyText) {
+        echo json_encode(['error' => 'Sorry, the planning assistant is unavailable right now. Please try again later.']);
+        exit;
+    }
+
+    $stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
+    $stmt->bind_param('is', $userId, $replyText);
+    $stmt->execute();
+    $stmt->close();
+
+    echo json_encode(['reply' => $replyText]);
+    exit;
+}
+
+//rule-based matching 
+
 $subjectList = [];
 $sres = $conn->query("SELECT DISTINCT name FROM subjects ORDER BY name");
 if ($sres) while ($r = $sres->fetch_assoc()) $subjectList[] = $r['name'];
 $subjectText = $subjectList ? implode(', ', $subjectList) : 'not available right now';
 
-// ── Pull custom knowledge entries you've added yourself ──
-$knowledgeText = '';
+$rules = [
+    [
+        'keywords' => ['fee', 'fees', 'pay', 'payment', 'invoice', 'cost', 'price', 'how much'],
+        'response' => "School fees are RM450 per month. You can pay via the Payment tab using Stripe checkout — invoices show as \"Invoice Sent\" until paid."
+    ],
+    [
+        'keywords' => ['timetable', 'schedule', 'period', 'class time', 'hours', 'sport day'],
+        'response' => "Year 1-6 classes run 8:00am to 12:45pm with 1-hour periods. Year 7-11 classes run 8:00am to 1:45pm with 45-minute periods. Each year group has one 2-hour Sport Day per week. Check the Timetable tab for your exact schedule."
+    ],
+    [
+        'keywords' => ['subject', 'subjects', 'course', 'courses', 'what do i study', 'classes offered'],
+        'response' => "Current subjects offered: {$subjectText}. You can see your enrolled courses under the Courses tab."
+    ],
+    [
+        'keywords' => ['homework', 'assignment', 'submit', 'missing work', 'due date'],
+        'response' => "You can track your homework submissions, quizzes, and tests under the Homework Status tab, which shows what's submitted and what's missing."
+    ],
+    [
+        'keywords' => ['grade', 'grades', 'result', 'results', 'marks', 'score'],
+        'response' => "Your released grades are visible under the Grades tab, broken down by term and subject."
+    ],
+    [
+        'keywords' => ['login', 'log in', 'password', 'account', 'sign in'],
+        'response' => "Use your school email and password to log in. If you're having trouble accessing your account, please contact the school office."
+    ],
+    [
+        'keywords' => ['notification', 'notifications', 'alert', 'bell'],
+        'response' => "Notifications appear under the bell icon at the top of your dashboard. Click it to see announcements, reminders, and updates, and mark them as read."
+    ],
+    [
+        'keywords' => ['hi', 'hello', 'hey', 'greetings'],
+        'response' => "Hi there! I can help with questions about fees, timetables, subjects, homework, grades, and even help you plan your study schedule. What would you like to know?"
+    ],
+];
+
 $kres = $conn->query("SELECT topic, content FROM chatbot_knowledge ORDER BY id");
 if ($kres) {
     while ($r = $kres->fetch_assoc()) {
-        $knowledgeText .= "- {$r['topic']}: {$r['content']}\n";
+        $topicWords = preg_split('/\s+/', strtolower(trim($r['topic'])));
+        $rules[] = [
+            'keywords' => $topicWords,
+            'response' => $r['content']
+        ];
     }
 }
-if ($knowledgeText === '') {
-    $knowledgeText = "(No custom entries added yet.)";
+
+$bestRule = null;
+$bestScore = 0;
+
+foreach ($rules as $rule) {
+    $score = 0;
+    foreach ($rule['keywords'] as $kw) {
+        $kw = trim($kw);
+        if ($kw !== '' && str_contains($msgLower, $kw)) {
+            $score++;
+        }
+    }
+    if ($score > $bestScore) {
+        $bestScore = $score;
+        $bestRule = $rule;
+    }
 }
 
-$systemPrompt = <<<PROMPT
-You are the Maplewood Learning Center school assistant chatbot. Only answer questions using the information below.
-
-CORE FACTS:
-- School fees: RM450 per month, paid via the Payment tab using Stripe checkout. Invoices show as "Invoice Sent" until paid.
-- Timetable structure: Year 1-6 runs 8:00am-12:45pm with 1-hour periods. Year 7-11 runs 8:00am-1:45pm with 45-minute periods (plus two 30-minute periods around the midday break). Each year group has one assigned 2-hour Sport Day per week.
-- Current subjects offered: {$subjectText}
-- Site navigation: Students see Courses, Timetable, Homework Status, and Payment tabs. Teachers see Schedules, Timetable Editor, Student Grades, Homework Oversight, and Payments tabs.
-
-SCHOOL-SPECIFIC KNOWLEDGE (maintained by staff):
-{$knowledgeText}
-
-If asked something outside this scope (e.g. specific grades, specific homework due dates, anything requiring personal account data), politely explain you can only help with general school questions and suggest they check the relevant tab or contact the school office. Keep answers short — 2 to 4 sentences, friendly tone.
-PROMPT;
-
-// Gemini puts the system prompt in its own field, and wraps user text in "parts"
-$payload = [
-    'system_instruction' => [
-        'parts' => [['text' => $systemPrompt]]
-    ],
-    'contents' => [
-        ['role' => 'user', 'parts' => [['text' => $userMessage]]]
-    ],
-    'generationConfig' => [
-        'maxOutputTokens' => 1024
-    ]
-];
-
-$url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=' . GEMINI_API_KEY;
-
-$ch = curl_init($url);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_POST, true);
-curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-curl_close($ch);
-
-$data = json_decode($response, true);
-$replyText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
-
-if ($httpCode !== 200 || !$replyText) {
-    echo json_encode(['error' => 'Sorry, the assistant is unavailable right now. Please try again later.']);
-    exit;
+if ($bestRule && $bestScore > 0) {
+    echo json_encode(['reply' => $bestRule['response']]);
+} else {
+    echo json_encode([
+        'reply' => "Sorry, I can only help with general questions about fees, timetables, subjects, homework, grades, site navigation, and study planning. For anything else, please contact the school office."
+    $stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
+    $stmt->bind_param('is', $userId, $replyText);
+    $stmt->execute();
+    $stmt->close();
+    
+    echo json_encode(['reply' => $finalReply]);]);
 }
-
-echo json_encode(['reply' => $replyText]);

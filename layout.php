@@ -16,6 +16,36 @@ HTML;
 }
 
 function renderChatWidget() {
+    global $conn;
+
+    $userName = $_SESSION['user']['name'] ?? '';
+    $firstName = $userName !== '' ? explode(' ', $userName)[0] : '';
+    $greetName = $firstName !== ''
+        ? "Hi {$firstName}! How can I help you today?"
+        : "Hi! How can I help you today?";
+
+    $userId = (int) ($_SESSION['user']['id'] ?? 0);
+
+    // ── Load this student's real chat history from the database ──
+    $historyHtml = '';
+    if ($userId > 0 && $conn) {
+        $stmt = $conn->prepare("SELECT role, message FROM chatbot_messages WHERE user_id = ? ORDER BY created_at ASC LIMIT 50");
+        $stmt->bind_param('i', $userId);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $cls = $row['role'] === 'user' ? 'user' : 'bot';
+            $historyHtml .= '<div class="mwMsg ' . $cls . '">' . e($row['message']) . '</div>';
+        }
+        $stmt->close();
+    }
+
+    // If there's no saved history yet, just show the greeting (not saved to DB
+    // until the student actually sends their first real message)
+    if ($historyHtml === '') {
+        $historyHtml = '<div class="mwMsg bot">' . e($greetName) . '</div>';
+    }
+
     echo <<<HTML
 <style>
 #mwChatBtn{position:fixed;bottom:24px;right:24px;width:56px;height:56px;border-radius:50%;
@@ -30,11 +60,13 @@ function renderChatWidget() {
 #mwChatWin.open{display:flex}
 #mwChatHdr{background:var(--F,#0f2318);color:#fff;padding:.85rem 1.1rem;display:flex;
   align-items:center;justify-content:space-between;font-weight:700;font-size:.9rem}
-#mwChatHdr button{background:none;border:none;color:#fff;cursor:pointer;font-size:1rem;opacity:.8}
+#mwChatHdrBtns{display:flex;align-items:center;gap:.6rem}
+#mwChatHdr button{background:none;border:none;color:#fff;cursor:pointer;font-size:.95rem;opacity:.75}
 #mwChatHdr button:hover{opacity:1}
 #mwChatBody{flex:1;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:.6rem;
   background:#f7f3ec}
-.mwMsg{max-width:82%;padding:.55rem .8rem;border-radius:12px;font-size:.82rem;line-height:1.45}
+.mwMsg{max-width:82%;padding:.55rem .8rem;border-radius:12px;font-size:.82rem;line-height:1.45;
+  white-space:pre-wrap}
 .mwMsg.bot{background:#fff;color:#111a14;align-self:flex-start;border:1px solid #e8e0cc}
 .mwMsg.user{background:var(--F,#0f2318);color:#fff;align-self:flex-end}
 .mwMsg.typing{color:#5a6b60;font-style:italic}
@@ -53,11 +85,12 @@ function renderChatWidget() {
 <div id="mwChatWin">
   <div id="mwChatHdr">
     <span><i class="fas fa-leaf"></i> Maplewood Assistant</span>
-    <button onclick="mwToggleChat()"><i class="fas fa-times"></i></button>
+    <div id="mwChatHdrBtns">
+      <button onclick="mwClearChat()" title="Clear chat history"><i class="fas fa-trash"></i></button>
+      <button onclick="mwToggleChat()" title="Close"><i class="fas fa-times"></i></button>
+    </div>
   </div>
-  <div id="mwChatBody">
-    <div class="mwMsg bot">Hi! I can answer questions about fees, timetables, and how to use the site. What would you like to know?</div>
-  </div>
+  <div id="mwChatBody">{$historyHtml}</div>
   <form id="mwChatForm" onsubmit="mwSendMsg(event)">
     <input id="mwChatInput" type="text" placeholder="Ask a question..." autocomplete="off">
     <button type="submit"><i class="fas fa-paper-plane"></i></button>
@@ -66,7 +99,12 @@ function renderChatWidget() {
 
 <script>
 function mwToggleChat(){
-  document.getElementById('mwChatWin').classList.toggle('open');
+  var win = document.getElementById('mwChatWin');
+  win.classList.toggle('open');
+  if (win.classList.contains('open')) {
+    var body = document.getElementById('mwChatBody');
+    body.scrollTop = body.scrollHeight;
+  }
 }
 
 async function mwSendMsg(e){
@@ -101,12 +139,24 @@ async function mwSendMsg(e){
   }
   body.scrollTop = body.scrollHeight;
 }
+
+async function mwClearChat(){
+  if (!confirm('Clear your entire chat history? This cannot be undone.')) return;
+  try {
+    await fetch('clear_chat_history.php', { method: 'POST' });
+    document.getElementById('mwChatBody').innerHTML = '';
+    location.reload();
+  } catch(err) {
+    alert('Could not clear chat history. Please try again.');
+  }
+}
 </script>
 HTML;
 }
 
 function pageFoot() {
     renderChatWidget();
+    
     echo <<<HTML
 <script>
 function togglePw(id,btn){
