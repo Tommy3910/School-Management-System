@@ -19,6 +19,8 @@ if ($userMessage === '') {
 
 $msgLower = strtolower($userMessage);
 $userId = $_SESSION['user']['id'] ?? 0;
+
+// ── Save the incoming user message immediately ──
 $stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'user', ?)");
 $stmt->bind_param('is', $userId, $userMessage);
 $stmt->execute();
@@ -45,17 +47,21 @@ foreach ($planningKeywords as $kw) {
     }
 }
 
+if (!$isPlanningQuestion && preg_match('/\bplan(ning)?\b/', $msgLower)) {
+    $isPlanningQuestion = true;
+}
+
 // ── Step 2a: Planning question → build personalized AI prompt ──
 if ($isPlanningQuestion) {
 
     // Pull this student's upcoming/overdue homework
     $hwList = [];
-    $stmt = $conn->prepare("SELECT title, type, due_date, status FROM homework WHERE student_id = ? AND status != 'submitted' ORDER BY due_date ASC LIMIT 10");
-    $stmt->bind_param('i', $userId);
-    $stmt->execute();
-    $hwRes = $stmt->get_result();
+    $hwStmt = $conn->prepare("SELECT title, type, due_date, status FROM homework WHERE student_id = ? AND status != 'submitted' ORDER BY due_date ASC LIMIT 10");
+    $hwStmt->bind_param('i', $userId);
+    $hwStmt->execute();
+    $hwRes = $hwStmt->get_result();
     while ($r = $hwRes->fetch_assoc()) $hwList[] = $r;
-    $stmt->close();
+    $hwStmt->close();
 
     $today = new DateTime('today');
     $hwText = '';
@@ -100,18 +106,19 @@ STUDENT'S PENDING HOMEWORK/TESTS/QUIZZES:
 STUDENT'S WEEKLY TIMETABLE:
 {$ttText}
 
-Give short, practical, encouraging advice in 60-80 words maximum. Do not exceed this length under any circumstances.
+Give short, practical, encouraging advice (4-6 sentences or a short bullet list). Reference their actual due dates and schedule by name where relevant. If they have nothing pending, say so positively and suggest general good habits (reviewing notes, staying ahead). Do not discuss grades, payments, or topics outside study planning — redirect those to the relevant tab.
 PROMPT;
 
+    // Pull recent real conversation history from DB for multi-turn context
     $geminiContents = [];
-    $hstmt = $conn->prepare("SELECT role, message FROM chatbot_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
-    $hstmt->bind_param('i', $userId);
-    $hstmt->execute();
-    $hres = $hstmt->get_result();
+    $histStmt = $conn->prepare("SELECT role, message FROM chatbot_messages WHERE user_id = ? ORDER BY created_at DESC LIMIT 10");
+    $histStmt->bind_param('i', $userId);
+    $histStmt->execute();
+    $histRes = $histStmt->get_result();
     $recentRows = [];
-    while ($r = $hres->fetch_assoc()) $recentRows[] = $r;
-    $hstmt->close();
-    $recentRows = array_reverse($recentRows); // put back in chronological order
+    while ($r = $histRes->fetch_assoc()) $recentRows[] = $r;
+    $histStmt->close();
+    $recentRows = array_reverse($recentRows); // chronological order
 
     foreach ($recentRows as $r) {
         $geminiContents[] = [
@@ -129,7 +136,7 @@ PROMPT;
         ],
         'contents' => $geminiContents,
         'generationConfig' => [
-            'maxOutputTokens' => 1024
+            'maxOutputTokens' => 1200
         ]
     ];
 
@@ -148,20 +155,21 @@ PROMPT;
     $replyText = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
 
     if ($httpCode !== 200 || !$replyText) {
-        echo json_encode(['error' => 'Sorry, the planning assistant is unavailable right now. Please try again later.']);
+        $replyText = 'Sorry, the planning assistant is unavailable right now. Please try again later.';
+        echo json_encode(['error' => $replyText]);
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
-    $stmt->bind_param('is', $userId, $replyText);
-    $stmt->execute();
-    $stmt->close();
+    $saveStmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
+    $saveStmt->bind_param('is', $userId, $replyText);
+    $saveStmt->execute();
+    $saveStmt->close();
 
     echo json_encode(['reply' => $replyText]);
     exit;
 }
 
-//rule-based matching 
+// ── Step 2b: Not a planning question → rule-based matching ──
 
 $subjectList = [];
 $sres = $conn->query("SELECT DISTINCT name FROM subjects ORDER BY name");
@@ -231,15 +239,13 @@ foreach ($rules as $rule) {
     }
 }
 
-if ($bestRule && $bestScore > 0) {
-    echo json_encode(['reply' => $bestRule['response']]);
-} else {
-    echo json_encode([
-        'reply' => "Sorry, I can only help with general questions about fees, timetables, subjects, homework, grades, site navigation, and study planning. For anything else, please contact the school office."
-    $stmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
-    $stmt->bind_param('is', $userId, $replyText);
-    $stmt->execute();
-    $stmt->close();
-    
-    echo json_encode(['reply' => $finalReply]);]);
-}
+$finalReply = ($bestRule && $bestScore > 0)
+    ? $bestRule['response']
+    : "Sorry, I can only help with general questions about fees, timetables, subjects, homework, grades, site navigation, and study planning. For anything else, please contact the school office.";
+
+$saveStmt = $conn->prepare("INSERT INTO chatbot_messages (user_id, role, message) VALUES (?, 'bot', ?)");
+$saveStmt->bind_param('is', $userId, $finalReply);
+$saveStmt->execute();
+$saveStmt->close();
+
+echo json_encode(['reply' => $finalReply]);

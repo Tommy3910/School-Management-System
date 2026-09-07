@@ -53,7 +53,7 @@ function renderChatWidget() {
   cursor:pointer;font-size:1.4rem;z-index:9999;display:flex;align-items:center;justify-content:center;
   transition:transform .2s}
 #mwChatBtn:hover{transform:scale(1.06)}
-#mwChatWin{position:fixed;bottom:92px;right:24px;width:340px;max-width:calc(100vw - 32px);
+#mwChatWin{position:fixed;bottom:92px;right:24px;width:380px;max-width:calc(100vw - 32px);
   height:460px;max-height:calc(100vh - 140px);background:#fff;border-radius:16px;
   box-shadow:0 12px 40px rgba(0,0,0,.25);display:none;flex-direction:column;overflow:hidden;z-index:9999;
   font-family:'Plus Jakarta Sans',sans-serif}
@@ -107,6 +107,39 @@ function mwToggleChat(){
   }
 }
 
+function mwFormatMarkdown(text) {
+  // Escape HTML first so nothing unexpected can inject markup
+  var div = document.createElement('div');
+  div.textContent = text;
+  var escaped = div.innerHTML;
+
+  // Bold: **text** -> <strong>text</strong>
+  escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+
+  // Bullet lines starting with "* " -> proper <ul><li>
+  var lines = escaped.split('\\n');
+  var html = '';
+  var inList = false;
+  lines.forEach(function(line) {
+    var trimmed = line.trim();
+    if (trimmed.startsWith('* ') || trimmed.startsWith('- ')) {
+      if (!inList) { html += '<ul style="margin:.3rem 0 .3rem 1.1rem;padding:0">'; inList = true; }
+      html += '<li style="margin-bottom:.25rem">' + trimmed.substring(2) + '</li>';
+    } else {
+      if (inList) { html += '</ul>'; inList = false; }
+      if (trimmed !== '') html += '<div>' + trimmed + '</div>';
+    }
+  });
+  if (inList) html += '</ul>';
+
+  return html;
+}
+
+
+document.querySelectorAll('#mwChatBody .mwMsg.bot').forEach(function(div) {
+  div.innerHTML = mwFormatMarkdown(div.textContent);
+});
+
 async function mwSendMsg(e){
   e.preventDefault();
   var input = document.getElementById('mwChatInput');
@@ -132,7 +165,7 @@ async function mwSendMsg(e){
     document.getElementById('mwTyping').remove();
     var reply = data.reply || data.error || 'Something went wrong.';
     body.insertAdjacentHTML('beforeend', '<div class="mwMsg bot"></div>');
-    body.lastElementChild.textContent = reply;
+    body.lastElementChild.innerHTML = mwFormatMarkdown(reply);
   } catch(err) {
     document.getElementById('mwTyping').remove();
     body.insertAdjacentHTML('beforeend', '<div class="mwMsg bot">Connection error. Please try again.</div>');
