@@ -226,3 +226,23 @@ tbody tr:hover td{background:rgba(45,106,79,.03)}
   .srow{grid-template-columns:repeat(2,1fr)}
   .scgrid{grid-template-columns:1fr}
 }
+
+/* ── COLLAPSIBLE SIDEBAR ── */
+.sb{transition:width .25s ease}
+.sb.collapsed{width:68px!important}
+.sb.collapsed .slbl,
+.sb.collapsed .twid,
+.sb.collapsed .cwid{display:none}
+.sb.collapsed .nl{justify-content:center;padding-left:0;padding-right:0;gap:0}
+.sb.collapsed .nl-label{display:none}
+.sbToggle{display:flex;align-items:center;justify-content:center;width:100%;padding:.7rem 0;
+  background:none;border:none;cursor:pointer;font-size:.85rem;transition:background .15s}
+.s-sb .sbToggle{color:var(--MT);border-bottom:1px solid rgba(0,0,0,.06)}
+.s-sb .sbToggle:hover{background:rgba(45,106,79,.06)}
+.t-sb .sbToggle{color:rgba(255,255,255,.5);border-bottom:1px solid rgba(255,255,255,.08)}
+.t-sb .sbToggle:hover{background:rgba(255,255,255,.05)}
+.sb.collapsed .sbToggle i{transform:rotate(180deg)}
+
+.cday.choliday{position:relative}
+.cday.choliday::after{content:'';position:absolute;bottom:1px;left:50%;transform:translateX(-50%);
+  width:4px;height:4px;border-radius:50%;background:var(--O,#d4a847)}

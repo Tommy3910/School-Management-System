@@ -274,20 +274,23 @@ pageHead('Teacher Dashboard');
   <div class="dlayout">
     <!-- SIDEBAR -->
     <aside class="sb t-sb">
+      <button class="sbToggle" onclick="mwToggleSidebar()" title="Collapse menu">
+        <i class="fas fa-angles-left"></i>
+      </button>
       <span class="slbl t-slbl">Management</span>
-      <a class="nl t-nl <?= $tab === 'schedules' ? 'on' : '' ?>" href="?tab=schedules"><i class="fas fa-calendar-alt"></i>
-        Schedules</a>
-      <a class="nl t-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"><i class="fas fa-table"></i> Timetable
-        Editor</a>
-      <a class="nl t-nl <?= $tab === 'grades' ? 'on' : '' ?>" href="?tab=grades"> <i class="fas fa-chart-bar"></i> Student
-        Grades</a>
-      <a class="nl t-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework"> <i class="fas fa-tasks"></i> Homework
-        Oversight</a>
-      <a class="nl t-nl <?= $tab === 'payments' ? 'on' : '' ?>" href="?tab=payments"> <i
-          class="fas fa-file-invoice-dollar"></i> Payments</a>
-      <a class="nl t-nl <?= $tab === 'materials' ? 'on' : '' ?>" href="?tab=materials"> <i
-          class="fas fa-folder-open"></i> Materials</a>
-        </aside>
+      <a class="nl t-nl <?= $tab === 'schedules' ? 'on' : '' ?>" href="?tab=schedules" title="Schedules"><i class="fas fa-calendar-alt"></i>
+        <span class="nl-label">Schedules</span></a>
+      <a class="nl t-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable" title="Timetable Editor"><i class="fas fa-table"></i>
+        <span class="nl-label">Timetable Editor</span></a>
+      <a class="nl t-nl <?= $tab === 'grades' ? 'on' : '' ?>" href="?tab=grades" title="Student Grades"> <i class="fas fa-chart-bar"></i>
+        <span class="nl-label">Student Grades</span></a>
+      <a class="nl t-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework" title="Homework Oversight"> <i class="fas fa-tasks"></i>
+        <span class="nl-label">Homework Oversight</span></a>
+      <a class="nl t-nl <?= $tab === 'payments' ? 'on' : '' ?>" href="?tab=payments" title="Payments"> <i
+          class="fas fa-file-invoice-dollar"></i> <span class="nl-label">Payments</span></a>
+      <a class="nl t-nl <?= $tab === 'materials' ? 'on' : '' ?>" href="?tab=materials" title="Materials"> <i
+          class="fas fa-folder-open"></i> <span class="nl-label">Materials</span></a>
+    </aside>
 
     <!-- MAIN -->
     <main class="mc t-mc">

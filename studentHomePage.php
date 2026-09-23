@@ -93,26 +93,43 @@ pageHead('Student Dashboard');
   <div class="dlayout">
     <!-- SIDEBAR -->
     <aside class="sb s-sb">
+      <button class="sbToggle" onclick="mwToggleSidebar()" title="Collapse menu">
+        <i class="fas fa-angles-left"></i>
+      </button>
       <span class="slbl s-slbl">Menu</span>
-      <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses"> <i class="fas fa-book-open"></i>
-        Courses</a>
-      <a class="nl s-nl <?= $tab === 'grades' ? 'on' : '' ?>" href="?tab=grades"> <i class="fas fa-chart-bar"></i>
-        Grades</a>
-      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable"> <i
+      <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses" title="Courses"> <i class="fas fa-book-open"></i>
+        <span class="nl-label">Courses</span></a>
+      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable" title="Timetable"> <i
           class="fas fa-calendar-alt"></i>
-        Timetable</a>
-      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework"> <i class="fas fa-tasks"></i>
-        Homework
-        Status</a>
-      <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment"> <i class="fas fa-credit-card"></i>
-        Payment</a>
+        <span class="nl-label">Timetable</span></a>
+      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
+        <span class="nl-label">Homework Status</span></a>
+      <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment" title="Payment"> <i class="fas fa-credit-card"></i>
+        <span class="nl-label">Payment</span></a>
 
-      <!-- To-Do Widget -->
+     <!-- To-Do Widget (real homework from DB) -->
       <div class="twid">
         <span class="wtl"><i class="fas fa-check-square"></i> To-Do</span>
-        <?php foreach (['Review Math notes', 'Submit BM essay', 'Study for History', 'Prepare sports kit', 'Complete Geo report'] as $i => $t): ?>
-          <label class="titem"><input type="checkbox" <?= $i === 0 ? 'checked' : '' ?>> <?= e($t) ?></label>
-        <?php endforeach; ?>
+        <?php
+        $todoItems = [];
+        $todoStmt = $conn->prepare("SELECT id, title FROM homework WHERE student_id = ? AND status != 'submitted' ORDER BY due_date ASC LIMIT 6");
+        $todoStmt->bind_param('i', $userId);
+        $todoStmt->execute();
+        $todoRes = $todoStmt->get_result();
+        while ($row = $todoRes->fetch_assoc()) $todoItems[] = $row;
+        $todoStmt->close();
+        ?>
+        <div id="todoList">
+          <?php if (empty($todoItems)): ?>
+            <p style="font-size:.78rem;color:var(--MT);padding:.3rem 0">All caught up! 🎉</p>
+          <?php else: ?>
+            <?php foreach ($todoItems as $t): ?>
+              <label class="titem" id="todo-<?= $t['id'] ?>">
+                <input type="checkbox" onchange="mwCompleteTodo(<?= $t['id'] ?>, this)"> <?= e($t['title']) ?>
+              </label>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </div>
       </div>
 
       <!-- Mini Calendar -->
@@ -126,7 +143,43 @@ pageHead('Student Dashboard');
         </div>
       </div>
 
+            <?php
+      // Count real classes per weekday from this student's timetable
+      $classCounts = [];
+      foreach ($TIMETABLE as $row) {
+          $periods = array_filter([
+              $row['p1'] ?? '', $row['p2'] ?? '', $row['p3'] ?? '', $row['p4'] ?? '',
+              $row['p5'] ?? '', $row['p6'] ?? '', $row['p7'] ?? ''
+          ], fn($p) => $p !== '' && strtoupper($p) !== 'BREAK');
+          $classCounts[$row['day']] = count($periods);
+      }
+
+      // Malaysia public holidays 2026 (national/federal level)
+      $publicHolidays2026 = [
+          '2026-01-01' => "New Year's Day",
+          '2026-02-17' => "Chinese New Year (Day 1)",
+          '2026-02-18' => "Chinese New Year (Day 2)",
+          '2026-03-21' => "Hari Raya Aidilfitri (Day 1)",
+          '2026-03-22' => "Hari Raya Aidilfitri (Day 2)",
+          '2026-05-01' => "Labour Day",
+          '2026-05-27' => "Hari Raya Haji (Day 1)",
+          '2026-05-28' => "Hari Raya Haji (Day 2)",
+          '2026-05-31' => "Wesak Day",
+          '2026-06-01' => "Agong's Birthday",
+          '2026-06-17' => "Awal Muharram",
+          '2026-08-25' => "Maulidur Rasul",
+          '2026-08-31' => "Merdeka Day",
+          '2026-09-16' => "Malaysia Day",
+          '2026-11-08' => "Deepavali",
+          '2026-11-09' => "Deepavali (Replacement)",
+          '2026-12-25' => "Christmas Day",
+      ];
+      ?>
       <script>
+        const mwClassCounts = <?= json_encode($classCounts) ?>;
+        const mwHolidays = <?= json_encode($publicHolidays2026) ?>;
+        const mwWeekdayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
         function generateCalendar() {
           const now = new Date();
           const year = now.getFullYear();
@@ -162,6 +215,23 @@ pageHead('Student Dashboard');
           for (let d = 1; d <= daysInMonth; d++) {
             const dayEl = document.createElement('div');
             dayEl.className = 'cday';
+
+            const weekdayName = mwWeekdayNames[new Date(year, month, d).getDay()];
+            const iso = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+            let tooltipParts = [];
+
+            if (mwHolidays[iso]) {
+              dayEl.classList.add('choliday');
+              tooltipParts.push('🎉 ' + mwHolidays[iso]);
+            } else if (mwClassCounts.hasOwnProperty(weekdayName)) {
+              const count = mwClassCounts[weekdayName];
+              tooltipParts.push(count > 0 ? (count + ' class' + (count > 1 ? 'es' : '') + ' today') : 'No classes');
+            }
+
+            if (tooltipParts.length > 0) {
+              dayEl.title = tooltipParts.join(' • ');
+            }
+
             if (d === today) {
               dayEl.classList.add('ctoday');
             }
@@ -173,7 +243,9 @@ pageHead('Student Dashboard');
         generateCalendar();
         setInterval(generateCalendar, 60000);
       </script>
-    </aside>
+      </aside>
+
+
 
     <!-- MAIN CONTENT -->
     <main class="mc s-mc">
@@ -705,7 +777,33 @@ pageHead('Student Dashboard');
     var d = document.getElementById('notifDrop');
     d.style.display = d.style.display === 'none' ? 'block' : 'none';
   }
-
+  
+  function mwCompleteTodo(hwId, checkbox) {
+    checkbox.disabled = true;
+    fetch('toggle_todo.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: 'hw_id=' + hwId
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        var row = document.getElementById('todo-' + hwId);
+        row.style.transition = 'opacity .3s';
+        row.style.opacity = '0';
+        setTimeout(function(){ row.remove(); }, 300);
+      } else {
+        checkbox.checked = false;
+        checkbox.disabled = false;
+        alert('Could not update. Please try again.');
+      }
+    })
+    .catch(function(){
+      checkbox.checked = false;
+      checkbox.disabled = false;
+      alert('Connection error.');
+    });
+  }
   document.addEventListener('click', function (e) {
     var wrap = document.getElementById('bellWrap');
     if (wrap && !wrap.contains(e.target)) {

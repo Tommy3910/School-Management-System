@@ -206,6 +206,18 @@ function otpBack(e,prevId,el){
     var p=document.getElementById(prevId);p.value='';p.classList.remove('filled');p.focus();
   }
 }
+function mwToggleSidebar(){
+  var sb = document.querySelector('.sb');
+  if (!sb) return;
+  sb.classList.toggle('collapsed');
+  localStorage.setItem('mwSidebarCollapsed', sb.classList.contains('collapsed') ? '1' : '0');
+}
+(function(){
+  var sb = document.querySelector('.sb');
+  if (sb && localStorage.getItem('mwSidebarCollapsed') === '1') {
+    sb.classList.add('collapsed');
+  }
+})();
 function checkStrength(pw,barPrefix,labelId){
   var bars=[1,2,3,4].map(function(n){return document.getElementById(barPrefix+n);});
   var lbl=document.getElementById(labelId);
