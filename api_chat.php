@@ -207,7 +207,7 @@ $rules = [
     ],
     [
         'keywords' => ['hi', 'hello', 'hey', 'greetings'],
-        'response' => "Hi there! I can help with questions about fees, timetables, subjects, homework, grades, and even help you plan your study schedule. What would you like to know?"
+        'response' => "Hi there! I am MapleGoat. I can help with questions about fees, timetables, subjects, homework, grades, and even help you plan your study schedule. What would you like to know?"
     ],
 ];
 

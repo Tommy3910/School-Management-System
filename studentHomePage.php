@@ -262,6 +262,16 @@ pageHead('Student Dashboard');
           <h2>Your Courses</h2>
           <p>Year <?= e($user['year']) ?> — Semester 1, 2026</p>
         </div>
+          <?php
+          // Cumulative percentage across all terms/subjects
+          $cum_res = $conn->query(
+            "SELECT SUM(marks) AS tm, SUM(max_marks) AS tx, COUNT(*) AS n
+            FROM grades WHERE student_id = " . (int) $userId
+          );
+          $cum = $cum_res ? $cum_res->fetch_assoc() : null;
+          $has_grades = $cum && (int) $cum['n'] > 0 && (float) $cum['tx'] > 0;
+          $cum_pct = $has_grades ? round(((float) $cum['tm'] / (float) $cum['tx']) * 100, 1) : null;
+          ?>
         <div class="srow">
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
@@ -280,8 +290,8 @@ pageHead('Student Dashboard');
           </div>
           <div class="sc">
             <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
-            <div class="sv">B+</div>
-            <div class="sl">Grade</div>
+            <div class="sv"><?= $has_grades ? $cum_pct . '%' : '—' ?></div>
+            <div class="sl">Cumulative Marks</div>
           </div>
         </div>
         <div class="cgrid">
