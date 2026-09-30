@@ -40,7 +40,7 @@ pageHead('Student Dashboard');
   $unreadCount = getUnreadCount($conn, $userId);
   ?>
   <header class="hdr s-hdr">
-    <div class="hbrand">
+    <div class="hbrand" id="hbrand">
       <img src="maple_wood_logo.png" alt="Maplewood Logo" class="hlogo">
       <h1>Maple<em>wood</em></h1>
     </div>
@@ -49,6 +49,7 @@ pageHead('Student Dashboard');
         <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
       </div>
+      <button type="button" class="tour-btn" onclick="mwStartTour()" title="Start Guided Tour"><i class="fas fa-compass"></i> Tour</button>
       <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
       <div class="nbell" id="bellWrap">
         <!-- FIX: pass event to toggleNotifs to stop bubbling -->
@@ -63,7 +64,7 @@ pageHead('Student Dashboard');
         <!-- Dropdown panel -->
         <div class="ndrop" id="notifDrop" style="display:none">
           <div class="ndhdr">
-            <span><i class="fas fa-bell"></i> Notifications</span>
+            <span><i class="fas fa-bell"></i> Notifications &amp; Reminders</span>
             <?php if ($unreadCount > 0): ?>
               <a href="?tab=<?= $tab ?>&markread=1" class="ndmark">Mark all read</a>
             <?php endif; ?>
@@ -72,10 +73,23 @@ pageHead('Student Dashboard');
             <?php if (empty($notifs)): ?>
               <div class="ndempty"><i class="fas fa-check-circle"></i> You're all caught up!</div>
             <?php else: ?>
-              <?php foreach ($notifs as $n): ?>
-                <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>">
-                  <div class="ndicn"><i class="fas fa-chart-bar"></i></div>
+              <?php foreach ($notifs as $n):
+                $cCode = $n['course_code'] ?? '';
+                $sender = $n['sender_name'] ?? 'Teacher';
+                $nDate = date('d M Y, g:ia', strtotime($n['created_at']));
+                $isCourse = !empty($cCode);
+              ?>
+                <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>"
+                  <?php if ($isCourse): ?>
+                    onclick="mwShowReminder(<?= $n['id'] ?>, <?= htmlspecialchars(json_encode($n['title']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($n['message']), ENT_QUOTES) ?>, '<?= e($cCode) ?>', '<?= e($sender) ?>', '<?= e($nDate) ?>')"
+                    style="cursor:pointer"
+                  <?php endif; ?>
+                >
+                  <div class="ndicn"><i class="fas <?= $isCourse ? 'fa-bell' : 'fa-chart-bar' ?>" style="<?= $isCourse ? 'color:#d97706' : '' ?>"></i></div>
                   <div class="ndcnt">
+                    <?php if ($isCourse): ?>
+                      <span class="course-rem-badge" style="background:#fef3c7;color:#92400e;margin-bottom:.25rem"><i class="fas fa-book"></i> <?= e($cCode) ?> · Click to view</span>
+                    <?php endif; ?>
                     <div class="ndtitle"><?= e($n['title']) ?></div>
                     <div class="ndmsg"><?= e($n['message']) ?></div>
                     <div class="ndtime"><i class="fas fa-clock"></i>
@@ -92,9 +106,10 @@ pageHead('Student Dashboard');
 
   <div class="dlayout">
     <!-- SIDEBAR -->
-    <aside class="sb s-sb">
+    <aside class="sb s-sb" id="sbMenu">
       <button class="sbToggle" onclick="mwToggleSidebar()" title="Collapse menu">
-        <i class="fas fa-angles-left"></i>
+        <span class="toggle-text">Collapse Menu</span>
+        <i class="fas fa-angles-left toggle-icon"></i>
       </button>
       <span class="slbl s-slbl">Menu</span>
       <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses" title="Courses"> <i class="fas fa-book-open"></i>
@@ -104,6 +119,8 @@ pageHead('Student Dashboard');
         <span class="nl-label">Timetable</span></a>
       <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
         <span class="nl-label">Homework Status</span></a>
+      <a class="nl s-nl <?= $tab === 'calendar' ? 'on' : '' ?>" href="?tab=calendar" title="Calendar Planner"> <i class="fas fa-calendar-check"></i>
+        <span class="nl-label">Calendar Planner</span></a>
       <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment" title="Payment"> <i class="fas fa-credit-card"></i>
         <span class="nl-label">Payment</span></a>
 
@@ -133,7 +150,7 @@ pageHead('Student Dashboard');
       </div>
 
       <!-- Mini Calendar -->
-      <div class="cwid" style="margin-top:1.2rem">
+      <div class="cwid" id="calWrap" style="margin-top:1.2rem">
         <span class="wtl"><i class="fas fa-calendar"></i> <span id="calMonthYear">June 2026</span></span>
         <div class="calgrid">
           <div class="calmo" id="calMonthDisplay">June 2026</div>
@@ -141,6 +158,7 @@ pageHead('Student Dashboard');
             <!-- Generated by JavaScript -->
           </div>
         </div>
+        <button type="button" class="cbtn-planner" onclick="mwOpenCalendar()"><i class="fas fa-expand"></i> Fullscreen Planner</button>
       </div>
 
             <?php
@@ -569,69 +587,202 @@ pageHead('Student Dashboard');
           </div>
         </div>
 
-        <!-- ── HOMEWORK TAB ── -->
+        <!-- ── HOMEWORK TAB (Requirement 5: Upload Function) ── -->
       <?php elseif ($tab === 'homework'): ?>
-        <div class="phdr">
-          <h2>Homework Status</h2>
-          <p>Track your assignments, quizzes and tests</p>
+        <?php
+        $dbHomework = [];
+        if ($conn && $userId > 0) {
+            $hwQ = $conn->query("SELECT h.*, s.name AS subject_name FROM homework h LEFT JOIN subjects s ON h.subject_id = s.id WHERE h.student_id = $userId ORDER BY h.due_date ASC");
+            if ($hwQ) {
+                while ($r = $hwQ->fetch_assoc()) $dbHomework[] = $r;
+            }
+        }
+        $subHw = array_filter($dbHomework, fn($h) => $h['status'] === 'submitted');
+        $misHw = array_filter($dbHomework, fn($h) => $h['status'] === 'missing');
+        $nowDate = date('Y-m-d');
+        $lateHw = array_filter($misHw, fn($h) => $h['due_date'] < $nowDate);
+        $completionPct = count($dbHomework) ? round(count($subHw) / count($dbHomework) * 100) : 0;
+        ?>
+        <div class="phdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h2>Homework &amp; Assignments</h2>
+            <p>Upload your homework submissions and track test deadlines</p>
+          </div>
+          <?php if (!empty($dbHomework)): ?>
+            <button type="button" class="bpr bsm" onclick="openHwUploadModal(<?= (int)$dbHomework[0]['id'] ?>, '<?= e(addslashes($dbHomework[0]['title'])) ?>')">
+              <i class="fas fa-cloud-upload-alt"></i> Submit Work
+            </button>
+          <?php endif; ?>
         </div>
+
         <div class="srow">
-          <?php $ok = array_filter($HOMEWORK, fn($h) => $h['status'] === 'submitted');
-          $ms = array_filter($HOMEWORK, fn($h) => $h['status'] === 'missing'); ?>
           <div class="sc">
             <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-check-circle"></i></div>
-            <div class="sv"><?= count($ok) ?></div>
+            <div class="sv"><?= count($subHw) ?></div>
             <div class="sl">Submitted</div>
           </div>
           <div class="sc">
             <div class="sico" style="background:#ffebee;color:#b71c1c"><i class="fas fa-times-circle"></i></div>
-            <div class="sv"><?= count($ms) ?></div>
+            <div class="sv"><?= count($misHw) ?></div>
             <div class="sl">Missing</div>
           </div>
           <div class="sc">
             <div class="sico" style="background:#fff3e0;color:#bf360c"><i class="fas fa-clock"></i></div>
-            <div class="sv">0</div>
-            <div class="sl">Late</div>
+            <div class="sv"><?= count($lateHw) ?></div>
+            <div class="sl">Overdue</div>
           </div>
           <div class="sc">
-            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i>
-            </div>
-            <div class="sv"><?= count($HOMEWORK) ? round(count($ok) / count($HOMEWORK) * 100) . '%' : '0%' ?></div>
+            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-percentage"></i></div>
+            <div class="sv"><?= $completionPct ?>%</div>
             <div class="sl">Completion</div>
           </div>
         </div>
+
         <div class="crd">
           <div class="tw">
             <table>
               <thead>
                 <tr>
-                  <th>Item Name</th>
+                  <th>Assignment Name</th>
+                  <th>Subject</th>
                   <th>Type</th>
                   <th>Due Date</th>
                   <th>Status</th>
+                  <th>Submission / File</th>
+                  <th>Action</th>
                 </tr>
               </thead>
               <tbody>
-                <?php foreach ($HOMEWORK as $h): ?>
+                <?php if (empty($dbHomework)): ?>
                   <tr>
-                    <td style="font-weight:600"><?= e($h['item']) ?></td>
-                    <td><?php
-                    $cls = $h['type'] === 'Homework' ? 'bhw' : ($h['type'] === 'Quiz' ? 'bqz' : 'bts');
-                    echo "<span class=\"{$cls}\">{$h['type']}</span>";
-                    ?></td>
-                    <td style="color:var(--MT)"><?= e($h['due']) ?></td>
-                    <td><?php if ($h['status'] === 'submitted'): ?>
-                        <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
-                      <?php else: ?>
-                        <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
-                      <?php endif; ?>
+                    <td colspan="7" style="padding:2.5rem;text-align:center;color:var(--MT)">
+                      <i class="fas fa-check-double" style="font-size:2rem;margin-bottom:.5rem;display:block"></i>
+                      No homework tasks assigned yet. You're all caught up! 🎉
                     </td>
                   </tr>
-                <?php endforeach; ?>
+                <?php else: ?>
+                  <?php foreach ($dbHomework as $h):
+                    $isSubmitted = ($h['status'] === 'submitted');
+                    $isOverdue = (!$isSubmitted && $h['due_date'] < $nowDate);
+                    $cls = ($h['type'] === 'Quiz') ? 'bqz' : (($h['type'] === 'Test') ? 'bts' : 'bhw');
+                  ?>
+                    <tr>
+                      <td style="font-weight:600">
+                        <?= e($h['title']) ?>
+                        <?php if ($isOverdue): ?>
+                          <span style="font-size:.68rem;background:#fee2e2;color:#991b1b;padding:.12rem .4rem;border-radius:4px;margin-left:.4rem;font-weight:700">Overdue</span>
+                        <?php endif; ?>
+                      </td>
+                      <td style="color:var(--MT);font-size:.82rem"><?= e($h['subject_name'] ?: 'General') ?></td>
+                      <td><span class="<?= $cls ?>"><?= e($h['type']) ?></span></td>
+                      <td style="color:var(--MT)"><?= date('d M Y', strtotime($h['due_date'])) ?></td>
+                      <td>
+                        <?php if ($isSubmitted): ?>
+                          <span class="bok"><i class="fas fa-check-circle"></i> Submitted</span>
+                        <?php else: ?>
+                          <span class="bno"><i class="fas fa-times-circle"></i> Missing</span>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <?php if (!empty($h['submission_file'])): ?>
+                          <a href="download_submission.php?id=<?= (int)$h['id'] ?>" class="hw-file-badge" title="Download your submission">
+                            <i class="fas fa-file-download"></i> View File
+                          </a>
+                          <?php if (!empty($h['submitted_at'])): ?>
+                            <div style="font-size:.68rem;color:var(--MT);margin-top:2px"><?= date('d M, g:ia', strtotime($h['submitted_at'])) ?></div>
+                          <?php endif; ?>
+                        <?php else: ?>
+                          <span style="font-size:.76rem;color:var(--MT)">No file uploaded</span>
+                        <?php endif; ?>
+                      </td>
+                      <td>
+                        <?php if (!$isSubmitted): ?>
+                          <button type="button" class="hw-upload-btn" onclick="openHwUploadModal(<?= (int)$h['id'] ?>, '<?= e(addslashes($h['title'])) ?>')">
+                            <i class="fas fa-upload"></i> Upload Work
+                          </button>
+                        <?php else: ?>
+                          <button type="button" class="bsd bsm" onclick="openHwUploadModal(<?= (int)$h['id'] ?>, '<?= e(addslashes($h['title'])) ?>')">
+                            <i class="fas fa-redo"></i> Resubmit
+                          </button>
+                        <?php endif; ?>
+                      </td>
+                    </tr>
+                  <?php endforeach; ?>
+                <?php endif; ?>
               </tbody>
             </table>
           </div>
         </div>
+
+        <!-- Upload Homework Modal -->
+        <div id="hwUploadModal" class="mw-modal">
+          <div class="mw-modal-card">
+            <div class="mw-modal-hdr" style="background:var(--F)">
+              <h3 style="font-size:1.05rem;display:flex;align-items:center;gap:.5rem"><i class="fas fa-cloud-upload-alt" style="color:var(--O)"></i> Submit Assignment</h3>
+              <button onclick="closeHwUploadModal()" style="background:none;border:none;color:#fff;cursor:pointer;font-size:1.1rem"><i class="fas fa-times"></i></button>
+            </div>
+            <form action="submit_homework.php" method="POST" enctype="multipart/form-data">
+              <div class="mw-modal-body">
+                <input type="hidden" name="hw_id" id="uploadHwId" value="">
+                <div class="fg">
+                  <label>Assignment</label>
+                  <input type="text" id="uploadHwTitle" readonly style="background:#f4f1ea;font-weight:700">
+                </div>
+                <div class="fg">
+                  <label>Select Homework File (PDF, Word, PPT, Excel, Images, ZIP up to 20MB)</label>
+                  <input type="file" name="homework_file" required accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt,.zip,.png,.jpg,.jpeg">
+                </div>
+                <div class="fg">
+                  <label>Remarks / Notes for Teacher (Optional)</label>
+                  <textarea name="submission_notes" rows="3" style="width:100%;border-radius:10px;border:1.5px solid var(--W);padding:.6rem .8rem;font-family:inherit;font-size:.85rem;outline:none" placeholder="Add any comments or questions for your teacher..."></textarea>
+                </div>
+              </div>
+              <div class="mw-modal-foot">
+                <button type="button" class="bsd bsm" onclick="closeHwUploadModal()">Cancel</button>
+                <button type="submit" class="bpr bsm"><i class="fas fa-check"></i> Upload &amp; Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ── CALENDAR TAB (Requirements 6 & 7) ── -->
+      <?php elseif ($tab === 'calendar'): ?>
+        <div class="phdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h2>Academic &amp; Holiday Planner</h2>
+            <p>School calendar with color-coded national public holidays, school events, and deadlines</p>
+          </div>
+          <button type="button" class="bpr bsm" onclick="mwOpenCalendar()">
+            <i class="fas fa-expand"></i> Launch Fullscreen Planner
+          </button>
+        </div>
+
+        <div class="crd" style="padding:1.4rem">
+          <div class="cal-pl-legend" style="border-radius:10px;margin-bottom:1.2rem;border:1px solid var(--W)">
+            <span style="font-weight:700;color:var(--F)"><i class="fas fa-palette"></i> Color Codes:</span>
+            <div class="legend-item"><span class="legend-chip legend-hol"></span> <span>Public Holiday (National)</span></div>
+            <div class="legend-item"><span class="legend-chip legend-evt"></span> <span>School Special Event</span></div>
+            <div class="legend-item"><span class="legend-chip legend-exam"></span> <span>Examination &amp; Test</span></div>
+            <div class="legend-item"><span class="legend-chip legend-sport"></span> <span>Sports Day / Session</span></div>
+            <div class="legend-item"><span class="legend-chip legend-hw"></span> <span>Assignment Deadline</span></div>
+          </div>
+          <div style="border:1.5px solid var(--W);border-radius:14px;overflow:hidden">
+            <div class="cal-grid-fs" id="calInlineGrid"></div>
+          </div>
+        </div>
+        <script>
+          window.addEventListener('load', function() {
+            mwLoadCalendarEvents();
+            // Also duplicate grid to inline if on calendar tab
+            setTimeout(function() {
+              var fsGrid = document.getElementById('calPlGrid');
+              var inGrid = document.getElementById('calInlineGrid');
+              if (fsGrid && inGrid && fsGrid.children.length) {
+                inGrid.innerHTML = fsGrid.innerHTML;
+              }
+            }, 800);
+          });
+        </script>
 
         <!-- ── PAYMENT TAB ── -->
       <?php elseif ($tab === 'payment'): ?>
@@ -847,5 +998,29 @@ pageHead('Student Dashboard');
     w.focus();
     setTimeout(function(){ w.print(); }, 300);
   }
+
+  function openHwUploadModal(id, title) {
+    var idInput = document.getElementById('uploadHwId');
+    var titleInput = document.getElementById('uploadHwTitle');
+    var modal = document.getElementById('hwUploadModal');
+    if (idInput) idInput.value = id;
+    if (titleInput) titleInput.value = title || 'Assignment #' + id;
+    if (modal) modal.classList.add('open');
+  }
+
+  function closeHwUploadModal() {
+    var modal = document.getElementById('hwUploadModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    var uploadId = params.get('upload');
+    if (uploadId) {
+      setTimeout(function() {
+        openHwUploadModal(uploadId, 'Assignment #' + uploadId);
+      }, 300);
+    }
+  })();
 </script>
 <?php pageFoot(); ?>

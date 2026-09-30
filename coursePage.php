@@ -215,6 +215,127 @@ while ($r = $mres->fetch_assoc()) {
 }
 $stmt->close();
 
+// ── Pull real class schedule from database timetable (Requirement 2) ─────────
+if ($studentYear <= 6) $yg = '1-6';
+elseif ($studentYear <= 9) $yg = '7-9';
+else $yg = '10-11';
+
+if ($yg === '1-6') {
+    $periodTimes = [
+        'p1' => '8:00–9:00',
+        'p2' => '9:00–10:00',
+        'p3' => '10:00–10:45 (Break)',
+        'p4' => '10:45–11:45',
+        'p5' => '11:45–12:45',
+    ];
+} else {
+    $periodTimes = [
+        'p1' => '8:00–8:45',
+        'p2' => '8:45–9:30',
+        'p3' => '9:30–10:00',
+        'p4' => '10:00–11:00 (Break)',
+        'p5' => '11:00–11:45',
+        'p6' => '11:45–12:30',
+        'p7' => '12:30–1:15',
+    ];
+}
+
+$courseKeywordsMap = [
+    'BM101' => ['BM', 'BAHASA MALAYSIA', 'BAHASA MELAYU', 'MALAY'],
+    'MT102' => ['MATH', 'MATHEMATICS', 'MATEMATIK', 'MT'],
+    'SC103' => ['SCI', 'SCIENCE', 'SAINS', 'SC'],
+    'EN104' => ['ENG', 'ENGLISH', 'EN'],
+    'HI105' => ['HIS', 'HISTORY', 'SEJARAH', 'HI'],
+    'GE106' => ['GEO', 'GEOGRAPHY', 'GEOGRAFI', 'GE'],
+    'PE107' => ['SPORT', 'PE', 'PJ', 'PENDIDIKAN JASMANI'],
+    'AR108' => ['ART', 'SENI', 'PENDIDIKAN SENI', 'AR'],
+];
+$kwList = $courseKeywordsMap[$code] ?? [strtoupper($c['name']), strtoupper($c['code'])];
+
+$dbSchedule = [];
+if ($conn) {
+    $ttStmt = $conn->prepare("SELECT * FROM timetable WHERE year = ? AND year_group = ? ORDER BY FIELD(day, 'Monday','Tuesday','Wednesday','Thursday','Friday')");
+    $ttStmt->bind_param('is', $studentYear, $yg);
+    $ttStmt->execute();
+    $ttRes = $ttStmt->get_result();
+    while ($ttRow = $ttRes->fetch_assoc()) {
+        $day = $ttRow['day'];
+        foreach ($periodTimes as $pkey => $timeSlot) {
+            $slotVal = trim(strtoupper($ttRow[$pkey] ?? ''));
+            if ($slotVal === '' || $slotVal === 'BREAK') continue;
+            foreach ($kwList as $kw) {
+                if ($slotVal === $kw || strpos($slotVal, $kw) !== false) {
+                    $dbSchedule[] = "$day $timeSlot";
+                    break;
+                }
+            }
+        }
+    }
+    $ttStmt->close();
+}
+
+// ── Pull real upcoming deadlines from database homework (Requirement 2) ──────
+$dbUpcoming = [];
+if ($conn && $userId > 0) {
+    $subjectIds = [];
+    $sRes = $conn->query("SELECT id, name FROM subjects");
+    if ($sRes) {
+        while ($sRow = $sRes->fetch_assoc()) {
+            $sName = strtoupper($sRow['name']);
+            foreach ($kwList as $kw) {
+                if ($sName === $kw || strpos($sName, $kw) !== false) {
+                    $subjectIds[] = (int) $sRow['id'];
+                    break;
+                }
+            }
+        }
+    }
+
+    $whereConditions = ["h.student_id = " . (int)$userId];
+    $matchConditions = [];
+    if (!empty($subjectIds)) {
+        $matchConditions[] = "h.subject_id IN (" . implode(',', $subjectIds) . ")";
+    }
+    foreach ($kwList as $kw) {
+        $kwEsc = $conn->real_escape_string($kw);
+        $matchConditions[] = "UPPER(h.title) LIKE '%$kwEsc%'";
+    }
+    if (!empty($matchConditions)) {
+        $whereConditions[] = "(" . implode(' OR ', $matchConditions) . ")";
+    }
+    $whereSql = implode(' AND ', $whereConditions);
+
+    $hwRes = $conn->query("SELECT h.* FROM homework h WHERE $whereSql ORDER BY h.due_date ASC");
+    if ($hwRes && $hwRes->num_rows > 0) {
+        while ($h = $hwRes->fetch_assoc()) {
+            $type = $h['type'];
+            $badge = ($type === 'Quiz') ? 'bqz' : (($type === 'Test') ? 'bts' : 'bhw');
+            $dbUpcoming[] = [
+                'id' => (int) $h['id'],
+                'label' => $h['title'],
+                'date' => date('d M Y', strtotime($h['due_date'])),
+                'badge' => $badge,
+                'type' => $type,
+                'status' => $h['status'],
+                'submission_file' => $h['submission_file'] ?? null,
+            ];
+        }
+    }
+}
+
+// ── Pull course-specific reminders from teacher (Requirements 8 & 9) ─────────
+$courseReminders = [];
+if ($conn && $userId > 0) {
+    $rStmt = $conn->prepare("SELECT * FROM notifications WHERE user_id = ? AND course_code = ? ORDER BY created_at DESC LIMIT 5");
+    $rStmt->bind_param('is', $userId, $code);
+    $rStmt->execute();
+    $rRes = $rStmt->get_result();
+    while ($r = $rRes->fetch_assoc()) {
+        $courseReminders[] = $r;
+    }
+    $rStmt->close();
+}
+
 pageHead('Course — ' . $c['name']);
 ?>
 
@@ -424,6 +545,7 @@ pageHead('Course — ' . $c['name']);
         <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
       </div>
+      <button type="button" class="tour-btn" onclick="mwStartTour()" title="Start Tour"><i class="fas fa-compass"></i> Tour</button>
       <a href="logout.php" class="obtn"><i class="fas fa-sign-out-alt"></i> Logout</a>
       <div class="nbell" id="bellWrap">
         <button class="nbtn" onclick="toggleNotifs()" title="Notifications">
@@ -441,14 +563,26 @@ pageHead('Course — ' . $c['name']);
             <?php if (empty($notifs)): ?>
               <div class="ndempty"><i class="fas fa-check-circle"></i> You're all caught up!</div>
             <?php else: ?>
-              <?php foreach ($notifs as $n): ?>
-                <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>">
-                  <div class="ndicn"><i class="fas fa-chart-bar"></i></div>
+              <?php foreach ($notifs as $n):
+                $cCode = $n['course_code'] ?? '';
+                $sender = $n['sender_name'] ?? 'Teacher';
+                $nDate = date('d M Y, g:ia', strtotime($n['created_at']));
+                $isCourse = !empty($cCode);
+              ?>
+                <div class="nditem <?= $n['is_read'] ? '' : 'ndunread' ?>"
+                  <?php if ($isCourse): ?>
+                    onclick="mwShowReminder(<?= $n['id'] ?>, <?= htmlspecialchars(json_encode($n['title']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($n['message']), ENT_QUOTES) ?>, '<?= e($cCode) ?>', '<?= e($sender) ?>', '<?= e($nDate) ?>')"
+                    style="cursor:pointer"
+                  <?php endif; ?>
+                >
+                  <div class="ndicn"><i class="fas <?= $isCourse ? 'fa-bell' : 'fa-chart-bar' ?>" style="<?= $isCourse ? 'color:#d97706' : '' ?>"></i></div>
                   <div class="ndcnt">
+                    <?php if ($isCourse): ?>
+                      <span class="course-rem-badge" style="background:#fef3c7;color:#92400e;margin-bottom:.25rem"><i class="fas fa-book"></i> <?= e($cCode) ?> · Click to view</span>
+                    <?php endif; ?>
                     <div class="ndtitle"><?= e($n['title']) ?></div>
                     <div class="ndmsg"><?= e($n['message']) ?></div>
-                    <div class="ndtime"><i class="fas fa-clock"></i>
-                      <?= date('d M Y, g:i a', strtotime($n['created_at'])) ?></div>
+                    <div class="ndtime"><i class="fas fa-clock"></i> <?= date('d M Y, g:i a', strtotime($n['created_at'])) ?></div>
                   </div>
                 </div>
               <?php endforeach; ?>
@@ -463,17 +597,20 @@ pageHead('Course — ' . $c['name']);
     <!-- SIDEBAR -->
     <aside class="sb s-sb">
       <button class="sbToggle" onclick="mwToggleSidebar()" title="Collapse menu">
-        <i class="fas fa-angles-left"></i>
+        <span class="toggle-text">Collapse Menu</span>
+        <i class="fas fa-angles-left toggle-icon"></i>
       </button>
       <span class="slbl s-slbl">Menu</span>
-      <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="?tab=courses" title="Courses"> <i class="fas fa-book-open"></i>
+      <a class="nl s-nl <?= $tab === 'courses' ? 'on' : '' ?>" href="studentHomePage.php?tab=courses" title="Courses"> <i class="fas fa-book-open"></i>
         <span class="nl-label">Courses</span></a>
-      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable" title="Timetable"> <i
+      <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="studentHomePage.php?tab=timetable" title="Timetable"> <i
           class="fas fa-calendar-alt"></i>
         <span class="nl-label">Timetable</span></a>
-      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
+      <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="studentHomePage.php?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
         <span class="nl-label">Homework Status</span></a>
-      <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="?tab=payment" title="Payment"> <i class="fas fa-credit-card"></i>
+      <a class="nl s-nl" href="#" onclick="mwOpenCalendar();return false;" title="Calendar Planner"> <i class="fas fa-calendar-check"></i>
+        <span class="nl-label">Calendar Planner</span></a>
+      <a class="nl s-nl <?= $tab === 'payment' ? 'on' : '' ?>" href="studentHomePage.php?tab=payment" title="Payment"> <i class="fas fa-credit-card"></i>
         <span class="nl-label">Payment</span></a>
 
       <div class="twid">
@@ -509,6 +646,7 @@ pageHead('Course — ' . $c['name']);
             <!-- Generated by JavaScript -->
           </div>
         </div>
+        <button type="button" class="cbtn-planner" onclick="mwOpenCalendar()"><i class="fas fa-expand"></i> Fullscreen Planner</button>
       </div>
 
             <?php
@@ -639,6 +777,24 @@ pageHead('Course — ' . $c['name']);
         <?= e($c['desc']) ?>
       </div>
 
+      <!-- Course Reminders from Teacher (Requirements 8 & 9) -->
+      <?php if (!empty($courseReminders)): ?>
+        <div style="background:#fffbeb;border:1.5px solid #fde68a;border-radius:14px;padding:1.1rem 1.4rem;margin-bottom:1.3rem">
+          <div style="display:flex;align-items:center;gap:.5rem;font-weight:700;color:#92400e;font-size:.9rem;margin-bottom:.6rem">
+            <i class="fas fa-bell"></i> Teacher Reminders for <?= e($c['name']) ?>
+          </div>
+          <?php foreach ($courseReminders as $rem): ?>
+            <div style="padding:.5rem 0;border-bottom:1px solid #fef3c7;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+              <div>
+                <strong style="font-size:.85rem;color:var(--F)"><?= e($rem['title']) ?></strong>
+                <p style="font-size:.8rem;color:var(--MT);margin-top:.2rem"><?= e($rem['message']) ?></p>
+              </div>
+              <span style="font-size:.72rem;color:var(--MT);white-space:nowrap"><i class="fas fa-clock"></i> <?= date('d M Y, g:ia', strtotime($rem['created_at'])) ?></span>
+            </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+
       <!-- 2-col grid -->
       <div class="cp-grid">
 
@@ -657,18 +813,28 @@ pageHead('Course — ' . $c['name']);
           </div>
         </div>
 
-        <!-- Schedule -->
+        <!-- Schedule (Requirement 2: Follow Database) -->
         <div class="cp-section">
           <div class="cp-section-hdr" style="color:<?= $c['accent'] ?>">
             <i class="fas fa-clock"></i> Class Schedule
+            <?php if (!empty($dbSchedule)): ?>
+              <span style="font-size:.68rem;background:rgba(45,106,79,.1);color:var(--S);padding:.15rem .5rem;border-radius:12px;margin-left:auto;font-weight:700">From Timetable DB</span>
+            <?php endif; ?>
           </div>
           <div class="cp-section-body">
-            <?php foreach ($c['schedule'] as $sch): ?>
-              <div class="cp-sch-item">
-                <i class="fas fa-calendar-day"></i>
-                <?= e($sch) ?>
-              </div>
-            <?php endforeach; ?>
+            <?php
+            $finalSchedule = !empty($dbSchedule) ? $dbSchedule : $c['schedule'];
+            if (empty($finalSchedule)):
+            ?>
+              <p style="color:var(--MT);font-size:.82rem">No schedule assigned in timetable yet.</p>
+            <?php else: ?>
+              <?php foreach ($finalSchedule as $sch): ?>
+                <div class="cp-sch-item">
+                  <i class="fas fa-calendar-day"></i>
+                  <?= e($sch) ?>
+                </div>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
 
@@ -700,25 +866,47 @@ pageHead('Course — ' . $c['name']);
             <?php endif; ?>
           </div>
         </div>
-        <!-- Upcoming -->
+        <!-- Upcoming Deadlines (Requirement 2: Follow Database) -->
         <div class="cp-section">
           <div class="cp-section-hdr" style="color:<?= $c['accent'] ?>">
             <i class="fas fa-calendar-check"></i> Upcoming Deadlines
+            <?php if (!empty($dbUpcoming)): ?>
+              <span style="font-size:.68rem;background:rgba(212,168,71,.15);color:#8a6200;padding:.15rem .5rem;border-radius:12px;margin-left:auto;font-weight:700">From Homework DB</span>
+            <?php endif; ?>
           </div>
           <div class="cp-section-body">
-            <?php foreach ($c['upcoming'] as $up): ?>
-              <div class="cp-up-item">
-                <div>
-                  <div class="cp-up-label"><?= e($up['label']) ?></div>
-                  <div class="cp-up-date"><i class="fas fa-calendar"></i> <?= e($up['date']) ?></div>
+            <?php
+            $finalUpcoming = !empty($dbUpcoming) ? $dbUpcoming : $c['upcoming'];
+            if (empty($finalUpcoming)):
+            ?>
+              <p style="color:var(--MT);font-size:.82rem">No upcoming deadlines recorded for this course 🎉</p>
+            <?php else: ?>
+              <?php foreach ($finalUpcoming as $up): ?>
+                <div class="cp-up-item">
+                  <div>
+                    <div class="cp-up-label"><?= e($up['label']) ?></div>
+                    <div class="cp-up-date"><i class="fas fa-calendar"></i> <?= e($up['date']) ?>
+                      <?php if (isset($up['status']) && $up['status'] === 'submitted'): ?>
+                        &nbsp;·&nbsp; <span style="color:#1b5e20;font-weight:700"><i class="fas fa-check-circle"></i> Submitted</span>
+                      <?php endif; ?>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:.5rem">
+                    <?php
+                      $cls = $up['badge'] ?? 'bhw';
+                      $labels = ['bhw'=>'Homework','bqz'=>'Quiz','bts'=>'Test'];
+                      $typeText = $labels[$cls] ?? ($up['type'] ?? 'Assignment');
+                      echo "<span class=\"{$cls}\">{$typeText}</span>";
+                    ?>
+                    <?php if (isset($up['id']) && (!isset($up['status']) || $up['status'] !== 'submitted')): ?>
+                      <a href="studentHomePage.php?tab=homework&upload=<?= (int)$up['id'] ?>" class="hw-upload-btn" style="padding:.2rem .55rem;font-size:.7rem"><i class="fas fa-upload"></i> Submit</a>
+                    <?php elseif (isset($up['submission_file']) && $up['submission_file']): ?>
+                      <a href="download_submission.php?id=<?= (int)$up['id'] ?>" class="hw-file-badge" style="padding:.18rem .45rem;font-size:.68rem" title="Download your submission"><i class="fas fa-download"></i> File</a>
+                    <?php endif; ?>
+                  </div>
                 </div>
-                <?php
-                  $cls = $up['badge'];
-                  $labels = ['bhw'=>'Homework','bqz'=>'Quiz','bts'=>'Test'];
-                  echo "<span class=\"{$cls}\">{$labels[$cls]}</span>";
-                ?>
-              </div>
-            <?php endforeach; ?>
+              <?php endforeach; ?>
+            <?php endif; ?>
           </div>
         </div>
 
