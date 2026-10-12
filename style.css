@@ -202,6 +202,8 @@ tbody tr:hover td{background:rgba(45,106,79,.03)}
 /* ── PAYMENT ── */
 .phero{background:linear-gradient(135deg,var(--F),var(--S));border-radius:16px;padding:1.35rem 1.5rem;display:flex;align-items:center;justify-content:space-between;color:#fff;margin-bottom:1rem}
 .pcard{background:#fff;border-radius:16px;padding:1.05rem 1.4rem;border:1px solid rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;box-shadow:var(--sh)}
+.pcard-amount{color:var(--F)}
+.pcard-date{color:var(--MT)}
 
 /* ── TEACHER ── */
 .t-hdr{background:#0a1a10}
@@ -340,3 +342,1102 @@ tbody tr:hover td{background:rgba(45,106,79,.03)}
 /* ── COURSE REMINDERS ── */
 .course-rem-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.18rem .55rem;border-radius:6px;font-size:.7rem;font-weight:700;letter-spacing:.02em}
 .course-rem-banner{background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1.5px solid #fde68a;border-radius:14px;padding:1rem 1.25rem;margin-bottom:1.2rem;display:flex;align-items:flex-start;gap:.9rem}
+
+/* ══════════════════════════════════════════════════════════════════
+   ── CYBERPUNK / GAME HUD DARK-RED THEME (Ghostwire: Tokyo Style) ──
+   ══════════════════════════════════════════════════════════════════ */
+#student.cyber-hud-mode {
+  --bg-dark: #0a0205;
+  --hud-red: #ff1f4b;
+  --hud-red-bright: #ff3864;
+  --hud-red-dim: rgba(255, 31, 75, 0.22);
+  --hud-red-glow: rgba(255, 31, 75, 0.55);
+  --hud-red-border: rgba(255, 31, 75, 0.4);
+  --hud-cyan: #00ffd0;
+  --hud-text: #ffd5dc;
+  --hud-text-dim: #993b4d;
+  --hud-gold: #ffbe3b;
+  background: #090205;
+  color: #ffd5dc;
+  min-height: 100vh;
+}
+
+/* Header in HUD Mode */
+#student.cyber-hud-mode .s-hdr {
+  background: #0d0206;
+  border-bottom: 1.5px solid rgba(255, 31, 75, 0.35);
+  box-shadow: 0 4px 20px rgba(255, 31, 75, 0.18);
+}
+#student.cyber-hud-mode .hbrand h1 {
+  color: #ff3864;
+  text-shadow: 0 0 12px rgba(255, 31, 75, 0.6);
+  letter-spacing: 0.04em;
+}
+#student.cyber-hud-mode .hbrand h1 em {
+  color: #ffbe3b;
+  text-shadow: 0 0 10px rgba(255, 190, 59, 0.6);
+}
+#student.cyber-hud-mode .hbrand .hlogo {
+  background: rgba(255, 31, 75, 0.15);
+  border: 1.5px solid #ff1f4b;
+  box-shadow: 0 0 12px rgba(255, 31, 75, 0.4);
+}
+#student.cyber-hud-mode .ubadge {
+  background: rgba(255, 31, 75, 0.1);
+  border: 1px solid rgba(255, 31, 75, 0.35);
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .ubadge .av {
+  background: #ff1f4b;
+  color: #000;
+  box-shadow: 0 0 8px #ff1f4b;
+  font-weight: 800;
+}
+#student.cyber-hud-mode .tour-btn,
+#student.cyber-hud-mode .obtn,
+#student.cyber-hud-mode .nbtn {
+  background: rgba(255, 31, 75, 0.1);
+  border: 1px solid rgba(255, 31, 75, 0.4);
+  color: #ffd5dc;
+  transition: all 0.2s ease;
+}
+#student.cyber-hud-mode .tour-btn:hover,
+#student.cyber-hud-mode .obtn:hover,
+#student.cyber-hud-mode .nbtn:hover {
+  background: rgba(255, 31, 75, 0.25);
+  color: #fff;
+  border-color: #ff1f4b;
+  box-shadow: 0 0 12px rgba(255, 31, 75, 0.4);
+}
+#student.cyber-hud-mode .hud-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: .38rem .85rem;
+  background: rgba(255, 31, 75, 0.18);
+  border: 1.5px solid #ff1f4b;
+  color: #ff3864;
+  border-radius: 8px;
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: all .2s;
+  box-shadow: 0 0 10px rgba(255, 31, 75, 0.35);
+}
+#student.cyber-hud-mode .hud-toggle-btn:hover {
+  background: #ff1f4b;
+  color: #000;
+  box-shadow: 0 0 16px #ff1f4b;
+}
+#student.cyber-hud-mode .hud-karma-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #ff1f4b;
+  color: #000;
+  font-weight: 800;
+  font-size: .78rem;
+  padding: .32rem .75rem;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(255, 31, 75, 0.6);
+  letter-spacing: .06em;
+}
+
+/* ── SIDEBAR & MENU SELECTION (THE GHOSTWIRE HUD SELECTION) ── */
+#student.cyber-hud-mode .s-sb {
+  background: #0b0206;
+  border-right: 1.5px solid rgba(255, 31, 75, 0.3);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.7);
+  position: sticky;
+  top: 68px;
+  height: calc(100vh - 68px);
+}
+#student.cyber-hud-mode .s-slbl {
+  color: #ff3864;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: .72rem;
+  font-weight: 800;
+  padding: 0 1.3rem;
+  margin-top: 1.2rem;
+  margin-bottom: .6rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+#student.cyber-hud-mode .s-slbl::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid #ff1f4b;
+  border-radius: 50%;
+}
+#student.cyber-hud-mode .s-sb .sbToggle {
+  background: rgba(255, 31, 75, 0.1);
+  border: 1px solid rgba(255, 31, 75, 0.3);
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .s-sb .sbToggle:hover {
+  background: rgba(255, 31, 75, 0.25);
+  color: #fff;
+  border-color: #ff1f4b;
+  box-shadow: 0 0 10px rgba(255, 31, 75, 0.3);
+}
+
+/* Inactive Sidebar Links */
+#student.cyber-hud-mode .s-nl {
+  color: #993b4d;
+  margin: .35rem .75rem;
+  border-radius: 6px;
+  padding: .68rem .95rem;
+  transition: all .2s cubic-bezier(.2,.8,.2,1);
+  position: relative;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+}
+#student.cyber-hud-mode .s-nl:hover {
+  color: #ffd5dc;
+  background: rgba(255, 31, 75, 0.1);
+  border-color: rgba(255, 31, 75, 0.3);
+  transform: translateX(3px);
+}
+#student.cyber-hud-mode .s-nl i {
+  color: #ff1f4b;
+  font-size: .95rem;
+  filter: drop-shadow(0 0 4px rgba(255, 31, 75, 0.5));
+  transition: all .2s ease;
+}
+
+/* ── ACTIVE MENU SELECTION (.s-nl.on) ── */
+#student.cyber-hud-mode .s-nl.on {
+  background: rgba(45, 10, 20, 0.92) !important;
+  color: #fff !important;
+  border: 1.5px solid #ff1f4b !important;
+  box-shadow: 0 0 16px rgba(255, 31, 75, 0.55), inset 0 0 12px rgba(255, 31, 75, 0.35) !important;
+  font-weight: 700;
+  margin-left: 1.5rem !important;
+  width: calc(100% - 2.25rem) !important;
+  position: relative;
+}
+
+/* Glowing Red Pointer Chevron: ❯❯ */
+#student.cyber-hud-mode .s-nl.on::before {
+  content: '❯❯';
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff3864;
+  font-size: 1.15rem;
+  font-weight: 900;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px #ff1f4b);
+  animation: hudPointerPulse 1.4s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes hudPointerPulse {
+  0% { transform: translateY(-50%) translateX(0px); filter: drop-shadow(0 0 4px #ff1f4b); }
+  100% { transform: translateY(-50%) translateX(3px); filter: drop-shadow(0 0 14px #ff3864); }
+}
+
+/* High-tech Corner Accents on Active Slot */
+#student.cyber-hud-mode .s-nl.on::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 7px;
+  height: 7px;
+  border-bottom: 2px solid #fff;
+  border-right: 2px solid #fff;
+  filter: drop-shadow(0 0 4px #ff1f4b);
+  pointer-events: none;
+}
+
+/* Active Icon Glow */
+#student.cyber-hud-mode .s-nl.on i {
+  color: #ff3864 !important;
+  filter: drop-shadow(0 0 8px #ff1f4b) !important;
+  transform: scale(1.15);
+}
+
+/* Status Indicator Dot on Active Slot */
+#student.cyber-hud-mode .s-nl.on .nl-label::after {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #00ffd0;
+  box-shadow: 0 0 6px #00ffd0;
+  margin-left: 8px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  vertical-align: middle;
+}
+
+/* Sidebar Widgets: To-do & Calendar */
+#student.cyber-hud-mode .twid,
+#student.cyber-hud-mode .cwid {
+  background: rgba(255, 31, 75, 0.05);
+  border: 1px solid rgba(255, 31, 75, 0.2);
+  border-radius: 8px;
+  padding: .9rem;
+  margin: 1.2rem .75rem 0;
+}
+#student.cyber-hud-mode .wtl {
+  color: #ff3864;
+  letter-spacing: .12em;
+  font-weight: 800;
+}
+#student.cyber-hud-mode .titem {
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .titem input {
+  accent-color: #ff1f4b;
+}
+#student.cyber-hud-mode .calgrid {
+  background: rgba(15, 3, 8, 0.85);
+  border: 1px solid rgba(255, 31, 75, 0.25);
+}
+#student.cyber-hud-mode .calmo {
+  color: #ff3864;
+}
+#student.cyber-hud-mode .dname {
+  color: #993b4d;
+}
+#student.cyber-hud-mode .cday {
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .ctoday {
+  background: #ff1f4b;
+  color: #000;
+  box-shadow: 0 0 8px #ff1f4b;
+}
+#student.cyber-hud-mode .cbtn-planner {
+  background: rgba(255, 31, 75, 0.2);
+  border: 1px solid #ff1f4b;
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .cbtn-planner:hover {
+  background: #ff1f4b;
+  color: #000;
+  box-shadow: 0 0 10px #ff1f4b;
+}
+
+/* ── MAIN CONTENT STAGE (.s-mc) ── */
+#student.cyber-hud-mode .dlayout {
+  background: #090205;
+}
+#student.cyber-hud-mode .s-mc {
+  background-color: #080104;
+  background-image: 
+    radial-gradient(circle at 85% 25%, rgba(255, 20, 60, 0.12) 0%, transparent 60%),
+    radial-gradient(circle at 15% 75%, rgba(255, 20, 60, 0.08) 0%, transparent 50%),
+    linear-gradient(to right, rgba(255, 31, 75, 0.035) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 31, 75, 0.035) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  color: #ffd5dc;
+  box-shadow: inset 0 0 120px rgba(0,0,0,0.85);
+  min-height: calc(100vh - 68px);
+}
+
+/* Page Headers */
+#student.cyber-hud-mode .phdr h2 {
+  color: #ffd5dc;
+  text-shadow: 0 0 12px rgba(255, 31, 75, 0.6);
+  font-family: 'Playfair Display', serif;
+  letter-spacing: 0.04em;
+  position: relative;
+  display: inline-block;
+}
+#student.cyber-hud-mode .phdr h2::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #ff1f4b;
+  box-shadow: 0 0 8px #ff1f4b;
+}
+#student.cyber-hud-mode .phdr p {
+  color: #993b4d;
+  letter-spacing: 0.08em;
+  margin-top: .4rem;
+}
+
+/* Stat Row Cards */
+#student.cyber-hud-mode .sc {
+  background: rgba(22, 5, 12, 0.85) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.35) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.6), inset 0 0 8px rgba(255, 31, 75, 0.1) !important;
+  color: #ffd5dc !important;
+  position: relative;
+}
+#student.cyber-hud-mode .sc::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #ff1f4b;
+  border-left: 2px solid #ff1f4b;
+}
+#student.cyber-hud-mode .sc .sv {
+  color: #fff !important;
+  text-shadow: 0 0 8px rgba(255, 31, 75, 0.6) !important;
+  font-weight: 800;
+}
+#student.cyber-hud-mode .sc .sl {
+  color: #993b4d !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-size: .68rem;
+}
+#student.cyber-hud-mode .sc .sico {
+  background: rgba(255, 31, 75, 0.15) !important;
+  color: #ff3864 !important;
+  box-shadow: 0 0 8px rgba(255, 31, 75, 0.4) !important;
+}
+
+/* Course Grid Cards (.cgrid .cc) */
+#student.cyber-hud-mode .cc {
+  background: rgba(20, 5, 11, 0.85) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.35) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.6) !important;
+  color: #ffd5dc !important;
+  position: relative;
+  transition: all .25s ease;
+}
+#student.cyber-hud-mode .cc::before,
+#student.cyber-hud-mode .cc::after {
+  content: '';
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-color: #ff1f4b;
+  pointer-events: none;
+  transition: all .2s ease;
+}
+#student.cyber-hud-mode .cc::before { top: 3px; left: 3px; border-top: 2px solid; border-left: 2px solid; }
+#student.cyber-hud-mode .cc::after { bottom: 3px; right: 3px; border-bottom: 2px solid; border-right: 2px solid; }
+
+#student.cyber-hud-mode .cc:hover {
+  transform: translateY(-5px);
+  border-color: #ff3864 !important;
+  box-shadow: 0 0 20px rgba(255, 31, 75, 0.45), inset 0 0 12px rgba(255, 31, 75, 0.2) !important;
+}
+#student.cyber-hud-mode .cc .cn {
+  color: #ff3864 !important;
+  text-shadow: 0 0 8px rgba(255, 31, 75, 0.5);
+}
+#student.cyber-hud-mode .cc .cmeta {
+  color: #993b4d !important;
+}
+
+/* Tables in Timetable, Homework, Payments */
+#student.cyber-hud-mode table {
+  background: rgba(18, 4, 10, 0.85);
+  border: 1px solid rgba(255, 31, 75, 0.3);
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode th {
+  background: rgba(45, 10, 20, 0.9);
+  color: #ff3864;
+  border-bottom: 1.5px solid #ff1f4b;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+#student.cyber-hud-mode td {
+  border-bottom: 1px solid rgba(255, 31, 75, 0.15);
+  color: #ffd5dc;
+}
+/* Payment Tab Cyberpunk HUD Overrides */
+#student.cyber-hud-mode .pcard {
+  background: rgba(22, 5, 12, 0.9) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.35) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+  position: relative;
+  transition: all 0.25s ease;
+  color: #ffd5dc !important;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .75rem;
+}
+#student.cyber-hud-mode .pcard::before,
+#student.cyber-hud-mode .pcard::after {
+  content: '';
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-color: #ff1f4b;
+  pointer-events: none;
+}
+#student.cyber-hud-mode .pcard::before { top: 2px; left: 2px; border-top: 2px solid; border-left: 2px solid; }
+#student.cyber-hud-mode .pcard::after { bottom: 2px; right: 2px; border-bottom: 2px solid; border-right: 2px solid; }
+
+#student.cyber-hud-mode .pcard:hover {
+  border-color: #ff3864 !important;
+  box-shadow: 0 0 16px rgba(255, 31, 75, 0.45) !important;
+  transform: translateY(-2px);
+}
+
+/* High-Contrast Cyberpunk Price Display (RM450 / All Amounts) */
+#student.cyber-hud-mode .pcard-amount,
+#student.cyber-hud-mode .pcard .pcard-amount,
+#student.cyber-hud-mode .pcard [style*="color:var(--F)"],
+#student.cyber-hud-mode .pcard [style*="color: var(--F)"] {
+  color: #ffbe3b !important; /* Radiant Glowing Cyber Gold */
+  text-shadow: 0 0 12px rgba(255, 190, 59, 0.65), 0 0 2px #fff !important;
+  font-weight: 800 !important;
+}
+
+#student.cyber-hud-mode .pcard-date,
+#student.cyber-hud-mode .pcard .pcard-date,
+#student.cyber-hud-mode .pcard [style*="color:var(--MT)"],
+#student.cyber-hud-mode .pcard [style*="color: var(--MT)"] {
+  color: #ffccd5 !important;
+  opacity: 0.85;
+}
+
+/* Status Chips in Payment Tab */
+#student.cyber-hud-mode .binv {
+  background: rgba(255, 190, 59, 0.15) !important;
+  color: #ffbe3b !important;
+  border: 1px solid rgba(255, 190, 59, 0.5) !important;
+  box-shadow: 0 0 8px rgba(255, 190, 59, 0.3) !important;
+}
+#student.cyber-hud-mode .bpd {
+  background: rgba(0, 255, 208, 0.15) !important;
+  color: #00ffd0 !important;
+  border: 1px solid rgba(0, 255, 208, 0.5) !important;
+  box-shadow: 0 0 8px rgba(0, 255, 208, 0.3) !important;
+}
+
+/* Balance Hero Card */
+#student.cyber-hud-mode .phero {
+  background: linear-gradient(135deg, #1f040d, #420819) !important;
+  border: 1.5px solid #ff1f4b !important;
+  box-shadow: 0 0 24px rgba(255, 31, 75, 0.35) !important;
+  color: #fff !important;
+}
+#student.cyber-hud-mode .phero div:nth-child(2),
+#student.cyber-hud-mode .phero [style*="font-size:2.3rem"] {
+  color: #ffffff !important;
+  text-shadow: 0 0 16px rgba(255, 31, 75, 0.8), 0 0 25px rgba(255, 29, 75, 0.4) !important;
+}
+#student.cyber-hud-mode .phero .bpr {
+  background: #ff1f4b !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 16px rgba(255, 31, 75, 0.7) !important;
+  border: none !important;
+}
+#student.cyber-hud-mode .phero .bpr:hover {
+  background: #ff3864 !important;
+  box-shadow: 0 0 24px #ff1f4b !important;
+}
+#student.cyber-hud-mode .ndrop {
+  background: #0d0206;
+  border: 1.5px solid #ff1f4b;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 16px rgba(255,31,75,0.3);
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .ndhdr {
+  background: #1f050e;
+  border-bottom: 1px solid #ff1f4b;
+  color: #ff3864;
+}
+#student.cyber-hud-mode .nditem {
+  border-bottom: 1px solid rgba(255,31,75,0.15);
+  color: #ffd5dc;
+}
+#student.cyber-hud-mode .nditem:hover {
+  background: rgba(255, 31, 75, 0.1);
+}
+
+/* ── COURSE PAGE (coursePage.php) IN CYBER HUD MODE ── */
+#student.cyber-hud-mode .cp-back {
+  background: rgba(255, 31, 75, 0.15) !important;
+  border: 1.5px solid #ff1f4b !important;
+  color: #ff3864 !important;
+  box-shadow: 0 0 10px rgba(255, 31, 75, 0.3) !important;
+  transition: all .2s ease;
+}
+#student.cyber-hud-mode .cp-back:hover {
+  background: #ff1f4b !important;
+  color: #000 !important;
+  box-shadow: 0 0 16px #ff1f4b !important;
+  transform: translateX(-3px);
+}
+
+#student.cyber-hud-mode .cp-hero {
+  background: linear-gradient(135deg, rgba(35, 7, 16, 0.95), rgba(16, 3, 9, 0.95)) !important;
+  border: 1.5px solid #ff1f4b !important;
+  box-shadow: 0 0 24px rgba(255, 31, 75, 0.35), inset 0 0 16px rgba(255, 31, 75, 0.15) !important;
+  position: relative;
+  color: #ffd5dc !important;
+}
+#student.cyber-hud-mode .cp-hero::before,
+#student.cyber-hud-mode .cp-hero::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: #ff3864;
+  pointer-events: none;
+}
+#student.cyber-hud-mode .cp-hero::before { top: 3px; left: 3px; border-top: 2px solid; border-left: 2px solid; }
+#student.cyber-hud-mode .cp-hero::after { bottom: 3px; right: 3px; border-bottom: 2px solid; border-right: 2px solid; }
+
+#student.cyber-hud-mode .cp-bigicon {
+  background: rgba(255, 31, 75, 0.18) !important;
+  border: 1.5px solid #ff1f4b !important;
+  box-shadow: 0 0 16px rgba(255, 31, 75, 0.45) !important;
+}
+#student.cyber-hud-mode .cp-hero-info h2 {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 31, 75, 0.7) !important;
+  letter-spacing: 0.04em;
+}
+#student.cyber-hud-mode .cp-hero-info .cp-code {
+  background: rgba(255, 31, 75, 0.22) !important;
+  color: #ffbe3b !important;
+  border: 1px solid #ff1f4b !important;
+  box-shadow: 0 0 10px rgba(255, 31, 75, 0.4) !important;
+  font-weight: 800;
+}
+#student.cyber-hud-mode .cp-hero-info .cp-teacher {
+  color: #ffccd5 !important;
+  opacity: 0.9;
+}
+
+#student.cyber-hud-mode .cp-desc {
+  background: rgba(20, 5, 11, 0.9) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.35) !important;
+  color: #ffd5dc !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5) !important;
+}
+
+#student.cyber-hud-mode .cp-section {
+  background: rgba(20, 5, 11, 0.9) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.35) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6) !important;
+  position: relative;
+}
+#student.cyber-hud-mode .cp-section::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-top: 2px solid #ff1f4b;
+  border-left: 2px solid #ff1f4b;
+  pointer-events: none;
+}
+#student.cyber-hud-mode .cp-section-hdr {
+  background: rgba(45, 10, 20, 0.95) !important;
+  border-bottom: 1.5px solid #ff1f4b !important;
+  color: #ff3864 !important;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+#student.cyber-hud-mode .cp-section-body {
+  color: #ffd5dc !important;
+}
+
+#student.cyber-hud-mode .cp-topic-item {
+  border-bottom-color: rgba(255, 31, 75, 0.15) !important;
+  color: #ffd5dc !important;
+}
+#student.cyber-hud-mode .cp-topic-dot {
+  background: #ff1f4b !important;
+  box-shadow: 0 0 6px #ff1f4b !important;
+}
+
+#student.cyber-hud-mode .cp-sch-item {
+  border-bottom-color: rgba(255, 31, 75, 0.15) !important;
+  color: #ffd5dc !important;
+}
+#student.cyber-hud-mode .cp-sch-item i {
+  color: #ff3864 !important;
+  filter: drop-shadow(0 0 4px #ff1f4b) !important;
+}
+
+#student.cyber-hud-mode .cp-mat-item {
+  background: rgba(30, 8, 16, 0.75) !important;
+  border: 1px solid rgba(255, 31, 75, 0.25) !important;
+  color: #ffd5dc !important;
+  transition: all .2s ease;
+}
+#student.cyber-hud-mode .cp-mat-item:hover {
+  background: rgba(55, 12, 28, 0.95) !important;
+  border-color: #ff1f4b !important;
+  box-shadow: 0 0 14px rgba(255, 31, 75, 0.45) !important;
+  transform: translateX(3px);
+}
+#student.cyber-hud-mode .cp-mat-ico {
+  background: rgba(255, 31, 75, 0.2) !important;
+  color: #ff3864 !important;
+  box-shadow: 0 0 8px rgba(255, 31, 75, 0.4) !important;
+}
+#student.cyber-hud-mode .cp-mat-name {
+  color: #fff !important;
+  font-weight: 700;
+}
+#student.cyber-hud-mode .cp-mat-type {
+  color: #ffbe3b !important;
+}
+
+#student.cyber-hud-mode .cp-up-item {
+  border-bottom-color: rgba(255, 31, 75, 0.15) !important;
+}
+#student.cyber-hud-mode .cp-up-label {
+  color: #ffd5dc !important;
+  font-weight: 700;
+}
+#student.cyber-hud-mode .cp-up-date {
+  color: #ffccd5 !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ── DASHBOARD TOUR IN CYBER HUD MODE ──
+   ══════════════════════════════════════════════════════════════════ */
+.cyber-hud-mode #mwTourBackdrop,
+body.cyber-hud-mode #mwTourBackdrop {
+  background: rgba(8, 2, 5, 0.84) !important;
+  backdrop-filter: blur(5px) !important;
+}
+
+/* Stacking context helper for tour ancestors */
+.mw-tour-parent-elevated {
+  z-index: 99994 !important;
+  position: relative !important;
+}
+
+.cyber-hud-mode .mw-tour-highlight,
+body.cyber-hud-mode .mw-tour-highlight {
+  position: relative;
+  z-index: 99995 !important;
+  box-shadow: 0 0 0 3px #ff1f4b, 0 0 35px rgba(255, 31, 75, 0.95), inset 0 0 16px rgba(255, 31, 75, 0.3) !important;
+  border-radius: 12px;
+  background: rgba(26, 6, 14, 0.98) !important;
+  animation: hudSpotlightGlow 1.8s ease-in-out infinite alternate !important;
+  transition: all .3s ease;
+}
+@keyframes hudSpotlightGlow {
+  0% { box-shadow: 0 0 0 3px #ff1f4b, 0 0 20px rgba(255, 31, 75, 0.7); }
+  100% { box-shadow: 0 0 0 4px #ff3864, 0 0 45px rgba(255, 31, 75, 1), 0 0 15px #ff1f4b; }
+}
+
+.cyber-hud-mode .mw-tour-highlight .wtl,
+body.cyber-hud-mode .mw-tour-highlight .wtl {
+  color: #ff3864 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 0 8px rgba(255, 31, 75, 0.6) !important;
+}
+.cyber-hud-mode .mw-tour-highlight .titem,
+body.cyber-hud-mode .mw-tour-highlight .titem {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.cyber-hud-mode .mw-tour-highlight p,
+body.cyber-hud-mode .mw-tour-highlight p {
+  color: #ffd5dc !important;
+}
+.cyber-hud-mode .mw-tour-highlight .calmo,
+body.cyber-hud-mode .mw-tour-highlight .calmo {
+  color: #ff3864 !important;
+  font-weight: 800 !important;
+}
+.cyber-hud-mode .mw-tour-highlight .dname,
+body.cyber-hud-mode .mw-tour-highlight .dname {
+  color: #ff859d !important;
+  font-weight: 700 !important;
+}
+.cyber-hud-mode .mw-tour-highlight .cday,
+body.cyber-hud-mode .mw-tour-highlight .cday {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
+.cyber-hud-mode .mw-tour-highlight .ctoday,
+body.cyber-hud-mode .mw-tour-highlight .ctoday {
+  background: #ff1f4b !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+}
+.cyber-hud-mode .mw-tour-highlight .cbtn-planner,
+body.cyber-hud-mode .mw-tour-highlight .cbtn-planner {
+  background: #ff1f4b !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px #ff1f4b !important;
+}
+
+.cyber-hud-mode #mwTourCard,
+body.cyber-hud-mode #mwTourCard {
+  background: rgba(18, 4, 10, 0.96) !important;
+  border: 1.5px solid #ff1f4b !important;
+  box-shadow: 0 0 30px rgba(255, 31, 75, 0.45), 0 25px 60px rgba(0, 0, 0, 0.9) !important;
+  border-radius: 14px !important;
+  color: #ffd5dc !important;
+  position: fixed;
+  z-index: 99999;
+  padding: 1.35rem 1.45rem;
+}
+
+.cyber-hud-mode #mwTourCard::before,
+.cyber-hud-mode #mwTourCard::after,
+body.cyber-hud-mode #mwTourCard::before,
+body.cyber-hud-mode #mwTourCard::after {
+  content: '';
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-color: #ff3864;
+  pointer-events: none;
+}
+.cyber-hud-mode #mwTourCard::before,
+body.cyber-hud-mode #mwTourCard::before { top: 3px; left: 3px; border-top: 2px solid; border-left: 2px solid; }
+.cyber-hud-mode #mwTourCard::after,
+body.cyber-hud-mode #mwTourCard::after { bottom: 3px; right: 3px; border-bottom: 2px solid; border-right: 2px solid; }
+
+.cyber-hud-mode .tour-step-badge,
+body.cyber-hud-mode .tour-step-badge {
+  background: rgba(255, 31, 75, 0.22) !important;
+  color: #ffbe3b !important;
+  border: 1px solid #ff1f4b !important;
+  font-weight: 800;
+  font-size: .72rem;
+  padding: .2rem .65rem;
+  letter-spacing: .08em;
+  box-shadow: 0 0 8px rgba(255, 31, 75, 0.3);
+}
+
+.cyber-hud-mode .tour-title,
+body.cyber-hud-mode .tour-title {
+  color: #ffffff !important;
+  text-shadow: 0 0 12px rgba(255, 31, 75, 0.7) !important;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+.cyber-hud-mode .tour-title i,
+body.cyber-hud-mode .tour-title i {
+  color: #ff3864 !important;
+  filter: drop-shadow(0 0 6px #ff1f4b);
+}
+
+.cyber-hud-mode .tour-desc,
+body.cyber-hud-mode .tour-desc {
+  color: #ffd5dc !important;
+  font-size: .84rem;
+  line-height: 1.6;
+}
+
+.cyber-hud-mode .tour-dot,
+body.cyber-hud-mode .tour-dot {
+  background: rgba(255, 31, 75, 0.3) !important;
+}
+.cyber-hud-mode .tour-dot.active,
+body.cyber-hud-mode .tour-dot.active {
+  background: #ff1f4b !important;
+  box-shadow: 0 0 10px #ff1f4b !important;
+  width: 18px;
+  border-radius: 4px;
+}
+
+.cyber-hud-mode .tbtn-skip,
+body.cyber-hud-mode .tbtn-skip {
+  color: #993b4d !important;
+  font-weight: 700;
+  transition: color .2s;
+}
+.cyber-hud-mode .tbtn-skip:hover,
+body.cyber-hud-mode .tbtn-skip:hover {
+  color: #ffd5dc !important;
+}
+
+.cyber-hud-mode .tbtn-prev,
+body.cyber-hud-mode .tbtn-prev {
+  background: rgba(255, 31, 75, 0.15) !important;
+  border: 1px solid rgba(255, 31, 75, 0.4) !important;
+  color: #ffd5dc !important;
+  transition: all .2s;
+}
+.cyber-hud-mode .tbtn-prev:hover,
+body.cyber-hud-mode .tbtn-prev:hover {
+  background: rgba(255, 31, 75, 0.3) !important;
+  color: #fff !important;
+  border-color: #ff1f4b !important;
+}
+
+.cyber-hud-mode .tbtn-next,
+body.cyber-hud-mode .tbtn-next {
+  background: #ff1f4b !important;
+  color: #000 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 14px rgba(255, 31, 75, 0.7) !important;
+  border: none !important;
+  transition: all .2s;
+}
+.cyber-hud-mode .tbtn-next:hover,
+body.cyber-hud-mode .tbtn-next:hover {
+  background: #ff3864 !important;
+  box-shadow: 0 0 20px #ff1f4b !important;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   ── AI CHATBOX ASSISTANT IN CYBER HUD MODE ──
+   ══════════════════════════════════════════════════════════════════ */
+
+/* 1. Chat Launcher Floating Button */
+.cyber-hud-mode #mwChatBtn,
+body.cyber-hud-mode #mwChatBtn {
+  background: linear-gradient(135deg, #22030a 0%, #100206 100%) !important;
+  color: #ff1f4b !important;
+  border: 2px solid #ff1f4b !important;
+  box-shadow: 0 0 22px rgba(255, 31, 75, 0.65), inset 0 0 10px rgba(255, 31, 75, 0.25) !important;
+  animation: hudChatBtnPulse 2.4s infinite ease-in-out !important;
+  transition: all .25s ease !important;
+}
+
+.cyber-hud-mode #mwChatBtn:hover,
+body.cyber-hud-mode #mwChatBtn:hover {
+  background: #ff1f4b !important;
+  color: #000000 !important;
+  box-shadow: 0 0 35px #ff1f4b, inset 0 0 10px #ffffff !important;
+  transform: scale(1.1) !important;
+}
+
+.cyber-hud-mode #mwChatBtn.mw-tour-highlight,
+body.cyber-hud-mode #mwChatBtn.mw-tour-highlight {
+  border-radius: 50% !important;
+}
+
+@keyframes hudChatBtnPulse {
+  0% {
+    box-shadow: 0 0 16px rgba(255, 31, 75, 0.5), inset 0 0 8px rgba(255, 31, 75, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 32px rgba(255, 31, 75, 0.95), inset 0 0 14px rgba(255, 31, 75, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 16px rgba(255, 31, 75, 0.5), inset 0 0 8px rgba(255, 31, 75, 0.2);
+  }
+}
+
+/* 2. Chat Floating Window */
+.cyber-hud-mode #mwChatWin,
+body.cyber-hud-mode #mwChatWin {
+  background: rgba(14, 3, 8, 0.97) !important;
+  backdrop-filter: blur(16px) !important;
+  border: 1.5px solid #ff1f4b !important;
+  border-radius: 14px !important;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.88), 0 0 35px rgba(255, 31, 75, 0.4), inset 0 0 20px rgba(255, 31, 75, 0.08) !important;
+}
+
+/* 3. Chat Window Header */
+.cyber-hud-mode #mwChatHdr,
+body.cyber-hud-mode #mwChatHdr {
+  background: linear-gradient(90deg, #2b0610 0%, #150207 100%) !important;
+  border-bottom: 1.5px solid rgba(255, 31, 75, 0.55) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.6) !important;
+}
+
+.cyber-hud-mode #mwChatHdr span,
+body.cyber-hud-mode #mwChatHdr span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800 !important;
+  letter-spacing: .03em;
+  text-shadow: 0 0 10px rgba(255, 31, 75, 0.7);
+}
+
+.cyber-hud-mode #mwChatHdr span i,
+body.cyber-hud-mode #mwChatHdr span i {
+  color: #ff1f4b !important;
+  filter: drop-shadow(0 0 6px #ff1f4b);
+}
+
+.cyber-hud-mode #mwChatHdr span::after,
+body.cyber-hud-mode #mwChatHdr span::after {
+  content: "HUD // AI";
+  font-size: .65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ff3864;
+  background: rgba(255, 31, 75, 0.15);
+  border: 1px solid rgba(255, 31, 75, 0.45);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+.cyber-hud-mode #mwChatHdr button,
+body.cyber-hud-mode #mwChatHdr button {
+  color: #ff859d !important;
+  opacity: .85 !important;
+  transition: all .2s;
+}
+
+.cyber-hud-mode #mwChatHdr button:hover,
+body.cyber-hud-mode #mwChatHdr button:hover {
+  color: #ffffff !important;
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 8px #ff1f4b);
+}
+
+/* 4. Chat Body & Scrollbar */
+.cyber-hud-mode #mwChatBody,
+body.cyber-hud-mode #mwChatBody {
+  background: radial-gradient(circle at 85% 15%, rgba(45, 6, 16, 0.35) 0%, rgba(10, 2, 6, 0.98) 75%) !important;
+  background-image: linear-gradient(rgba(255, 31, 75, 0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 31, 75, 0.035) 1px, transparent 1px) !important;
+  background-size: 20px 20px !important;
+  scrollbar-width: thin;
+  scrollbar-color: #ff1f4b rgba(14, 3, 8, 0.9);
+}
+
+.cyber-hud-mode #mwChatBody::-webkit-scrollbar,
+body.cyber-hud-mode #mwChatBody::-webkit-scrollbar {
+  width: 6px;
+}
+
+.cyber-hud-mode #mwChatBody::-webkit-scrollbar-track,
+body.cyber-hud-mode #mwChatBody::-webkit-scrollbar-track {
+  background: rgba(14, 3, 8, 0.9);
+}
+
+.cyber-hud-mode #mwChatBody::-webkit-scrollbar-thumb,
+body.cyber-hud-mode #mwChatBody::-webkit-scrollbar-thumb {
+  background: #ff1f4b;
+  border-radius: 3px;
+  box-shadow: 0 0 8px #ff1f4b;
+}
+
+/* 5. Message Bubbles */
+.cyber-hud-mode .mwMsg,
+body.cyber-hud-mode .mwMsg {
+  font-size: .83rem;
+  line-height: 1.5;
+}
+
+/* Bot Response */
+.cyber-hud-mode .mwMsg.bot,
+body.cyber-hud-mode .mwMsg.bot {
+  background: rgba(25, 5, 13, 0.94) !important;
+  color: #ffd5dc !important;
+  border: 1px solid rgba(255, 31, 75, 0.35) !important;
+  border-left: 3px solid #ff1f4b !important;
+  border-radius: 10px !important;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.cyber-hud-mode .mwMsg.bot strong,
+body.cyber-hud-mode .mwMsg.bot strong {
+  color: #ff3864 !important;
+  font-weight: 800;
+  text-shadow: 0 0 6px rgba(255, 31, 75, 0.4);
+}
+
+.cyber-hud-mode .mwMsg.bot ul,
+body.cyber-hud-mode .mwMsg.bot ul {
+  color: #ffccd5 !important;
+}
+
+.cyber-hud-mode .mwMsg.bot li,
+body.cyber-hud-mode .mwMsg.bot li {
+  color: #ffd5dc !important;
+}
+
+.cyber-hud-mode .mwMsg.bot a,
+body.cyber-hud-mode .mwMsg.bot a {
+  color: #ff859d !important;
+  text-decoration: underline;
+}
+
+/* Student / User Message */
+.cyber-hud-mode .mwMsg.user,
+body.cyber-hud-mode .mwMsg.user {
+  background: linear-gradient(135deg, rgba(255, 31, 75, 0.35) 0%, rgba(184, 13, 50, 0.5) 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid #ff1f4b !important;
+  border-right: 3px solid #ff3864 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 15px rgba(255, 31, 75, 0.3) !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Bot Thinking Indicator */
+.cyber-hud-mode .mwMsg.typing,
+body.cyber-hud-mode .mwMsg.typing {
+  background: rgba(25, 5, 13, 0.75) !important;
+  color: #ff758f !important;
+  border: 1px dashed rgba(255, 31, 75, 0.5) !important;
+  border-left: 3px solid #ff1f4b !important;
+  font-style: italic;
+  animation: hudTypingPulse 1.2s infinite alternate !important;
+}
+
+@keyframes hudTypingPulse {
+  0% { opacity: 0.6; }
+  100% { opacity: 1; text-shadow: 0 0 8px #ff1f4b; }
+}
+
+/* 6. Form Bar & Input */
+.cyber-hud-mode #mwChatForm,
+body.cyber-hud-mode #mwChatForm {
+  background: #110207 !important;
+  border-top: 1.5px solid rgba(255, 31, 75, 0.45) !important;
+}
+
+.cyber-hud-mode #mwChatInput,
+body.cyber-hud-mode #mwChatInput {
+  background: rgba(25, 4, 13, 0.95) !important;
+  border: 1.5px solid rgba(255, 31, 75, 0.4) !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  caret-color: #ff1f4b;
+}
+
+.cyber-hud-mode #mwChatInput::placeholder,
+body.cyber-hud-mode #mwChatInput::placeholder {
+  color: #8f3448 !important;
+  opacity: 0.85;
+}
+
+.cyber-hud-mode #mwChatInput:focus,
+body.cyber-hud-mode #mwChatInput:focus {
+  border-color: #ff1f4b !important;
+  box-shadow: 0 0 12px rgba(255, 31, 75, 0.6) !important;
+}
+
+.cyber-hud-mode #mwChatForm button,
+body.cyber-hud-mode #mwChatForm button {
+  background: #ff1f4b !important;
+  color: #000000 !important;
+  font-weight: 800 !important;
+  border: none !important;
+  border-radius: 10px !important;
+  box-shadow: 0 0 14px rgba(255, 31, 75, 0.6) !important;
+  transition: all .2s ease;
+}
+
+.cyber-hud-mode #mwChatForm button:hover,
+body.cyber-hud-mode #mwChatForm button:hover {
+  background: #ff3864 !important;
+  box-shadow: 0 0 22px rgba(255, 31, 75, 0.95) !important;
+  transform: scale(1.05);
+}
+

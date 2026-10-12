@@ -12,7 +12,54 @@ function pageHead($title = 'Maplewood') {
 <style>
 HTML;
     echo file_get_contents(__DIR__ . '/style.css');
-    echo "</style>\n</head>\n<body>\n";
+    echo <<<HTML
+</style>
+<script>
+(function() {
+  function applyHudTheme() {
+    var pref = localStorage.getItem('mwCyberHud');
+    var isHud = pref !== '0';
+    var el = document.getElementById('student');
+    if (el) {
+      if (isHud) {
+        document.body.classList.add('cyber-hud-mode');
+        el.classList.add('cyber-hud-mode');
+      } else {
+        document.body.classList.remove('cyber-hud-mode');
+        el.classList.remove('cyber-hud-mode');
+      }
+      var txt = document.getElementById('hudToggleTxt');
+      if (txt) {
+        txt.textContent = isHud ? 'HUD MODE: ON' : 'HUD MODE: OFF';
+      }
+    }
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyHudTheme);
+  } else {
+    applyHudTheme();
+  }
+})();
+function mwToggleCyberHud() {
+  var el = document.getElementById('student');
+  if (!el) return;
+  var isHud = !document.body.classList.contains('cyber-hud-mode');
+  if (isHud) {
+    document.body.classList.add('cyber-hud-mode');
+    el.classList.add('cyber-hud-mode');
+    localStorage.setItem('mwCyberHud', '1');
+  } else {
+    document.body.classList.remove('cyber-hud-mode');
+    el.classList.remove('cyber-hud-mode');
+    localStorage.setItem('mwCyberHud', '0');
+  }
+  var txt = document.getElementById('hudToggleTxt');
+  if (txt) txt.textContent = isHud ? 'HUD MODE: ON' : 'HUD MODE: OFF';
+}
+</script>
+</head>
+<body>
+HTML;
 }
 
 function renderChatWidget() {
@@ -574,13 +621,30 @@ function mwStartTour(customSteps) {
 function mwShowTourStep(idx) {
   var prevEl = document.querySelector('.mw-tour-highlight');
   if (prevEl) prevEl.classList.remove('mw-tour-highlight');
+  document.querySelectorAll('.mw-tour-parent-elevated').forEach(function(el) {
+    el.classList.remove('mw-tour-parent-elevated');
+  });
 
   var step = mwTourSteps[idx];
   var target = document.querySelector(step.el);
   if (!target) return;
 
   target.classList.add('mw-tour-highlight');
-  target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  // If target is inside sidebar, elevate sidebar and scroll sidebar internally
+  var parentSb = target.closest('.sb');
+  if (parentSb) {
+    parentSb.classList.add('mw-tour-parent-elevated');
+    var targetOffsetTop = target.offsetTop;
+    parentSb.scrollTo({ top: Math.max(0, targetOffsetTop - 50), behavior: 'smooth' });
+  } else {
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  var parentHdr = target.closest('.hdr');
+  if (parentHdr) {
+    parentHdr.classList.add('mw-tour-parent-elevated');
+  }
 
   document.getElementById('mwTourStepBadge').textContent = 'Step ' + (idx + 1) + ' of ' + mwTourSteps.length;
   document.getElementById('mwTourTitle').innerHTML = '<i class="fas fa-compass" style="color:var(--O)"></i> ' + step.title;
@@ -603,25 +667,49 @@ function mwShowTourStep(idx) {
     nextBtn.innerHTML = 'Next <i class="fas fa-arrow-right"></i>';
   }
 
-  // Position tour card near target
-  var rect = target.getBoundingClientRect();
-  var card = document.getElementById('mwTourCard');
-  var cardWidth = card.offsetWidth || 340;
-  var cardHeight = card.offsetHeight || 180;
+  // Intelligent collision-free positioning of tour card
+  function updateCardPos() {
+    var rect = target.getBoundingClientRect();
+    var card = document.getElementById('mwTourCard');
+    var cardWidth = card.offsetWidth || 340;
+    var cardHeight = card.offsetHeight || 180;
 
-  var top = rect.bottom + 14;
-  var left = rect.left;
+    var top, left;
 
-  if (top + cardHeight > window.innerHeight) {
-    top = Math.max(16, rect.top - cardHeight - 14);
+    // Case 1: Target is in the sidebar (Step 4 .twid, Step 5 .cwid)
+    if (target.closest('.sb') || rect.left < 280) {
+      // Place card to the RIGHT of the sidebar into the open workspace
+      left = Math.min(window.innerWidth - cardWidth - 20, Math.max(275, rect.right + 24));
+      top = Math.max(80, Math.min(window.innerHeight - cardHeight - 20, rect.top));
+    }
+    // Case 2: Target is in the bottom-right corner (Step 7 Chat button)
+    else if (rect.right > window.innerWidth - 120 && rect.bottom > window.innerHeight - 120) {
+      left = Math.max(16, rect.left - cardWidth - 20);
+      top = Math.max(80, Math.min(window.innerHeight - cardHeight - 20, rect.top - 60));
+    }
+    // Case 3: Target is in header right (Step 6 Notification bell)
+    else if (rect.right > window.innerWidth - 360) {
+      left = Math.max(16, rect.right - cardWidth);
+      top = rect.bottom + 16;
+      if (top + cardHeight > window.innerHeight) {
+        top = Math.max(16, rect.top - cardHeight - 16);
+      }
+    }
+    // Case 4: Standard elements (e.g. .hbrand, .srow)
+    else {
+      left = Math.max(16, Math.min(window.innerWidth - cardWidth - 20, rect.left));
+      top = rect.bottom + 16;
+      if (top + cardHeight > window.innerHeight) {
+        top = Math.max(16, rect.top - cardHeight - 16);
+      }
+    }
+
+    card.style.top = top + 'px';
+    card.style.left = left + 'px';
   }
-  if (left + cardWidth > window.innerWidth) {
-    left = Math.max(16, window.innerWidth - cardWidth - 20);
-  }
-  if (left < 16) left = 16;
 
-  card.style.top = top + 'px';
-  card.style.left = left + 'px';
+  updateCardPos();
+  setTimeout(updateCardPos, 200);
 }
 
 function mwNextTourStep() {
@@ -643,6 +731,9 @@ function mwPrevTourStep() {
 function mwEndTour() {
   var prevEl = document.querySelector('.mw-tour-highlight');
   if (prevEl) prevEl.classList.remove('mw-tour-highlight');
+  document.querySelectorAll('.mw-tour-parent-elevated').forEach(function(el) {
+    el.classList.remove('mw-tour-parent-elevated');
+  });
   document.getElementById('mwTourBackdrop').classList.remove('active');
   document.getElementById('mwTourCard').classList.remove('active');
   localStorage.setItem('mw_tour_completed', '1');

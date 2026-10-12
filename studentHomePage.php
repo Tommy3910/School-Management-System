@@ -33,7 +33,7 @@ if (isset($_GET['markread'])) {
 
 pageHead('Student Dashboard');
 ?>
-<div id="student">
+<div id="student" class="cyber-hud-mode">
   <!-- HEADER -->
   <?php
   $notifs = getNotifications($conn, $userId);
@@ -45,6 +45,9 @@ pageHead('Student Dashboard');
       <h1>Maple<em>wood</em></h1>
     </div>
     <div class="hright">
+      <button type="button" class="hud-toggle-btn" id="hudToggleBtn" onclick="mwToggleCyberHud()" title="Toggle Cyberpunk Game HUD Theme">
+        <i class="fas fa-crosshairs"></i> <span id="hudToggleTxt">HUD MODE: ON</span>
+      </button>
       <div class="ubadge">
         <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
@@ -904,9 +907,9 @@ pageHead('Student Dashboard');
             <div class="pcard">
           <?php endif; ?>
               <div>
-                <div style="font-size:.74rem;color:var(--MT);margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?>
+                <div class="pcard-date" style="font-size:.74rem;margin-bottom:.22rem"><?= e($p['created_at'] ?? $p['date']) ?>
                   — Invoice</div>
-                <div style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif;color:var(--F)">
+                <div class="pcard-amount" style="font-size:1.4rem;font-weight:700;font-family:'Playfair Display',serif">
                   <?= e(isset($p['amount_formatted']) ? $p['amount_formatted'] : (isset($p['amount']) ? (is_numeric($p['amount']) ? ('RM ' . number_format((float) $p['amount'], 2)) : $p['amount']) : 'RM 0.00')) ?>
                 </div>
               </div>

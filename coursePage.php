@@ -6,6 +6,7 @@ requireAuth('student');
 $user     = $_SESSION['user'];
 $userId   = $_SESSION['user']['id'] ?? null;
 $code     = $_GET['code'] ?? '';
+$tab      = 'courses';
 
 // ── Course catalogue ──────────────────────────────────────────────────────────
 // Each entry mirrors the cards shown on the courses tab.
@@ -125,9 +126,9 @@ $CATALOGUE = [
       ['label'=>'History Quiz 3',         'date'=>'01 Jul 2026', 'badge'=>'bqz'],
     ],
   ],
-  'GE106' => [
-    'code'    => 'GE106',
-    'name'    => 'Geography',
+  'AC106' => [
+    'code'    => 'AC106',
+    'name'    => 'Account',
     'icon'    => '🌍',
     'color'   => '#e0f7fa',
     'accent'  => '#006064',
@@ -530,7 +531,7 @@ pageHead('Course — ' . $c['name']);
 .cp-back:hover { background: var(--W); color: var(--F); }
 </style>
 
-<div id="student">
+<div id="student" class="cyber-hud-mode">
   <?php
   $notifs = getNotifications($conn, $userId);
   $unreadCount = getUnreadCount($conn, $userId);
@@ -541,6 +542,9 @@ pageHead('Course — ' . $c['name']);
       <h1>Maple<em>wood</em></h1>
     </div>
     <div class="hright">
+      <button type="button" class="hud-toggle-btn" id="hudToggleBtn" onclick="mwToggleCyberHud()" title="Toggle Cyberpunk Game HUD Theme">
+        <i class="fas fa-crosshairs"></i> <span id="hudToggleTxt">HUD MODE: ON</span>
+      </button>
       <div class="ubadge">
         <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
