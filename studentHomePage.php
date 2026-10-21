@@ -48,6 +48,7 @@ pageHead('Student Dashboard');
       <button type="button" class="hud-toggle-btn" id="hudToggleBtn" onclick="mwToggleCyberHud()" title="Toggle Cyberpunk Game HUD Theme">
         <i class="fas fa-crosshairs"></i> <span id="hudToggleTxt">HUD MODE: ON</span>
       </button>
+
       <div class="ubadge">
         <div class="av"><?= e(strtoupper(substr($user['name'], 0, 1))) ?></div>
         <span><?= e($user['name']) ?> &nbsp;·&nbsp; Year <?= e($user['year']) ?></span>
@@ -120,6 +121,9 @@ pageHead('Student Dashboard');
       <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="?tab=timetable" title="Timetable"> <i
           class="fas fa-calendar-alt"></i>
         <span class="nl-label">Timetable</span></a>
+      <a class="nl s-nl <?= in_array($tab, ['marks', 'grades']) ? 'on' : '' ?>" href="?tab=marks" title="Marks & Grade Prediction"> <i
+          class="fas fa-chart-line"></i>
+        <span class="nl-label">Marks &amp; Prediction</span></a>
       <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
         <span class="nl-label">Homework Status</span></a>
       <a class="nl s-nl <?= $tab === 'calendar' ? 'on' : '' ?>" href="?tab=calendar" title="Calendar Planner"> <i class="fas fa-calendar-check"></i>
@@ -326,7 +330,7 @@ pageHead('Student Dashboard');
           <?php endforeach; ?>
         </div>
 
-      <?php elseif ($tab === 'grades'): ?>
+      <?php elseif ($tab === 'grades' || $tab === 'marks'): ?>
         <?php
         $yr = (int) $user['year'];
         if ($yr <= 6)
@@ -361,17 +365,24 @@ pageHead('Student Dashboard');
         }
         $overall_pct = $total_max > 0 ? round(($total_marks / $total_max) * 100, 1) : 0;
         $overall_grade = $count > 0 ? calcGrade($total_marks, $total_max) : '—';
+        $as = array_filter($my_grades, fn($g) => str_starts_with($g['grade'], 'A'));
         ?>
-        <div class="phdr">
-          <h2>My Grades</h2>
-          <p>Year <?= e($user['year']) ?> — Academic Results</p>
+        <div class="phdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <h2>My Marks &amp; Academic Prediction</h2>
+            <p>Year <?= e($user['year']) ?> — Subject Breakdown &amp; ML.NET Machine Learning Forecasting</p>
+          </div>
+          <a href="#mlPredictionSection" class="bpr bsm" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:.5rem 1rem;background:linear-gradient(135deg,var(--P),var(--S));color:#fff;border-radius:10px;font-weight:700">
+            <i class="fas fa-brain" style="color:var(--O)"></i> <span>AI Grade Predictor</span>
+          </a>
         </div>
 
-        <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap">
+        <div style="display:flex;gap:.5rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center">
+          <span style="font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.05em;margin-right:.25rem">Academic Term:</span>
           <?php foreach ($terms as $t): ?>
-            <a href="?tab=grades&term=<?= urlencode($t) ?>" style="padding:.38rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;border:1.5px solid var(--W);
+            <a href="?tab=<?= urlencode($tab) ?>&term=<?= urlencode($t) ?>" style="padding:.4rem 1.1rem;border-radius:8px;font-size:.82rem;font-weight:600;border:1.5px solid var(--W);text-decoration:none;
     background:<?= $t === $term ? 'var(--P)' : '#fff' ?>;
-    color:<?= $t === $term ? '#fff' : 'var(--F)' ?>">
+    color:<?= $t === $term ? '#fff' : 'var(--F)' ?>;box-shadow:<?= $t === $term ? '0 2px 8px rgba(15,35,24,.18)' : 'none' ?>">
               <?= e($t) ?>
             </a>
           <?php endforeach; ?>
@@ -379,51 +390,52 @@ pageHead('Student Dashboard');
 
         <div class="srow" style="margin-bottom:1.2rem">
           <div class="sc">
-            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book"></i></div>
+            <div class="sico" style="background:#e8f5e9;color:#1b5e20"><i class="fas fa-book-open"></i></div>
             <div class="sv"><?= $count ?></div>
             <div class="sl">Subjects Graded</div>
           </div>
           <div class="sc">
             <div class="sico" style="background:#e3f2fd;color:#0d47a1"><i class="fas fa-percentage"></i></div>
             <div class="sv"><?= $overall_pct ?>%</div>
-            <div class="sl">Overall Score</div>
+            <div class="sl">Overall Term Score</div>
           </div>
           <div class="sc">
-            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-star"></i></div>
+            <div class="sico" style="background:rgba(212,168,71,.15);color:#8a6200"><i class="fas fa-award"></i></div>
             <div class="sv"><?= $overall_grade ?></div>
             <div class="sl">Overall Grade</div>
           </div>
           <div class="sc">
             <div class="sico" style="background:#fce4ec;color:#880e4f"><i class="fas fa-trophy"></i></div>
-            <div class="sv">
-              <?php
-              $as = array_filter($my_grades, fn($g) => str_starts_with($g['grade'], 'A'));
-              echo count($as);
-              ?>
-            </div>
-            <div class="sl">A Grades</div>
+            <div class="sv"><?= count($as) ?></div>
+            <div class="sl">A-Grade Honors</div>
           </div>
         </div>
 
+        <!-- SUBJECT MARKS TABLE -->
         <?php if (empty($my_grades)): ?>
-          <div class="crd" style="padding:2.5rem;text-align:center;color:var(--MT)">
+          <div class="crd" style="padding:2.5rem;text-align:center;color:var(--MT);margin-bottom:1.5rem">
             <i class="fas fa-hourglass-half" style="font-size:2rem;margin-bottom:.75rem;display:block"></i>
-            No grades released for <?= e($term) ?> yet. Check back soon!
+            <strong>No marks released for <?= e($term) ?> yet.</strong>
+            <p style="font-size:.85rem;margin-top:.35rem">Your teachers have not finalized grades for this term yet. You can still test the AI Grade Predictor below!</p>
           </div>
         <?php else: ?>
-          <div class="crd">
-            <div class="crdhdr">
-              <h3><i class="fas fa-chart-bar"></i>&nbsp; <?= e($term) ?> Results</h3>
+          <div class="crd" style="margin-bottom:1.6rem">
+            <div class="crdhdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+              <h3><i class="fas fa-table-list"></i>&nbsp; <?= e($term) ?> Subject Marks &amp; Performance</h3>
+              <span style="font-size:.76rem;color:var(--MT);background:#f4f1ea;padding:3px 10px;border-radius:20px;font-weight:600">
+                <i class="fas fa-check-circle" style="color:#2d6a4f"></i> <?= $count ?> Subjects Recorded
+              </span>
             </div>
             <div class="tw">
               <table>
                 <thead>
                   <tr>
                     <th>Subject</th>
-                    <th>Marks</th>
-                    <th>Percentage</th>
+                    <th>Marks Scored</th>
+                    <th>Percentage &amp; Progress</th>
                     <th>Grade</th>
-                    <th>Performance</th>
+                    <th>Status</th>
+                    <th style="text-align:center">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -432,60 +444,434 @@ pageHead('Student Dashboard');
                     $color = gradeColor($g['grade']);
                     ?>
                     <tr>
-                      <td style="font-weight:600"><?= e($g['subject_name']) ?></td>
-                      <td style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:700">
-                        <?= $g['marks'] ?><span
-                          style="font-size:.72rem;color:var(--MT);font-family:'Plus Jakarta Sans',sans-serif"> /
-                          <?= $g['max_marks'] ?></span>
+                      <td style="font-weight:600">
+                        <i class="fas fa-bookmark" style="color:var(--S);margin-right:6px;font-size:.8rem"></i>
+                        <?= e($g['subject_name']) ?>
+                      </td>
+                      <td style="font-family:'Playfair Display',serif;font-size:1.02rem;font-weight:700">
+                        <?= $g['marks'] ?>
+                        <span style="font-size:.74rem;color:var(--MT);font-family:'Plus Jakarta Sans',sans-serif"> / <?= $g['max_marks'] ?></span>
                       </td>
                       <td>
                         <div style="display:flex;align-items:center;gap:.6rem">
-                          <div
-                            style="flex:1;height:7px;background:var(--W);border-radius:99px;overflow:hidden;min-width:80px">
-                            <div
-                              style="height:100%;width:<?= $pct ?>%;background:<?= $pct >= 70 ? '#52b788' : ($pct >= 50 ? '#f4a261' : '#e63946') ?>;border-radius:99px">
+                          <div style="flex:1;height:8px;background:var(--W);border-radius:99px;overflow:hidden;min-width:85px">
+                            <div style="height:100%;width:<?= $pct ?>%;background:<?= $pct >= 80 ? '#2d6a4f' : ($pct >= 65 ? '#52b788' : ($pct >= 50 ? '#f4a261' : '#e63946')) ?>;border-radius:99px;transition:width .4s ease">
                             </div>
                           </div>
-                          <span style="font-size:.78rem;font-weight:600;color:var(--F);min-width:38px"><?= $pct ?>%</span>
+                          <span style="font-size:.8rem;font-weight:700;color:var(--F);min-width:42px"><?= $pct ?>%</span>
                         </div>
                       </td>
                       <td>
-                        <span style="display:inline-flex;align-items:center;justify-content:center;
-              width:42px;height:42px;border-radius:10px;font-weight:800;font-size:1rem;
-              background:<?= $color[0] ?>;color:<?= $color[1] ?>">
+                        <span style="display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:10px;font-weight:800;font-size:1rem;background:<?= $color[0] ?>;color:<?= $color[1] ?>;box-shadow:0 2px 6px rgba(0,0,0,.06)">
                           <?= e($g['grade']) ?>
                         </span>
                       </td>
-                      <td style="font-size:.78rem;color:var(--MT)">
+                      <td style="font-size:.8rem;font-weight:600">
                         <?php
                         if ($pct >= 80)
-                          echo '<span style="color:#1b5e20"><i class="fas fa-arrow-up"></i> Excellent</span>';
+                          echo '<span style="color:#1b5e20;display:inline-flex;align-items:center;gap:4px"><i class="fas fa-arrow-up"></i> Excellent</span>';
                         elseif ($pct >= 65)
-                          echo '<span style="color:#0d47a1"><i class="fas fa-check"></i> Good</span>';
+                          echo '<span style="color:#0d47a1;display:inline-flex;align-items:center;gap:4px"><i class="fas fa-check"></i> Good</span>';
                         elseif ($pct >= 50)
-                          echo '<span style="color:#bf360c"><i class="fas fa-minus"></i> Average</span>';
+                          echo '<span style="color:#bf360c;display:inline-flex;align-items:center;gap:4px"><i class="fas fa-minus"></i> Average</span>';
                         else
-                          echo '<span style="color:#b71c1c"><i class="fas fa-arrow-down"></i> Needs Improvement</span>';
+                          echo '<span style="color:#b71c1c;display:inline-flex;align-items:center;gap:4px"><i class="fas fa-arrow-down"></i> Needs Focus</span>';
                         ?>
+                      </td>
+                      <td style="text-align:center">
+                        <button type="button" onclick="mwSelectSubjectForPrediction('<?= e(addslashes($g['subject_name'])) ?>', <?= $pct ?>)"
+                          style="background:rgba(45,106,79,.08);color:var(--S);border:1px solid rgba(45,106,79,.25);border-radius:8px;padding:.32rem .75rem;font-size:.74rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .2s"
+                          onmouseover="this.style.background='var(--S)';this.style.color='#fff'"
+                          onmouseout="this.style.background='rgba(45,106,79,.08)';this.style.color='var(--S)'"
+                          title="Forecast next score for <?= e($g['subject_name']) ?>">
+                          <i class="fas fa-wand-magic-sparkles"></i> Predict
+                        </button>
                       </td>
                     </tr>
                   <?php endforeach; ?>
                 </tbody>
               </table>
             </div>
-            <div
-              style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-              <span style="font-size:.8rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?>:</span>
+            <div style="padding:1rem 1.25rem;border-top:1.5px solid var(--W);background:#fafaf7;display:flex;align-items:center;gap:1.2rem;flex-wrap:wrap">
+              <span style="font-size:.82rem;font-weight:700;color:var(--F)">Overall <?= e($term) ?> Cumulative:</span>
               <div style="flex:1;height:10px;background:var(--W);border-radius:99px;overflow:hidden;min-width:120px">
-                <div
-                  style="height:100%;width:<?= $overall_pct ?>%;background:linear-gradient(90deg,var(--P),#52b788);border-radius:99px;transition:width .5s ease">
-                </div>
+                <div style="height:100%;width:<?= $overall_pct ?>%;background:linear-gradient(90deg,var(--P),#52b788);border-radius:99px;transition:width .5s ease"></div>
               </div>
-              <span style="font-size:.88rem;font-weight:700;color:var(--P)"><?= $overall_pct ?>% —
-                <?= $overall_grade ?></span>
+              <span style="font-size:.9rem;font-weight:800;color:var(--P)"><?= $overall_pct ?>% &nbsp;·&nbsp; Grade <?= $overall_grade ?></span>
             </div>
           </div>
         <?php endif; ?>
+
+        <!-- ── GRADE PREDICTION SYSTEM (ML.NET & C# ASP.NET CORE API) ── -->
+        <div class="crd" id="mlPredictionSection" style="border:1.5px solid rgba(45,106,79,.25);box-shadow:0 8px 30px rgba(0,0,0,.08);overflow:hidden">
+          <div class="crdhdr" style="background:linear-gradient(135deg,var(--F) 0%, #173826 100%);color:#fff;padding:1.2rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="background:var(--O);color:var(--F);font-size:.72rem;font-weight:800;padding:2px 8px;border-radius:4px;letter-spacing:.05em">ML.NET</span>
+                <h3 style="font-size:1.15rem;font-weight:700;color:#fff;margin:0">Grade Prediction System</h3>
+              </div>
+              <p style="font-size:.78rem;color:var(--L);margin-top:3px">Powered by C# ASP.NET Core Web API with Microsoft ML.NET Regression Model</p>
+            </div>
+            <div id="mlApiStatusBadge" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);padding:4px 12px;border-radius:30px;font-size:.74rem;font-weight:600">
+              <i class="fas fa-circle-notch fa-spin"></i> Checking C# Service...
+            </div>
+          </div>
+
+          <div style="padding:1.5rem;display:grid;grid-template-columns:1fr 1fr;gap:1.75rem" class="ml-grid-layout">
+            <!-- INPUT CONTROLS (LEFT) -->
+            <div>
+              <div style="font-size:.76rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--S);margin-bottom:.9rem;display:flex;align-items:center;gap:6px">
+                <i class="fas fa-sliders"></i> Prediction Parameters
+              </div>
+
+              <!-- Scope / Subject Selector -->
+              <div class="fg" style="margin-bottom:1.15rem">
+                <label for="predSubjectSelect" style="font-size:.74rem;font-weight:700;color:var(--T);display:block;margin-bottom:4px">Target Subject / Evaluation Scope</label>
+                <select id="predSubjectSelect" onchange="mwOnSubjectChange()" style="width:100%;padding:.7rem .9rem;border:1.5px solid var(--W);border-radius:10px;font-family:inherit;font-size:.88rem;background:#fff;outline:none">
+                  <option value="Overall" data-prev="<?= $overall_pct > 0 ? $overall_pct : 80 ?>">Overall Term Academic Performance</option>
+                  <?php foreach ($my_grades as $g):
+                    $spct = round(($g['marks'] / $g['max_marks']) * 100, 1);
+                  ?>
+                    <option value="<?= e($g['subject_name']) ?>" data-prev="<?= $spct ?>">
+                      <?= e($g['subject_name']) ?> (Current: <?= $spct ?>% · <?= e($g['grade']) ?>)
+                    </option>
+                  <?php endforeach; ?>
+                </select>
+              </div>
+
+              <!-- Study Hours -->
+              <div style="background:#fafaf8;border:1px solid var(--W);border-radius:12px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+                  <label for="predStudyHoursNum" style="font-size:.74rem;font-weight:700;color:var(--T);text-transform:uppercase;letter-spacing:.04em">
+                    <i class="fas fa-clock" style="color:var(--S)"></i> Weekly Study Hours
+                  </label>
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <input type="number" id="predStudyHoursNum" min="0" max="60" step="0.5" value="12" style="width:65px;padding:.3rem .45rem;border:1.5px solid var(--W);border-radius:8px;font-weight:700;font-size:.88rem;text-align:center" oninput="mwSyncStudyHours(this.value, 'num')">
+                    <span style="font-size:.74rem;color:var(--MT);font-weight:600">hrs/wk</span>
+                  </div>
+                </div>
+                <input type="range" id="predStudyHoursRange" min="0" max="40" step="0.5" value="12" style="width:100%;accent-color:var(--S);cursor:pointer" oninput="mwSyncStudyHours(this.value, 'range')">
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--MT);margin-top:2px">
+                  <span>0 hrs (Minimal)</span>
+                  <span>10-15 hrs (Recommended)</span>
+                  <span>40 hrs (Intensive)</span>
+                </div>
+              </div>
+
+              <!-- Attendance Percentage -->
+              <div style="background:#fafaf8;border:1px solid var(--W);border-radius:12px;padding:1rem;margin-bottom:1rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+                  <label for="predAttendanceNum" style="font-size:.74rem;font-weight:700;color:var(--T);text-transform:uppercase;letter-spacing:.04em">
+                    <i class="fas fa-user-check" style="color:var(--S)"></i> Attendance Rate
+                  </label>
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <input type="number" id="predAttendanceNum" min="0" max="100" step="1" value="92" style="width:65px;padding:.3rem .45rem;border:1.5px solid var(--W);border-radius:8px;font-weight:700;font-size:.88rem;text-align:center" oninput="mwSyncAttendance(this.value, 'num')">
+                    <span style="font-size:.74rem;color:var(--MT);font-weight:600">%</span>
+                  </div>
+                </div>
+                <input type="range" id="predAttendanceRange" min="50" max="100" step="1" value="92" style="width:100%;accent-color:var(--S);cursor:pointer" oninput="mwSyncAttendance(this.value, 'range')">
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:var(--MT);margin-top:2px">
+                  <span>50%</span>
+                  <span>85% (Passing standard)</span>
+                  <span>100%</span>
+                </div>
+              </div>
+
+              <!-- Previous Grade Score -->
+              <div style="background:#fafaf8;border:1px solid var(--W);border-radius:12px;padding:1rem;margin-bottom:1.15rem">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">
+                  <label for="predPreviousGradeNum" style="font-size:.74rem;font-weight:700;color:var(--T);text-transform:uppercase;letter-spacing:.04em">
+                    <i class="fas fa-history" style="color:var(--S)"></i> Previous / Baseline Score
+                  </label>
+                  <div style="display:flex;align-items:center;gap:4px">
+                    <input type="number" id="predPreviousGradeNum" min="0" max="100" step="0.5" value="<?= $overall_pct > 0 ? $overall_pct : 80 ?>" style="width:65px;padding:.3rem .45rem;border:1.5px solid var(--W);border-radius:8px;font-weight:700;font-size:.88rem;text-align:center" oninput="mwSyncPreviousGrade(this.value, 'num')">
+                    <span style="font-size:.74rem;color:var(--MT);font-weight:600">%</span>
+                  </div>
+                </div>
+                <input type="range" id="predPreviousGradeRange" min="0" max="100" step="0.5" value="<?= $overall_pct > 0 ? $overall_pct : 80 ?>" style="width:100%;accent-color:var(--S);cursor:pointer" oninput="mwSyncPreviousGrade(this.value, 'range')">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+                  <span style="font-size:.7rem;color:var(--MT)">Current average: <?= $overall_pct ?>%</span>
+                  <button type="button" onclick="mwQuickFillStats(<?= $overall_pct > 0 ? $overall_pct : 80 ?>)" style="background:transparent;border:none;color:var(--S);font-size:.72rem;font-weight:700;cursor:pointer;padding:0;text-decoration:underline">
+                    Use My Average
+                  </button>
+                </div>
+              </div>
+
+              <!-- Run Predict Action Button -->
+              <button type="button" id="btnRunPrediction" onclick="mwRunPrediction()" class="pbtn" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:.9rem 1rem;font-size:.92rem;background:linear-gradient(135deg,var(--F) 0%,var(--S) 100%);box-shadow:0 4px 15px rgba(15,35,24,.2)">
+                <i class="fas fa-wand-magic-sparkles" style="color:var(--O)"></i>
+                <span id="btnRunPredictionTxt">Predict Grade with ML.NET</span>
+              </button>
+            </div>
+
+            <!-- PREDICTION RESULTS (RIGHT) -->
+            <div style="display:flex;flex-direction:column;gap:1.1rem">
+              <div style="font-size:.76rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--S);display:flex;align-items:center;gap:6px">
+                <i class="fas fa-chart-pie"></i> ML Inference Output
+              </div>
+
+              <!-- Primary Forecast Card -->
+              <div style="background:linear-gradient(135deg,#fcfbf7 0%,#f4f1ea 100%);border:1.5px solid var(--W);border-radius:16px;padding:1.4rem;text-align:center;position:relative;box-shadow:inset 0 1px 3px rgba(255,255,255,.8)">
+                <span id="predScopeBadge" style="display:inline-block;padding:3px 12px;background:rgba(45,106,79,.12);color:var(--F);font-size:.72rem;font-weight:700;border-radius:20px;margin-bottom:.75rem">
+                  Overall Term Forecast
+                </span>
+
+                <div style="display:flex;align-items:center;justify-content:center;gap:1.25rem;margin-bottom:.5rem">
+                  <!-- Large Score Display -->
+                  <div>
+                    <div id="predScoreVal" style="font-family:'Playfair Display',serif;font-size:3.2rem;font-weight:800;color:var(--F);line-height:1">
+                      --.-%
+                    </div>
+                    <div style="font-size:.74rem;color:var(--MT);margin-top:4px;font-weight:600">Predicted Academic Score</div>
+                  </div>
+
+                  <!-- Grade Letter Badge -->
+                  <div style="display:flex;flex-direction:column;align-items:center">
+                    <span id="predGradeBadge" style="width:62px;height:62px;border-radius:14px;background:#e8f5e9;color:#1b5e20;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.08)">
+                      --
+                    </span>
+                    <span style="font-size:.7rem;color:var(--MT);margin-top:4px;font-weight:600">Letter Grade</span>
+                  </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div style="height:10px;background:var(--W);border-radius:99px;overflow:hidden;margin:1rem auto .6rem;max-width:320px">
+                  <div id="predProgressFill" style="height:100%;width:0%;background:linear-gradient(90deg,var(--S),#52b788);border-radius:99px;transition:width .6s cubic-bezier(.34,1.56,.64,1)"></div>
+                </div>
+
+                <!-- Tier & Trend indicators -->
+                <div style="display:flex;align-items:center;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-top:.6rem">
+                  <span id="predTierBadge" style="padding:3px 10px;border-radius:6px;background:#e3f2fd;color:#0d47a1;font-size:.74rem;font-weight:700">
+                    Awaiting Inference
+                  </span>
+                  <span id="predDeltaBadge" style="padding:3px 10px;border-radius:6px;background:#f3f4f6;color:#374151;font-size:.74rem;font-weight:700">
+                    --
+                  </span>
+                </div>
+              </div>
+
+              <!-- Recommendation & AI Insights Box -->
+              <div style="background:#fff;border:1.5px solid var(--W);border-radius:14px;padding:1.15rem;box-shadow:0 2px 10px rgba(0,0,0,.04);flex:1">
+                <div style="font-size:.76rem;font-weight:700;color:var(--T);margin-bottom:.6rem;display:flex;align-items:center;gap:6px">
+                  <i class="fas fa-lightbulb" style="color:var(--O)"></i> ML Recommendations &amp; Insights
+                </div>
+                <div id="predInsightsList" style="display:flex;flex-direction:column;gap:.5rem;font-size:.8rem;color:var(--MT);line-height:1.5">
+                  <div style="display:flex;align-items:flex-start;gap:6px">
+                    <i class="fas fa-circle-check" style="color:var(--S);margin-top:3px;font-size:.75rem"></i>
+                    <span>Adjust weekly study hours and attendance to see how your predicted score shifts.</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Model Architecture Info Footer -->
+              <div style="background:rgba(212,168,71,.08);border:1px solid rgba(212,168,71,.2);border-radius:10px;padding:.65rem .85rem;display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--MT)">
+                <span><i class="fas fa-microchip" style="color:#8a6200;margin-right:4px"></i> Engine: <strong id="predEngineLabel">C# ASP.NET Core API</strong></span>
+                <span id="predServiceStatusNote" style="color:var(--S);font-weight:600"><i class="fas fa-plug"></i> http://localhost:5000/api/insights/predict</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+        // ── GRADE PREDICTOR INTERACTIVE SCRIPT ──
+        function mwSyncStudyHours(val, source) {
+          var f = parseFloat(val) || 0;
+          if (source === 'range') document.getElementById('predStudyHoursNum').value = f;
+          else document.getElementById('predStudyHoursRange').value = f;
+        }
+
+        function mwSyncAttendance(val, source) {
+          var f = parseFloat(val) || 0;
+          if (source === 'range') document.getElementById('predAttendanceNum').value = f;
+          else document.getElementById('predAttendanceRange').value = f;
+        }
+
+        function mwSyncPreviousGrade(val, source) {
+          var f = parseFloat(val) || 0;
+          if (source === 'range') document.getElementById('predPreviousGradeNum').value = f;
+          else document.getElementById('predPreviousGradeRange').value = f;
+        }
+
+        function mwOnSubjectChange() {
+          var sel = document.getElementById('predSubjectSelect');
+          var opt = sel.options[sel.selectedIndex];
+          var prev = opt.getAttribute('data-prev');
+          if (prev) {
+            var val = parseFloat(prev);
+            document.getElementById('predPreviousGradeNum').value = val;
+            document.getElementById('predPreviousGradeRange').value = val;
+          }
+          var scopeTxt = sel.value === 'Overall' ? 'Overall Term Forecast' : (sel.value + ' Subject Forecast');
+          document.getElementById('predScopeBadge').textContent = scopeTxt;
+          mwRunPrediction();
+        }
+
+        function mwSelectSubjectForPrediction(subjectName, currentScore) {
+          var sel = document.getElementById('predSubjectSelect');
+          var found = false;
+          for (var i = 0; i < sel.options.length; i++) {
+            if (sel.options[i].value.toLowerCase() === subjectName.toLowerCase()) {
+              sel.selectedIndex = i;
+              found = true;
+              break;
+            }
+          }
+          if (!found) {
+            sel.value = 'Overall';
+          }
+          document.getElementById('predPreviousGradeNum').value = currentScore;
+          document.getElementById('predPreviousGradeRange').value = currentScore;
+          document.getElementById('predScopeBadge').textContent = subjectName + ' Subject Forecast';
+
+          var target = document.getElementById('mlPredictionSection');
+          if (target) {
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            target.style.transition = 'box-shadow 0.3s ease, border-color 0.3s ease';
+            target.style.borderColor = 'var(--O)';
+            target.style.boxShadow = '0 0 22px rgba(212,168,71,.4)';
+            setTimeout(function() {
+              target.style.borderColor = 'rgba(45,106,79,.25)';
+              target.style.boxShadow = '0 8px 30px rgba(0,0,0,.08)';
+            }, 1200);
+          }
+          mwRunPrediction();
+        }
+
+        function mwQuickFillStats(val) {
+          document.getElementById('predPreviousGradeNum').value = val;
+          document.getElementById('predPreviousGradeRange').value = val;
+          mwRunPrediction();
+        }
+
+        function mwCheckApiHealth() {
+          fetch('api_predict_grade.php?action=check_health')
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+              var badge = document.getElementById('mlApiStatusBadge');
+              if (data && data.online) {
+                badge.innerHTML = '<i class="fas fa-circle-check" style="color:#52b788"></i> <span>C# ML.NET Connected (localhost:5000)</span>';
+                badge.style.background = 'rgba(82,183,136,.18)';
+                badge.style.color = '#fff';
+                badge.style.borderColor = '#52b788';
+                document.getElementById('predEngineLabel').textContent = 'Live C# ASP.NET Core API';
+              } else {
+                badge.innerHTML = '<i class="fas fa-microchip" style="color:#ffbe3b"></i> <span>Smart Estimator (C# Service Offline)</span>';
+                badge.style.background = 'rgba(212,168,71,.2)';
+                badge.style.color = '#fff';
+                badge.style.borderColor = 'var(--O)';
+                document.getElementById('predEngineLabel').textContent = 'Local Smart ML Model';
+              }
+            })
+            .catch(function() {
+              var badge = document.getElementById('mlApiStatusBadge');
+              badge.innerHTML = '<i class="fas fa-microchip" style="color:#ffbe3b"></i> <span>Smart Estimator Ready</span>';
+            });
+        }
+
+        function mwRunPrediction() {
+          var btn = document.getElementById('btnRunPrediction');
+          var btnTxt = document.getElementById('btnRunPredictionTxt');
+          var studyHours = parseFloat(document.getElementById('predStudyHoursNum').value) || 0;
+          var attendance = parseFloat(document.getElementById('predAttendanceNum').value) || 0;
+          var prevGrade = parseFloat(document.getElementById('predPreviousGradeNum').value) || 0;
+          var sel = document.getElementById('predSubjectSelect');
+          var subjectName = sel ? sel.value : 'Overall';
+
+          btn.disabled = true;
+          btnTxt.textContent = 'Computing with ML.NET...';
+
+          fetch('api_predict_grade.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              study_hours: studyHours,
+              attendance_percentage: attendance,
+              previous_grade: prevGrade,
+              subject: subjectName
+            })
+          })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            btn.disabled = false;
+            btnTxt.textContent = 'Predict Grade with ML.NET';
+
+            if (data && data.success) {
+              var p = data.prediction;
+              document.getElementById('predScoreVal').textContent = p.predictedScore.toFixed(1) + '%';
+              var gb = document.getElementById('predGradeBadge');
+              gb.textContent = p.letterGrade;
+              gb.style.background = p.badgeBg;
+              gb.style.color = p.badgeText;
+
+              document.getElementById('predProgressFill').style.width = Math.min(100, Math.max(0, p.predictedScore)) + '%';
+              document.getElementById('predTierBadge').textContent = p.tier;
+
+              var db = document.getElementById('predDeltaBadge');
+              if (p.delta > 0) {
+                db.innerHTML = '<i class="fas fa-arrow-trend-up"></i> +' + p.delta.toFixed(1) + '% Expected Gain';
+                db.style.background = '#e8f5e9';
+                db.style.color = '#1b5e20';
+              } else if (p.delta < 0) {
+                db.innerHTML = '<i class="fas fa-arrow-trend-down"></i> ' + p.delta.toFixed(1) + '% Projected Dip';
+                db.style.background = '#ffebee';
+                db.style.color = '#b71c1c';
+              } else {
+                db.innerHTML = '<i class="fas fa-equals"></i> Steady Performance';
+                db.style.background = '#f3f4f6';
+                db.style.color = '#4b5563';
+              }
+
+              var list = document.getElementById('predInsightsList');
+              list.innerHTML = '';
+              if (data.insights && data.insights.length) {
+                data.insights.forEach(function(msg) {
+                  var row = document.createElement('div');
+                  row.style.display = 'flex';
+                  row.style.alignItems = 'flex-start';
+                  row.style.gap = '8px';
+                  row.innerHTML = '<i class="fas fa-lightbulb" style="color:var(--O);margin-top:3px;font-size:.78rem"></i><span>' + msg + '</span>';
+                  list.appendChild(row);
+                });
+              }
+
+              if (data.statusNote) {
+                document.getElementById('predServiceStatusNote').textContent = data.statusNote;
+              }
+            }
+          })
+          .catch(function(err) {
+            btn.disabled = false;
+            btnTxt.textContent = 'Predict Grade with ML.NET';
+            console.error('Prediction failed', err);
+          });
+        }
+
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', function() {
+          mwCheckApiHealth();
+          mwRunPrediction();
+        });
+        </script>
+        <style>
+        @media (max-width: 860px) {
+          .ml-grid-layout { grid-template-columns: 1fr !important; }
+        }
+        #student.cyber-hud-mode #mlPredictionSection {
+          background: #080f0c !important;
+          border-color: #ff103f !important;
+          box-shadow: 0 0 20px rgba(255, 16, 63, 0.25) !important;
+        }
+        #student.cyber-hud-mode #mlPredictionSection .crdhdr {
+          background: linear-gradient(135deg, #45000a 0%, #1a0004 100%) !important;
+          border-bottom-color: #ff103f !important;
+        }
+        #student.cyber-hud-mode #mlPredictionSection input,
+        #student.cyber-hud-mode #mlPredictionSection select {
+          background: #0d1a14 !important;
+          color: #fff !important;
+          border-color: #264a38 !important;
+        }
+        </style>
         <!-- ── TIMETABLE TAB ── -->
       <?php elseif ($tab === 'timetable'): ?>
         <?php
@@ -497,16 +883,15 @@ pageHead('Student Dashboard');
         else
           $yg = '10-11';
         ?>
-        <div class="phdr">
-          <h2>My Timetable</h2>
-          <p>Year <?= e($user['year']) ?> — Weekly Schedule</p>
+        <div class="phdr" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+          <div>
+            <h2>My Timetable</h2>
+            <p>Year <?= e($user['year']) ?> — Weekly Schedule</p>
+          </div>
+
         </div>
 
-        <div class="crd">
-          <div
-            style="padding:.75rem 1.25rem;border-bottom:1.5px solid var(--W);font-size:.78rem;font-weight:700;color:var(--MT);text-transform:uppercase;letter-spacing:.06em">
-            Year <?= e($user['year']) ?> &nbsp;·&nbsp; 
-          </div>
+
           <div class="tw">
             <table>
       <thead>
@@ -570,14 +955,16 @@ pageHead('Student Dashboard');
                   }
                   $is_sport = (bool) $row['sport_day'];
                   ?>
-                  <tr>
+                  <tr class="tt-row">
                     <td
+                      class="tt-day-col"
                       style="font-weight:600;font-size:.78rem;color:var(--MT);background:#f9f6f0;border-right:1.5px solid var(--W);padding:.5rem 1rem;white-space:nowrap">
                       <?= e($row['day']) ?>
                     </td>
                     <?php foreach ($periods as $idx => $p): ?>
                       <td style="padding:4px">
                         <div
+                          class="tt-slot <?= strtoupper($p) === 'SPORT' ? 'tt-sport' : (strtoupper($p) === 'BREAK' ? 'tt-break' : 'tt-normal') ?>"
                           style="background:<?= strtoupper($p) === 'SPORT' ? '#fef3c7' : (strtoupper($p) === 'BREAK' ? '#f3f4f6' : 'rgba(45,106,79,.08)') ?>;color:<?= strtoupper($p) === 'SPORT' ? '#92400e' : (strtoupper($p) === 'BREAK' ? '#6b7280' : 'var(--P)') ?>;border-radius:8px;padding:5px 4px;font-size:.75rem;font-weight:<?= strtoupper($p) === 'BREAK' ? '400' : '600' ?>;display:flex;align-items:center;justify-content:center;height:36px;text-align:center;line-height:1.2">
                           <?= e($p !== '' ? $p : '—') ?>
                         </div>

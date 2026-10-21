@@ -610,6 +610,9 @@ pageHead('Course — ' . $c['name']);
       <a class="nl s-nl <?= $tab === 'timetable' ? 'on' : '' ?>" href="studentHomePage.php?tab=timetable" title="Timetable"> <i
           class="fas fa-calendar-alt"></i>
         <span class="nl-label">Timetable</span></a>
+      <a class="nl s-nl <?= in_array($tab, ['marks', 'grades']) ? 'on' : '' ?>" href="studentHomePage.php?tab=marks" title="Marks & Grade Prediction"> <i
+          class="fas fa-chart-line"></i>
+        <span class="nl-label">Marks &amp; Prediction</span></a>
       <a class="nl s-nl <?= $tab === 'homework' ? 'on' : '' ?>" href="studentHomePage.php?tab=homework" title="Homework Status"> <i class="fas fa-tasks"></i>
         <span class="nl-label">Homework Status</span></a>
       <a class="nl s-nl" href="#" onclick="mwOpenCalendar();return false;" title="Calendar Planner"> <i class="fas fa-calendar-check"></i>

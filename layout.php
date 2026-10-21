@@ -56,6 +56,25 @@ function mwToggleCyberHud() {
   var txt = document.getElementById('hudToggleTxt');
   if (txt) txt.textContent = isHud ? 'HUD MODE: ON' : 'HUD MODE: OFF';
 }
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.s-nl').forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      if (document.body.classList.contains('cyber-hud-mode') || document.getElementById('student')?.classList.contains('cyber-hud-mode')) {
+        var href = link.getAttribute('href');
+        var mc = document.querySelector('.s-mc');
+        if (mc && href && href.indexOf('?tab=') !== -1 && !link.classList.contains('on')) {
+          e.preventDefault();
+          mc.style.transition = 'transform 0.12s cubic-bezier(0.4, 0, 0.8, 1), opacity 0.12s cubic-bezier(0.4, 0, 0.8, 1)';
+          mc.style.transform = 'translateX(24px)';
+          mc.style.opacity = '0';
+          setTimeout(function() {
+            window.location.href = href;
+          }, 120);
+        }
+      }
+    });
+  });
+});
 </script>
 </head>
 <body>

@@ -1,4 +1,4 @@
-    <?php
+<?php
 
     ini_set('session.gc_maxlifetime', 186400);
     session_set_cookie_params([
@@ -23,6 +23,11 @@
 
     // ── AI Chat Config ───────────────────────────────────────
  define('GEMINI_API_KEY', 'AIzaSyDS6hfzx6-mvzJxp3dC-4dL3MAYBIMXhlo'); 
+
+    // ── C# ML.NET Grade Predictor API ────────────────────────
+    if (!defined('GRADE_PREDICTOR_API_URL')) {
+        define('GRADE_PREDICTOR_API_URL', 'http://localhost:5000/api/insights/predict');
+    }
 
     // ── Helpers ──────────────────────────────────────────────
     function e($s)
